@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Visites Électorales</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root { --bleu:#1a3a6b; --bleu-clair:#2755a8; --rouge:#c0392b; --vert:#27ae60; --gris:#f0f2f5; --texte:#1a1a2e; --texte2:#5a6070; }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { font-family:'DM Sans',sans-serif; background:var(--gris); color:var(--texte); min-height:100vh; max-width:480px; margin:0 auto; }
+  #ecranLogin { min-height:100vh; background:var(--bleu); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:30px 24px; }
+  .login-logo { font-family:'Bebas Neue',sans-serif; font-size:36px; color:white; letter-spacing:2px; text-align:center; margin-bottom:6px; }
+  .login-sub { color:rgba(255,255,255,0.6); font-size:13px; margin-bottom:40px; text-align:center; }
+  .login-card { background:white; border-radius:16px; padding:28px 24px; width:100%; box-shadow:0 8px 30px rgba(0,0,0,0.2); }
+  .login-card h2 { font-size:18px; font-weight:700; color:var(--bleu); margin-bottom:20px; text-align:center; }
+  .login-field { margin-bottom:16px; }
+  .login-field label { font-size:12px; font-weight:600; color:var(--texte2); display:block; margin-bottom:6px; text-transform:uppercase; letter-spacing:.5px; }
+  .login-field select { width:100%; padding:13px 16px; border:2px solid #e0e4ea; border-radius:10px; font-family:'DM Sans',sans-serif; font-size:16px; color:var(--texte); background:white; outline:none; }
+  .pin-display { display:flex; justify-content:center; gap:12px; margin:16px 0; }
+  .pin-dot { width:16px; height:16px; border-radius:50%; border:2px solid var(--bleu-clair); background:white; transition:background .15s; }
+  .pin-dot.filled { background:var(--bleu-clair); }
+  .pin-clavier { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:16px; }
+  .pin-btn { padding:16px; border:none; background:var(--gris); border-radius:10px; font-family:'Bebas Neue',sans-serif; font-size:24px; color:var(--texte); cursor:pointer; transition:all .1s; }
+  .pin-btn:active { background:#d0d5df; transform:scale(0.95); }
+  .pin-btn.effacer { font-family:'DM Sans',sans-serif; font-size:16px; color:var(--rouge); }
+  .pin-btn.vide { background:transparent; cursor:default; }
+  .btn-connexion { width:100%; padding:15px; background:var(--bleu-clair); color:white; border:none; border-radius:10px; font-family:'DM Sans',sans-serif; font-size:16px; font-weight:700; cursor:pointer; }
+  .login-erreur { color:var(--rouge); font-size:13px; text-align:center; margin-top:12px; min-height:20px; font-weight:600; }
+  #appPrincipale { display:none; }
+  .header { background:var(--bleu); padding:14px 20px 10px; position:sticky; top:0; z-index:100; box-shadow:0 2px 12px rgba(26,58,107,0.25); display:flex; justify-content:space-between; align-items:center; }
+  .header-left h1 { font-family:'Bebas Neue',sans-serif; font-size:20px; color:white; letter-spacing:1.5px; line-height:1; }
+  .header-left p { color:rgba(255,255,255,0.6); font-size:11px; margin-top:1px; }
+  .header-user { background:rgba(255,255,255,0.15); color:white; font-size:12px; font-weight:600; padding:6px 12px; border-radius:20px; cursor:pointer; border:none; font-family:'DM Sans',sans-serif; }
+  .tabs { display:flex; background:white; border-bottom:2px solid var(--gris); }
+  .tab { flex:1; padding:12px 6px; text-align:center; font-size:12px; font-weight:600; color:var(--texte2); cursor:pointer; border-bottom:3px solid transparent; transition:all .2s; white-space:nowrap; }
+  .tab.active { color:var(--bleu-clair); border-bottom-color:var(--bleu-clair); }
+  .page { display:none; padding:16px; }
+  .page.active { display:block; }
+  .search-box { background:white; border-radius:12px; padding:14px; box-shadow:0 2px 8px rgba(0,0,0,0.06); margin-bottom:12px; }
+  .search-box label { font-size:11px; font-weight:600; color:var(--texte2); text-transform:uppercase; letter-spacing:.5px; }
+  input[type=text], select, textarea { width:100%; padding:11px 14px; border:1.5px solid #e0e4ea; border-radius:8px; font-family:'DM Sans',sans-serif; font-size:15px; color:var(--texte); background:white; outline:none; transition:border-color .2s; }
+  input:focus, select:focus, textarea:focus { border-color:var(--bleu-clair); }
+  input:disabled { background:#f5f5f5; color:var(--texte2); }
+  textarea { min-height:70px; resize:vertical; }
+  .btn-vert { background:var(--vert); color:white; width:100%; padding:14px; font-size:15px; margin-top:10px; border:none; border-radius:9px; font-family:'DM Sans',sans-serif; font-weight:600; cursor:pointer; }
+  .btn-rouge { background:var(--rouge); color:white; width:100%; padding:14px; font-size:15px; margin-top:8px; border:none; border-radius:9px; font-family:'DM Sans',sans-serif; font-weight:600; cursor:pointer; }
+  .resultats { margin-top:12px; }
+  .resultat-item { background:white; border-radius:10px; padding:13px 14px; margin-bottom:8px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 1px 4px rgba(0,0,0,0.07); cursor:pointer; border-left:4px solid transparent; }
+  .resultat-item:active { transform:scale(0.98); }
+  .resultat-item.visite { border-left-color:var(--vert); }
+  .resultat-item.non-visite { border-left-color:#dde1e8; }
+  .ri-info { flex:1; }
+  .ri-nom { font-weight:600; font-size:15px; }
+  .ri-detail { font-size:12px; color:var(--texte2); margin-top:2px; }
+  .ri-badge { font-size:11px; font-weight:600; padding:4px 9px; border-radius:20px; white-space:nowrap; margin-left:10px; }
+  .badge-visite { background:#d5f5e3; color:#1e8449; }
+  .badge-non { background:#f0f2f5; color:#888; }
+  .fiche { background:white; border-radius:12px; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,0.08); margin-bottom:12px; }
+  .fiche-header { background:var(--bleu); padding:18px 18px 14px; color:white; }
+  .fiche-header .nom { font-family:'Bebas Neue',sans-serif; font-size:24px; letter-spacing:1px; line-height:1.1; }
+  .fiche-header .prenom { font-size:16px; opacity:.85; margin-top:2px; }
+  .fiche-header .nom-usage { font-size:13px; opacity:.65; margin-top:4px; font-style:italic; }
+  .fiche-header .badge-deja-visite { display:inline-block; background:#27ae60; color:white; font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; margin-top:8px; }
+  .fiche-body { padding:14px; }
+  .fiche-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--gris); }
+  .fiche-row:last-child { border-bottom:none; }
+  .fiche-row .label { font-size:12px; color:var(--texte2); font-weight:500; }
+  .fiche-row .value { font-size:14px; font-weight:600; text-align:right; max-width:65%; }
+  .statut-badge { font-size:12px; font-weight:700; padding:5px 12px; border-radius:20px; display:inline-block; }
+  .statut-visite { background:#d5f5e3; color:#1e8449; }
+  .statut-non { background:#fde8e6; color:var(--rouge); }
+  .form-section { background:white; border-radius:12px; padding:16px; margin-bottom:10px; box-shadow:0 1px 5px rgba(0,0,0,0.06); }
+  .form-section h3 { font-size:13px; font-weight:700; color:var(--bleu); text-transform:uppercase; letter-spacing:.5px; margin-bottom:12px; padding-bottom:8px; border-bottom:2px solid var(--gris); }
+  .field { margin-bottom:12px; }
+  .field label { font-size:12px; font-weight:600; color:var(--texte2); display:block; margin-bottom:5px; }
+  .loading { text-align:center; padding:30px; color:var(--texte2); font-size:14px; line-height:1.8; }
+  .loading .spinner { width:32px; height:32px; border:3px solid #e0e4ea; border-top-color:var(--bleu-clair); border-radius:50%; animation:spin .8s linear infinite; margin:0 auto 12px; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#1a1a2e; color:white; padding:12px 22px; border-radius:30px; font-size:14px; font-weight:500; box-shadow:0 4px 20px rgba(0,0,0,0.3); z-index:999; animation:toastIn .3s ease; white-space:nowrap; }
+  .toast.succes { background:var(--vert); }
+  .toast.erreur { background:var(--rouge); }
+  @keyframes toastIn { from { opacity:0; transform:translateX(-50%) translateY(10px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
+  .vide { text-align:center; color:var(--texte2); padding:30px 20px; font-size:14px; }
+  .btn-retour { display:flex; align-items:center; gap:6px; color:var(--bleu-clair); font-size:14px; font-weight:600; background:none; border:none; cursor:pointer; padding:0 0 12px 0; }
+  .compteur { background:var(--bleu); border-radius:12px; padding:16px; color:white; margin-bottom:12px; display:flex; justify-content:space-around; }
+  .cpt-item { text-align:center; }
+  .cpt-num { font-family:'Bebas Neue',sans-serif; font-size:32px; line-height:1; }
+  .cpt-label { font-size:11px; opacity:.7; margin-top:2px; }
+  .militant-card { background:white; border-radius:10px; padding:14px; margin-bottom:8px; box-shadow:0 1px 4px rgba(0,0,0,0.07); display:flex; align-items:center; justify-content:space-between; }
+  .mc-nom { font-weight:700; font-size:15px; }
+  .mc-detail { font-size:12px; color:var(--texte2); margin-top:3px; }
+  .mc-badge { font-family:'Bebas Neue',sans-serif; font-size:28px; color:var(--bleu-clair); }
+  .log-item { background:white; border-radius:8px; padding:10px 12px; margin-bottom:6px; display:flex; align-items:center; gap:10px; box-shadow:0 1px 3px rgba(0,0,0,0.06); }
+  .log-icon { font-size:18px; }
+  .log-info { flex:1; }
+  .log-action { font-size:13px; font-weight:600; }
+  .log-detail { font-size:11px; color:var(--texte2); margin-top:1px; }
+  .log-date { font-size:11px; color:var(--texte2); white-space:nowrap; }
+  .section-title { font-size:12px; font-weight:700; color:var(--texte2); text-transform:uppercase; letter-spacing:.5px; margin-bottom:8px; }
+  .btn-refresh { background:var(--bleu-clair); color:white; border:none; border-radius:8px; padding:8px 16px; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:600; cursor:pointer; margin-bottom:12px; }
+  .role-badge { font-size:10px; font-weight:700; padding:2px 8px; border-radius:10px; margin-left:8px; background:#fff3cd; color:#856404; }
+  .alerte-visite { background:#d5f5e3; border:2px solid #27ae60; border-radius:10px; padding:12px 16px; margin-bottom:12px; display:flex; align-items:center; gap:10px; }
+  .alerte-visite .av-icon { font-size:24px; }
+  .alerte-visite .av-texte { font-size:13px; font-weight:600; color:#1e8449; line-height:1.4; }
+  .progress-bar { height:4px; background:#e0e4ea; border-radius:2px; margin-top:8px; overflow:hidden; display:none; }
+
+  /* POPUP MODALE */
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:500; display:flex; align-items:center; justify-content:center; padding:20px; animation:fadeIn .2s ease; }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+  .modal-box { background:white; border-radius:16px; padding:28px 24px; width:100%; max-width:340px; box-shadow:0 10px 40px rgba(0,0,0,0.3); animation:slideUp .25s ease; }
+  @keyframes slideUp { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+  .modal-box h3 { font-size:17px; font-weight:700; color:var(--texte); margin-bottom:10px; }
+  .modal-box p { font-size:14px; color:var(--texte2); margin-bottom:24px; line-height:1.5; }
+  .modal-actions { display:flex; gap:10px; }
+  .modal-actions button { flex:1; padding:12px; border:none; border-radius:10px; font-family:'DM Sans',sans-serif; font-size:14px; font-weight:600; cursor:pointer; }
+  .modal-btn-ok { background:var(--rouge); color:white; }
+
+  /* HISTORIQUE CONNEXION DÉROULANT */
+  .mc-historique { margin-top:8px; border-top:1px solid rgba(255,255,255,0.1); padding-top:8px; display:none; }
+  .mc-historique.open { display:block; }
+  .mc-histo-btn { font-size:11px; color:#4a6fa5; cursor:pointer; text-decoration:underline; margin-top:4px; display:inline-block; }
+  .mc-histo-item { font-size:11px; color:#555; padding:3px 0; border-bottom:1px solid #f0f0f0; display:flex; justify-content:space-between; }
+  .mc-histo-item:last-child { border-bottom:none; }
+  .mc-histo-duree { color:#888; font-size:10px; }
+
+  /* TOGGLE ON/OFF */
+  .toggle-wrap { display:flex; align-items:center; gap:8px; }
+  .toggle { position:relative; width:44px; height:24px; cursor:pointer; }
+  .toggle input { opacity:0; width:0; height:0; }
+  .toggle-slider { position:absolute; inset:0; background:#ccc; border-radius:24px; transition:.3s; }
+  .toggle-slider:before { content:''; position:absolute; height:18px; width:18px; left:3px; bottom:3px; background:white; border-radius:50%; transition:.3s; }
+  .toggle input:checked + .toggle-slider { background:var(--vert); }
+  .toggle input:checked + .toggle-slider:before { transform:translateX(20px); }
+  .mc-connecte { font-size:11px; font-weight:600; padding:2px 8px; border-radius:10px; }
+  .mc-connecte.on { background:#d5f5e3; color:#1e8449; }
+  .mc-connecte.off { background:#fde8e8; color:#c0392b; }
+  .modal-btn-cancel { background:var(--gris); color:var(--texte); }
+
+  /* OVERLAY CHARGEMENT */
+  .loading-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:600; display:none; flex-direction:column; align-items:center; justify-content:center; gap:20px; }
+  .loading-overlay.visible { display:flex; }
+  .loading-overlay .big-spinner { width:56px; height:56px; border:5px solid rgba(255,255,255,0.3); border-top-color:white; border-radius:50%; animation:spin .8s linear infinite; }
+  .loading-overlay .loading-text { color:white; font-size:16px; font-weight:600; letter-spacing:.5px; }
+  .loading-overlay .overlay-bar-wrap { width:220px; height:6px; background:rgba(255,255,255,0.25); border-radius:3px; overflow:hidden; }
+  .loading-overlay .overlay-bar-fill { height:100%; width:0%; background:white; border-radius:3px; transition:width .2s linear; }
+
+  /* SABLIER BOUTON */
+  .btn-loading { position:relative; overflow:hidden; opacity:.9; cursor:not-allowed; }
+  .btn-loading::before { content:''; position:absolute; left:0; top:0; height:100%; width:0%; background:rgba(255,255,255,0.35); animation:btnProgress 4s linear forwards; border-radius:9px; }
+  @keyframes btnProgress { 0%{width:0%} 80%{width:85%} 100%{width:90%} }
+  .progress-fill { height:100%; background:var(--bleu-clair); border-radius:2px; transition:width .3s; width:0%; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="ecranLogin">
+  <div class="login-logo">🗳️ Visites Électorales</div>
+  <div class="login-sub">La Plaine-des-Palmistes</div>
+  <div class="login-card">
+    <h2>🔐 Connexion</h2>
+    <div class="login-field">
+      <label>Votre nom</label>
+      <select id="loginNom" onchange="resetPin()"><option value="">-- Choisir --</option></select>
+    </div>
+    <div class="login-field">
+      <label>Code PIN</label>
+      <div class="pin-display">
+        <div class="pin-dot" id="dot0"></div><div class="pin-dot" id="dot1"></div>
+        <div class="pin-dot" id="dot2"></div><div class="pin-dot" id="dot3"></div>
+      </div>
+      <div class="pin-clavier">
+        <button class="pin-btn" onclick="ajouterPin('1')">1</button>
+        <button class="pin-btn" onclick="ajouterPin('2')">2</button>
+        <button class="pin-btn" onclick="ajouterPin('3')">3</button>
+        <button class="pin-btn" onclick="ajouterPin('4')">4</button>
+        <button class="pin-btn" onclick="ajouterPin('5')">5</button>
+        <button class="pin-btn" onclick="ajouterPin('6')">6</button>
+        <button class="pin-btn" onclick="ajouterPin('7')">7</button>
+        <button class="pin-btn" onclick="ajouterPin('8')">8</button>
+        <button class="pin-btn" onclick="ajouterPin('9')">9</button>
+        <button class="pin-btn vide"></button>
+        <button class="pin-btn" onclick="ajouterPin('0')">0</button>
+        <button class="pin-btn effacer" onclick="effacerPin()">⌫</button>
+      </div>
+    </div>
+    <button class="btn-connexion" onclick="seConnecter()">Se connecter</button>
+    <div class="login-erreur" id="loginErreur"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appPrincipale">
+  <div class="header">
+    <div class="header-left">
+      <h1>🗳️ Visites Électorales</h1>
+      <p>La Plaine-des-Palmistes</p>
+    </div>
+    <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
+  </div>
+  <div class="tabs" id="tabsBar">
+    <div class="tab active" onclick="showPage('recherche',this)">🔍 Recherche</div>
+    <div class="tab" onclick="showPage('saisie',this)">✏️ Saisie</div>
+    <div class="tab" onclick="showPage('stats',this)">📊 Stats</div>
+  </div>
+
+  <div class="page active" id="page-recherche">
+    <div class="search-box">
+      <label>Rechercher un inscrit</label>
+      <input type="text" id="searchInput" placeholder="⏳ Chargement des données..." oninput="rechercherDebounce()" autocomplete="off" style="margin-top:8px;" disabled>
+      <div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
+    </div>
+    <div id="resultatsRecherche" class="resultats">
+      <div class="loading"><div class="spinner"></div>Chargement des données...<br><small>Quelques secondes, une seule fois</small></div>
+    </div>
+  </div>
+
+  <div class="page" id="page-saisie">
+    <div id="saisieContenu">
+      <div class="vide"><div style="font-size:40px;margin-bottom:10px;">🔍</div>Recherchez d'abord une personne</div>
+    </div>
+  </div>
+
+  <div class="page" id="page-stats">
+    <div class="compteur" id="compteur" style="display:none;">
+      <div class="cpt-item"><div class="cpt-num" id="cptTotal">-</div><div class="cpt-label">INSCRITS</div></div>
+      <div class="cpt-item"><div class="cpt-num" id="cptVisites">-</div><div class="cpt-label">VISITÉS</div></div>
+      <div class="cpt-item"><div class="cpt-num" id="cptPct">-</div><div class="cpt-label">PROGRESSION</div></div>
+    </div>
+    <div id="statsContenu"><div class="loading"><div class="spinner"></div>Chargement...</div></div>
+  </div>
+
+  <div class="page" id="page-admin">
+    <button class="btn-refresh" onclick="chargerAdmin()">🔄 Actualiser</button>
+    <div id="adminContenu"><div class="loading"><div class="spinner"></div>Chargement...</div></div>
+  </div>
+</div>
+
+<script>
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
+const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
+
+let currentPersonne = null;
+let currentMilitant = null;
+let currentRole = 'militant';
+let pinSaisi = '';
+let searchTimeout = null;
+let listeMilitants = [];
+let toutesPersonnes = [];
+
+// ===== MILITANTS =====
+async function chargerMilitants() {
+  try {
+    const resp = await fetch(SCRIPT_URL + '?action=getMilitants');
+    const data = await resp.json();
+    listeMilitants = data.militants || [];
+    const sel = document.getElementById('loginNom');
+    listeMilitants.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m.nom; opt.textContent = m.nom; sel.appendChild(opt);
+    });
+  } catch(e) {}
+}
+
+// ===== CHARGEMENT INITIAL DONNÉES (après login) =====
+async function chargerToutesPersonnes() {
+  const input = document.getElementById('searchInput');
+  const div = document.getElementById('resultatsRecherche');
+  const bar = document.getElementById('progressBar');
+  const fill = document.getElementById('progressFill');
+  bar.style.display = 'block';
+  let pct = 0;
+  const timer = setInterval(() => { pct = Math.min(pct+4, 88); fill.style.width = pct+'%'; }, 200);
+  try {
+    const resp = await fetch(SCRIPT_URL + '?action=getAllPersonnes');
+    const data = await resp.json();
+    toutesPersonnes = data.personnes || [];
+    clearInterval(timer);
+    fill.style.width = '100%';
+    setTimeout(() => { bar.style.display = 'none'; }, 400);
+    input.disabled = false;
+    input.placeholder = 'Nom, prénom ou ID...';
+    div.innerHTML = `<div class="vide" style="color:var(--vert);">✅ ${toutesPersonnes.length} personnes chargées<br>Recherche instantanée !</div>`;
+    setTimeout(() => { if (div.innerHTML.includes('chargées')) div.innerHTML = ''; }, 3000);
+  } catch(e) {
+    clearInterval(timer); bar.style.display = 'none';
+    input.disabled = false; input.placeholder = 'Nom, prénom ou ID...';
+    div.innerHTML = '<div class="vide" style="color:orange;">⚠️ Erreur de chargement</div>';
+  }
+}
+
+// ===== PIN =====
+function ajouterPin(c) {
+  if (pinSaisi.length >= 4) return;
+  pinSaisi += c; majDots();
+  if (pinSaisi.length === 4) setTimeout(seConnecter, 200);
+}
+function effacerPin() { pinSaisi = pinSaisi.slice(0,-1); majDots(); }
+function resetPin() { pinSaisi = ''; majDots(); document.getElementById('loginErreur').textContent = ''; }
+function majDots() {
+  for (let i=0; i<4; i++) document.getElementById('dot'+i).classList.toggle('filled', i < pinSaisi.length);
+}
+
+// ===== CONNEXION =====
+async function seConnecter() {
+  const nom = document.getElementById('loginNom').value;
+  const errDiv = document.getElementById('loginErreur');
+  if (!nom) { errDiv.textContent = '⚠️ Choisissez votre nom'; return; }
+  if (pinSaisi.length < 4) { errDiv.textContent = '⚠️ Entrez votre PIN'; return; }
+  const militant = listeMilitants.find(m => m.nom === nom && String(m.pin) === pinSaisi);
+  if (!militant) { errDiv.textContent = '❌ PIN incorrect'; pinSaisi = ''; majDots(); return; }
+  currentMilitant = militant.nom;
+  currentRole = militant.role || 'militant';
+  const prenom = militant.nom.split(' ').pop();
+  document.getElementById('btnUser').textContent = '👤 ' + prenom + (currentRole==='admin'?' 👑':'') + ' — Quitter';
+  if (currentRole === 'admin') {
+    const tabs = document.getElementById('tabsBar');
+    const t = document.createElement('div');
+    t.className = 'tab'; t.textContent = '👁️ Admin';
+    t.onclick = function() { showPage('admin', this); };
+    tabs.appendChild(t);
+  }
+  document.getElementById('ecranLogin').style.display = 'none';
+  document.getElementById('appPrincipale').style.display = 'block';
+  fetch(SCRIPT_URL, { method:'POST', body: new URLSearchParams({ action:'logConnexion', militant: currentMilitant }) });
+  chargerToutesPersonnes();
+  chargerStats();
+}
+
+function seDeconnecter() {
+  document.getElementById('modalDeconnexion').style.display = 'flex';
+}
+function confirmerDeconnexion() {
+  document.getElementById('modalDeconnexion').style.display = 'none';
+  const tabs = document.getElementById('tabsBar');
+  const adminTab = Array.from(tabs.children).find(t => t.textContent.includes('Admin'));
+  if (adminTab) tabs.removeChild(adminTab);
+  currentMilitant = null; currentRole = 'militant'; toutesPersonnes = [];
+  pinSaisi = ''; majDots();
+  document.getElementById('loginNom').value = '';
+  document.getElementById('loginErreur').textContent = '';
+  document.getElementById('ecranLogin').style.display = 'flex';
+  document.getElementById('appPrincipale').style.display = 'none';
+  document.getElementById('searchInput').disabled = true;
+  document.getElementById('searchInput').placeholder = '⏳ Chargement des données...';
+  document.getElementById('resultatsRecherche').innerHTML = '<div class="loading"><div class="spinner"></div>Chargement des données...<br><small>Quelques secondes, une seule fois</small></div>';
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab')[0].classList.add('active');
+  document.getElementById('page-recherche').classList.add('active');
+}
+
+// ===== NAVIGATION =====
+function showPage(page, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  el.classList.add('active');
+  if (page === 'stats') chargerStats();
+  if (page === 'admin') chargerAdmin();
+  if (page === 'recherche' && toutesPersonnes.length > 0) rechargerSilencieux();
+}
+
+// ===== RECHARGEMENT SILENCIEUX EN ARRIÈRE-PLAN =====
+async function rechargerSilencieux() {
+  try {
+    const resp = await fetch(SCRIPT_URL + '?action=getAllPersonnes');
+    const data = await resp.json();
+    if (data.personnes && data.personnes.length > 0) {
+      toutesPersonnes = data.personnes;
+      // Relancer la recherche si un texte est déjà saisi
+      const q = document.getElementById('searchInput').value.trim();
+      if (q.length >= 2) rechercher();
+    }
+  } catch(e) {} // Silencieux — pas d'erreur visible
+}
+
+// ===== RECHERCHE LOCALE INSTANTANÉE =====
+// toutesPersonnes format: [id, nom, prenom, statut, sexe, age, nVoie, libelleVoie, nomUsage]
+function rechercherDebounce() { clearTimeout(searchTimeout); searchTimeout = setTimeout(rechercher, 150); }
+function rechercher() {
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const div = document.getElementById('resultatsRecherche');
+  if (q.length < 2) { div.innerHTML = ''; return; }
+  const resultats = [];
+  for (let i = 0; i < toutesPersonnes.length; i++) {
+    const p = toutesPersonnes[i];
+    const id = String(p[0]);
+    const nom = String(p[1]||'').toLowerCase();
+    const prenom = String(p[2]||'').toLowerCase();
+    const nomUsage = String(p[8]||'').toLowerCase();
+    if (id===q || nom.indexOf(q)!==-1 || prenom.indexOf(q)!==-1 ||
+        nomUsage.indexOf(q)!==-1 || (nom+' '+prenom).indexOf(q)!==-1) {
+      resultats.push(p);
+      if (resultats.length >= 15) break;
+    }
+  }
+  if (resultats.length === 0) { div.innerHTML = '<div class="vide">Aucun résultat</div>'; return; }
+  div.innerHTML = resultats.map(p => {
+    const statut = p[3];
+    const sexeIcon = p[4]==='M' ? '👨' : p[4]==='F' ? '👩' : '';
+    const age = p[5] ? p[5]+' ans' : '';
+    const adresse = [p[6], p[7]].filter(Boolean).join(' ');
+    const nomUsageAff = p[8] && p[8] !== p[1] ? ` · <span style="font-style:italic;opacity:.8">${p[8]}</span>` : '';
+    const detail = [sexeIcon + (age ? ' '+age : ''), adresse].filter(Boolean).join(' · ');
+    return `
+    <div class="resultat-item ${statut==='Visité'?'visite':'non-visite'}" onclick="selectionnerPersonne(${p[0]})">
+      <div class="ri-info">
+        <div class="ri-nom">${p[1]} ${p[2]}${nomUsageAff}</div>
+        <div class="ri-detail">${detail}</div>
+      </div>
+      <span class="ri-badge ${statut==='Visité'?'badge-visite':'badge-non'}">${statut==='Visité'?'✓ Visité':'Non visité'}</span>
+    </div>`;
+  }).join('');
+}
+
+function majCacheStatut(id, statut) {
+  for (let i=0; i<toutesPersonnes.length; i++) {
+    if (toutesPersonnes[i][0]==id) { toutesPersonnes[i][3]=statut; break; }
+  }
+}
+
+async function selectionnerPersonne(id) {
+  currentPersonne = null;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-saisie').classList.add('active');
+  document.querySelectorAll('.tab')[1].classList.add('active');
+  document.getElementById('saisieContenu').innerHTML = '<div class="loading"><div class="spinner"></div>Chargement...</div>';
+  try {
+    const resp = await fetch(SCRIPT_URL + '?action=getFiche&id=' + id);
+    const p = await resp.json();
+    currentPersonne = p; afficherFiche(p);
+  } catch(e) { document.getElementById('saisieContenu').innerHTML = '<div class="vide" style="color:red;">⚠️ Erreur</div>'; }
+}
+
+function afficherFiche(p) {
+  const sb = p.statut==='Visité'
+    ? '<span class="statut-badge statut-visite">✓ Visité</span>'
+    : '<span class="statut-badge statut-non">Non visité</span>';
+  const cOpts = CANDIDATS.map(c => `<option value="${c}" ${p.candidatActuel===c?'selected':''}>${c||'-- Choisir --'}</option>`).join('');
+  const adresse = [p.nVoie, p.libelleVoie].filter(Boolean).join(' ') || '—';
+  const sexeIcon = p.sexe==='M' ? '👨' : p.sexe==='F' ? '👩' : '';
+  document.getElementById('saisieContenu').innerHTML = `
+    <button class="btn-retour" onclick="retourRecherche()">← Retour</button>
+    <div class="fiche">
+      <div class="fiche-header">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <div class="nom">${p.nom}</div>
+          <div style="font-size:14px;color:white;font-weight:600;margin-top:2px;">ID — ${p.id}</div>
+        </div>
+        <div class="prenom">${p.prenom}</div>
+        ${p.nomUsage && p.nomUsage !== p.nom ? `<div class="nom-usage">Usage : ${p.nomUsage}</div>` : ''}
+        ${p.statut==='Visité' ? `<div class="badge-deja-visite">✅ Déjà visité${p.candidatActuel ? ' · '+p.candidatActuel : ''}</div>` : ''}
+      </div>
+      <div class="fiche-body">
+        ${p.sexe?`<div class="fiche-row"><span class="label">Sexe</span><span class="value">${sexeIcon} ${p.sexe==='M'?'Masculin':'Féminin'}</span></div>`:''}
+        ${p.age?`<div class="fiche-row"><span class="label">Âge</span><span class="value">${p.age} ans</span></div>`:''}
+        <div class="fiche-row"><span class="label">Adresse</span><span class="value">${adresse}</span></div>
+        <div class="fiche-row"><span class="label">Bureau 🏢</span><span class="value">${p.bureau||'—'}</span></div>
+        <div class="fiche-row"><span class="label">Statut</span><span class="value">${sb}</span></div>
+        ${p.dateDerniereVisite?`<div class="fiche-row"><span class="label">Dernière visite</span><span class="value">${p.dateDerniereVisite}</span></div>`:''}
+        ${p.candidatActuel?`<div class="fiche-row"><span class="label">Candidat</span><span class="value">${p.candidatActuel}</span></div>`:''}
+      </div>
+    </div>
+    <div class="form-section">
+      <h3>✏️ Enregistrer une visite</h3>
+      <div class="field"><label>Statut</label>
+        <select id="fStatut">
+          <option value="Visité" ${p.statut==='Visité'?'selected':''}>✅ Visité</option>
+          <option value="Non visité" ${p.statut!=='Visité'?'selected':''}>❌ Non visité</option>
+          <option value="Absent">🚪 Absent</option>
+          <option value="Refus">🚫 Refus</option>
+        </select>
+      </div>
+      <div class="field"><label>Candidat soutenu</label><select id="fCandidat">${cOpts}</select></div>
+      <div class="field"><label>Notes</label><textarea id="fNotes" placeholder="Remarques...">${p.notes||''}</textarea></div>
+      ${p.statut==='Visité' ? `
+        <button class="btn-rouge" onclick="reinitialiserVisite()">✏️ Modifier l'enregistrement</button>
+      ` : `
+        <button class="btn-vert" id="btnEnregistrer" onclick="enregistrerVisite()">✅ Enregistrer la visite</button>
+      `}
+    </div>`;
+}
+
+function retourRecherche() {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-recherche').classList.add('active');
+  document.querySelectorAll('.tab')[0].classList.add('active');
+}
+
+function showLoading(texte) {
+  document.getElementById('loadingText').textContent = texte;
+  document.getElementById('loadingOverlay').classList.add('visible');
+  const fill = document.getElementById('overlayBarFill');
+  fill.style.width = '0%';
+  fill.style.transition = 'none';
+  setTimeout(() => {
+    fill.style.transition = 'width 2s ease-out';
+    fill.style.width = '85%';
+  }, 50);
+}
+function hideLoading() {
+  const fill = document.getElementById('overlayBarFill');
+  fill.style.transition = 'width .3s ease';
+  fill.style.width = '100%';
+  setTimeout(() => {
+    document.getElementById('loadingOverlay').classList.remove('visible');
+    fill.style.width = '0%';
+  }, 350);
+}
+
+async function enregistrerVisite() {
+  if (!currentPersonne) return;
+  const statut = document.getElementById('fStatut').value;
+  const candidat = document.getElementById('fCandidat').value;
+  const notes = document.getElementById('fNotes').value;
+  showLoading('⏳ Enregistrement en cours...');
+  try {
+    const params = new URLSearchParams({ action:'enregistrer', id:currentPersonne.id, statut, candidat, notes, militant:currentMilitant, nom:currentPersonne.nom+' '+currentPersonne.prenom, secteur:currentPersonne.secteur||'' });
+    const resp = await fetch(SCRIPT_URL, {method:'POST', body:params});
+    const data = await resp.json();
+    hideLoading();
+    if (data.ok) {
+      currentPersonne.statut=statut; currentPersonne.candidatActuel=candidat; currentPersonne.notes=notes;
+      majCacheStatut(currentPersonne.id, statut);
+      afficherFiche(currentPersonne);
+      showToast('✅ Enregistré !','succes');
+    } else {
+      showToast('❌ Erreur serveur','erreur');
+    }
+  } catch(e) {
+    hideLoading();
+    showToast('❌ Erreur connexion','erreur');
+  }
+}
+
+function reinitialiserVisite() {
+  if (!currentPersonne) return;
+  document.getElementById('modalOverlay').style.display = 'flex';
+}
+function fermerModal() {
+  document.getElementById('modalOverlay').style.display = 'none';
+}
+async function confirmerReinit() {
+  fermerModal();
+  const idAReinit = currentPersonne.id;
+  showLoading('⏳ Réinitialisation...');
+  try {
+    const resp = await fetch(SCRIPT_URL, {method:'POST', body: new URLSearchParams({action:'reinitialiser', id:idAReinit})});
+    const data = await resp.json();
+    hideLoading();
+    if (data.ok) {
+      currentPersonne.statut='Non visité'; currentPersonne.candidatActuel=''; currentPersonne.notes='';
+      majCacheStatut(idAReinit, 'Non visité');
+      afficherFiche(currentPersonne);
+      showToast('✅ Modifié !','succes');
+    } else {
+      showToast('❌ Erreur serveur','erreur');
+    }
+  } catch(e) {
+    hideLoading();
+    showToast('❌ Erreur connexion','erreur');
+  }
+}
+
+async function chargerStats() {
+  try {
+    const resp = await fetch(SCRIPT_URL + '?action=stats');
+    const data = await resp.json();
+    document.getElementById('cptTotal').textContent = data.total||'?';
+    document.getElementById('cptVisites').textContent = data.visites||'0';
+    document.getElementById('cptPct').textContent = (data.pct||'0')+'%';
+    document.getElementById('compteur').style.display = 'flex';
+    document.getElementById('statsContenu').innerHTML = '<div class="vide">Progression globale affichée ci-dessus</div>';
+  } catch(e) { document.getElementById('statsContenu').innerHTML = '<div class="vide" style="color:red;">⚠️ Erreur</div>'; }
+}
+
+async function chargerAdmin() {
+  if (currentRole !== 'admin') return;
+  const div = document.getElementById('adminContenu');
+  div.innerHTML = '<div class="loading"><div class="spinner"></div>Chargement...</div>';
+  try {
+    const resp = await fetch(SCRIPT_URL + '?action=getLogs');
+    const data = await resp.json();
+    const compteurs = data.compteurs||{}, logs = data.logs||[];
+    const connectes = data.connectes||{};
+    let html = '<div class="section-title">👥 Activité par militant</div>';
+    listeMilitants.forEach(m => {
+      const nb = compteurs[m.nom]||0;
+      const actif = m.actif !== false;
+      const connecte = connectes[m.nom];
+      const emojiConnecte = connecte ? '🟢' : '⚪';
+      const statusLabel = connecte ? '<span class="mc-connecte on">En ligne</span>' : '';
+      // Historique connexions pour ce militant
+      const histo = logs.filter(l => l.militant === m.nom && l.action === 'Connexion').slice(0,5);
+      let histoHtml = '';
+      for (let h = 0; h < histo.length; h++) {
+        const next = histo[h+1];
+        const duree = next ? '' : (connectes[m.nom] ? '🟢 En cours' : '');
+        histoHtml += `<div class="mc-histo-item"><span>🔑 ${histo[h].date}</span><span class="mc-histo-duree">${duree}</span></div>`;
+      }
+      const mcId = 'histo_' + m.nom.replace(/ /g,'_');
+      html += `
+      <div class="militant-card" id="mc-${m.nom.replace(/ /g,'_')}">
+        <div style="flex:1">
+          <div class="mc-nom">${emojiConnecte} ${m.nom}${m.role==='admin'?'<span class="role-badge">admin</span>':''} ${statusLabel}</div>
+          <div class="mc-detail">${nb} visite${nb>1?'s':''} enregistrée${nb>1?'s':''}</div>
+          <div style="font-size:11px;color:#888;margin-top:2px;">
+            Rôle : <span style="font-weight:600;color:${m.role==='admin'?'#856404':'#1a73e8'}">${m.role==='admin'?'👑 Admin':'⚔️ Militant'}</span>
+            &nbsp;·&nbsp;
+            Statut : <span style="font-weight:600;color:${actif?'#27ae60':'#e74c3c'}">${actif?'✅ Actif':'🔴 Désactivé'}</span>
+          </div>
+          <span class="mc-histo-btn" onclick="toggleHisto('${mcId}')">📋 Historique connexions ▼</span>
+          <div class="mc-historique" id="${mcId}">${histoHtml || '<div class="mc-histo-item"><span>Aucune connexion récente</span></div>'}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="mc-badge">${nb}</div>
+          ${m.role!=='admin' ? `
+          <div class="toggle-wrap">
+            <label class="toggle">
+              <input type="checkbox" ${actif?'checked':''} onchange="toggleMilitant('${m.nom}', this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>` : ''}
+        </div>
+      </div>`;
+    });
+    html += '<div class="section-title" style="margin-top:16px;">📋 Dernières actions</div>';
+    if (!logs.length) { html += '<div class="vide">Aucune activité</div>'; }
+    else logs.slice(0,10).forEach((l, idx) => {
+      const alerte = l.alerte ? '<span style="color:red;font-weight:700;"> ⚠️ ALERTE</span>' : '';
+      const roleM = listeMilitants.find(x => x.nom === l.militant);
+      const roleBadge = roleM ? `<span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:8px;margin-left:6px;background:${roleM.role==='admin'?'#fff3cd':'#e8f0fe'};color:${roleM.role==='admin'?'#856404':'#1a73e8'}">${roleM.role}</span>` : '';
+      html += `<div class="log-item"><div class="log-icon" style="min-width:28px;text-align:center;font-size:13px;font-weight:700;color:#888;">${idx+1}</div><div class="log-info"><div class="log-action">${l.militant}${roleBadge}${alerte}</div><div class="log-detail">${l.action==='Connexion'?'🔑 Connexion':'✅ Visite — '+(l.nom||'ID '+l.id)}</div></div><div class="log-date">${l.date}</div></div>`;
+    });
+    div.innerHTML = html;
+  } catch(e) { div.innerHTML = '<div class="vide" style="color:red;">⚠️ Erreur</div>'; }
+}
+
+function toggleHisto(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.toggle('open');
+  const btn = el.previousElementSibling;
+  if (btn) btn.textContent = el.classList.contains('open') ? '📋 Historique connexions ▲' : '📋 Historique connexions ▼';
+}
+
+async function toggleMilitant(nom, actif) {
+  try {
+    const resp = await fetch(SCRIPT_URL, {method:'POST', body: new URLSearchParams({action:'toggleMilitant', nom, actif: actif?'1':'0'})});
+    const data = await resp.json();
+    if (data.ok) {
+      showToast(actif ? '✅ Militant activé' : '🔴 Militant désactivé', 'succes');
+      // Mettre à jour listeMilitants local
+      const m = listeMilitants.find(x => x.nom===nom);
+      if (m) m.actif = actif;
+    } else { showToast('❌ Erreur','erreur'); }
+  } catch(e) { showToast('❌ Erreur connexion','erreur'); }
+}
+
+function showToast(msg, type) {
+  const ex = document.querySelector('.toast'); if (ex) ex.remove();
+  const t = document.createElement('div');
+  t.className = 'toast '+type; t.textContent = msg; document.body.appendChild(t);
+  if (type !== '') setTimeout(() => t.remove(), 2500);
+}
+
+chargerMilitants();
+</script>
+
+<!-- OVERLAY CHARGEMENT -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="big-spinner"></div>
+  <div class="loading-text" id="loadingText">⏳ Enregistrement en cours...</div>
+  <div class="overlay-bar-wrap"><div class="overlay-bar-fill" id="overlayBarFill"></div></div>
+</div>
+
+<!-- POPUP DÉCONNEXION -->
+<div class="modal-overlay" id="modalDeconnexion" style="display:none;">
+  <div class="modal-box">
+    <h3>👋 Déconnexion</h3>
+    <p>Voulez-vous vous déconnecter ?</p>
+    <div class="modal-actions">
+      <button class="modal-btn-cancel" onclick="document.getElementById('modalDeconnexion').style.display='none'">Non</button>
+      <button class="modal-btn-ok" onclick="confirmerDeconnexion()">Oui, quitter</button>
+    </div>
+  </div>
+</div>
+
+<!-- POPUP MODALE -->
+<div class="modal-overlay" id="modalOverlay" style="display:none;">
+  <div class="modal-box">
+    <h3>✏️ Modifier l'enregistrement</h3>
+    <p>Voulez-vous modifier ou annuler la visite de cette personne ?</p>
+    <div class="modal-actions">
+      <button class="modal-btn-cancel" onclick="fermerModal()">Annuler</button>
+      <button class="modal-btn-ok" onclick="confirmerReinit()">Oui, modifier</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>
