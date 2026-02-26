@@ -760,6 +760,8 @@ async function seConnecter() {
   document.getElementById('ecranLogin').style.display = 'none';
   document.getElementById('appPrincipale').style.display = 'block';
   fetch(SCRIPT_URL, { method:'POST', body: new URLSearchParams({ action:'logConnexion', militant: currentMilitant }) });
+  localStorage.removeItem('visites_stats_cache'); // Forcer refresh stats à chaque connexion
+  statsLastLoad = 0;
   chargerToutesPersonnes();
   chargerStats();
 }
@@ -849,16 +851,11 @@ function rechercher() {
     // Nom / prénom / nom d'usage
     const matchNom = nom.indexOf(q) !== -1;
     const matchPrenom = prenom.indexOf(q) !== -1;
-    const matchNomUsage = nomUsage.indexOf(q) !== -1;
     const matchCombine = (nom+' '+prenom).indexOf(q) !== -1
-                      || (prenom+' '+nom).indexOf(q) !== -1
-                      || (nomUsage+' '+prenom).indexOf(q) !== -1
-                      || (prenom+' '+nomUsage).indexOf(q) !== -1;
-    // Adresse : libellé seul ou n°voie + libellé
-    const matchVoie = libelleVoie.indexOf(q) !== -1
-                   || (nVoie+' '+libelleVoie).indexOf(q) !== -1
-                   || (libelleVoie+' '+nVoie).indexOf(q) !== -1;
-    if (matchId || matchNom || matchPrenom || matchNomUsage || matchCombine || matchVoie) {
+                      || (prenom+' '+nom).indexOf(q) !== -1;
+    // Adresse : libellé de voie uniquement
+    const matchVoie = libelleVoie.indexOf(q) !== -1;
+    if (matchId || matchNom || matchPrenom || matchCombine || matchVoie) {
       resultats.push(p);
       if (resultats.length >= 15) break;
     }
@@ -1115,12 +1112,12 @@ async function chargerStats() {
   if (cache) {
     try { afficherStats(JSON.parse(cache)); } catch(e) {}
   }
-  // 2. Refresh arrière-plan si cache vieux ou absent (throttle 60s)
+  // 2. TOUJOURS rafraîchir depuis serveur (throttle réduit à 10s)
   const now = Date.now();
-  if (now - statsLastLoad < 60000 && cache) return;
+  if (now - statsLastLoad < 10000) return;
   statsLastLoad = now;
   try {
-    const resp = await fetch(SCRIPT_URL + '?action=stats');
+    const resp = await fetch(SCRIPT_URL + '?action=stats&t=' + now); // cache-buster
     const data = await resp.json();
     try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch(e) {}
     afficherStats(data);
