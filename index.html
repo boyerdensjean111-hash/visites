@@ -160,7 +160,7 @@
 <!-- LOGIN -->
 <div id="ecranLogin">
   <div class="login-logo">🗳️ Visites Électorales</div>
-  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v32</span></div>
+  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v33</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -198,7 +198,7 @@
   <div class="header">
     <div class="header-left">
       <h1>🗳️ Visites Électorales</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v32</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v33</span></p>
     </div>
     <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
   </div>
@@ -238,7 +238,7 @@
       </div>
       <div style="background:white;border-radius:12px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
         <div style="font-size:12px;font-weight:700;color:#1a3a6b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">📊 Par bureau de vote</div>
-        <canvas id="chartBureau" style="max-height:300px;"></canvas>
+        <canvas id="chartBureau"></canvas>
       </div>
     </div>
   </div>
@@ -274,7 +274,7 @@
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
-const APP_VERSION = 'v32';
+const APP_VERSION = 'v33';
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
 
 // Fetch avec timeout pour éviter blocages infinis
@@ -1189,9 +1189,12 @@ function afficherGraphiques(data) {
   const dataVisites = bureaux.map(b => statsBureau[b].v);
   const dataTotaux  = bureaux.map(b => statsBureau[b].total);
   // Labels avec total
+  // Labels courts sur 2 lignes pour mobile
   const labels = bureaux.map(b => {
-    const short = b.length > 20 ? b.substring(0,20)+'…' : b;
-    return short + '  (' + statsBureau[b].total + ')';
+    // Prendre les 2 premiers mots significatifs
+    const mots = b.split(' ').filter(m => m.length > 2);
+    const court = mots.slice(0,2).join(' ');
+    return [court, '(' + statsBureau[b].total + ' inscrits)'];
   });
 
   if (chartBureau) chartBureau.destroy();
@@ -1253,12 +1256,16 @@ function afficherGraphiques(data) {
       scales: {
         x: {
           grid: { color: '#f0f2f5' },
-          ticks: { font: { size: 11 } }
+          ticks: { font: { size: 10 }, maxTicksLimit: 6 }
         },
         y: {
-          ticks: { font: { size: 11 } }
+          ticks: {
+            font: { size: 11, weight: '600' },
+            crossAlign: 'far'
+          }
         }
-      }
+      },
+      layout: { padding: { right: 70 } }
     },
     plugins: [ChartDataLabels]
   });
