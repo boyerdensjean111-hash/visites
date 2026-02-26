@@ -146,10 +146,7 @@
   .loading-overlay .overlay-bar-wrap { width:220px; height:6px; background:rgba(255,255,255,0.25); border-radius:3px; overflow:hidden; }
   .loading-overlay .overlay-bar-fill { height:100%; width:0%; background:white; border-radius:3px; transition:width .2s linear; }
 
-  /* SABLIER BOUTON */
-  .btn-loading { position:relative; overflow:hidden; opacity:.9; cursor:not-allowed; }
-  .btn-loading::before { content:''; position:absolute; left:0; top:0; height:100%; width:0%; background:rgba(255,255,255,0.35); animation:btnProgress 4s linear forwards; border-radius:9px; }
-  @keyframes btnProgress { 0%{width:0%} 80%{width:85%} 100%{width:90%} }
+  /* SABLIER BOUTON — supprimé */
   .progress-fill { height:100%; background:var(--bleu-clair); border-radius:2px; transition:width .3s; width:0%; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
@@ -160,7 +157,7 @@
 <!-- LOGIN -->
 <div id="ecranLogin">
   <div class="login-logo">🗳️ Visites Électorales</div>
-  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v58</span></div>
+  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v60</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -198,7 +195,7 @@
   <div class="header">
     <div class="header-left">
       <h1>🗳️ Visites Électorales</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v58</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v60</span></p>
     </div>
     <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
   </div>
@@ -284,7 +281,7 @@
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
-const APP_VERSION = 'v58';
+const APP_VERSION = 'v60';
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
 
 // ── Liste militants fallback (mise à jour auto depuis serveur) ───
@@ -1082,20 +1079,7 @@ function afficherFiche(p) {
         <textarea id="fObservation" placeholder="Observation complémentaire..." style="min-height:70px;">${p.observation||''}</textarea>
       </div>
       <div id="btnZone">
-        ${p.statut && p.statut !== 'Non visité' ? `
-          ${p.militant && p.militant !== currentMilitant ? `
-          <div style="background:#fff3cd;border:1.5px solid #f0ad4e;border-radius:10px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px;">
-            <span style="font-size:22px;">⚠️</span>
-            <div style="font-size:13px;color:#856404;line-height:1.5;">
-              Visite enregistrée par <strong>${p.militant}</strong> le ${p.dateDerniereVisite||'—'}<br>
-              <span style="font-size:12px;">Voulez-vous quand même modifier ?</span>
-            </div>
-          </div>
-          ` : ``}
-          <button class="btn-rouge" onclick="reinitialiserVisite()">✏️ Modifier l'enregistrement</button>
-        ` : `
-          <button class="btn-vert" onclick="enregistrerVisite()">✅ Enregistrer la visite</button>
-        `}
+        <button class="btn-vert" onclick="enregistrerVisite()">✅ Enregistrer la visite</button>
       </div>
     </div>
   </div>`;
