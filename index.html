@@ -160,7 +160,7 @@
 <!-- LOGIN -->
 <div id="ecranLogin">
   <div class="login-logo">🗳️ Visites Électorales</div>
-  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v49</span></div>
+  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v50</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -198,7 +198,7 @@
   <div class="header">
     <div class="header-left">
       <h1>🗳️ Visites Électorales</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v49</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v50</span></p>
     </div>
     <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
   </div>
@@ -219,7 +219,7 @@
       <div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
     </div>
     <div id="resultatsRecherche" class="resultats">
-      <div class="loading"><div class="spinner"></div>Chargement des données...<br><small>Quelques secondes, une seule fois</small></div>
+      <div class="loading"><div class="spinner"></div>Chargement des données...<br><small>Première connexion : ~1 minute, une seule fois</small></div>
     </div>
   </div>
 
@@ -284,7 +284,7 @@
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
-const APP_VERSION = 'v49';
+const APP_VERSION = 'v50';
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
 
 // ── Liste militants fallback (mise à jour auto depuis serveur) ───
@@ -318,19 +318,22 @@ let toutesPersonnes = [];
 
 // ── Nettoyage ancien cache localStorage ─────────────────────────
 function nettoyerAncienCache() {
+  const hasCachePersonnes  = !!localStorage.getItem('visites_personnes_cache_' + APP_VERSION);
+  const hasCacheMilitants  = !!localStorage.getItem('visites_militants_cache_' + APP_VERSION);
   const keysToDelete = [];
   for (let i = 0; i < localStorage.length; i++) {
     const k = localStorage.key(i);
     if (!k) continue;
-    // Garder seulement la version courante
     const isOldMilitants = k.startsWith('visites_militants_cache_') && k !== 'visites_militants_cache_' + APP_VERSION;
     const isOldPersonnes = k.startsWith('visites_personnes_cache_') && k !== 'visites_personnes_cache_' + APP_VERSION;
     const isOldStats     = k.startsWith('visites_stats_cache_')     && k !== 'visites_stats_cache_'     + APP_VERSION;
     const isOldAdmin     = k.startsWith('visites_admin_cache_')     && k !== 'visites_admin_cache_'     + APP_VERSION;
     const isOldDate      = k.startsWith('visites_militants_date_')  && k !== 'visites_militants_date_'  + APP_VERSION;
-    if (isOldMilitants || isOldPersonnes || isOldStats || isOldAdmin || isOldDate) {
-      keysToDelete.push(k);
-    }
+    // Ne supprimer les anciens caches que si le cache courant existe déjà
+    if (isOldStats || isOldAdmin) keysToDelete.push(k);
+    if (isOldMilitants && hasCacheMilitants) keysToDelete.push(k);
+    if (isOldPersonnes && hasCachePersonnes) keysToDelete.push(k);
+    if (isOldDate && hasCacheMilitants) keysToDelete.push(k);
   }
   keysToDelete.forEach(k => localStorage.removeItem(k));
   if (keysToDelete.length > 0) console.log('Cache nettoyé :', keysToDelete.length, 'clés supprimées');
@@ -856,7 +859,7 @@ async function chargerToutesPersonnes() {
 
   // 2. Pas de cache → sablier + barre
   bar.style.display = 'block';
-  div.innerHTML = `<div class="loading"><div class="spinner"></div>⏳ Chargement des données...<br><small>Quelques secondes, une seule fois</small></div>`;
+  div.innerHTML = `<div class="loading"><div class="spinner"></div>⏳ Chargement des données...<br><small>Première connexion : ~1 minute, une seule fois</small></div>`;
   let pct = 0;
   const timer = setInterval(() => { pct = Math.min(pct+4, 88); fill.style.width = pct+'%'; }, 200);
   try {
@@ -971,7 +974,7 @@ function confirmerDeconnexion() {
   });
   document.getElementById('resultatsRecherche').innerHTML = cacheOk
     ? ''
-    : '<div class="loading"><div class="spinner"></div>Chargement des données...<br><small>Quelques secondes, une seule fois</small></div>';
+    : '<div class="loading"><div class="spinner"></div>Chargement des données...<br><small>Première connexion : ~1 minute, une seule fois</small></div>';
   document.getElementById('saisieContenu').innerHTML = '<div class="vide"><div style="font-size:40px;margin-bottom:10px;">🔍</div>Recherchez d\'abord une personne</div>';
   // Reset throttles pour le prochain militant
   statsLastLoad = 0;
