@@ -160,7 +160,7 @@
 <!-- LOGIN -->
 <div id="ecranLogin">
   <div class="login-logo">🗳️ Visites Électorales</div>
-  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v57</span></div>
+  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v58</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -198,7 +198,7 @@
   <div class="header">
     <div class="header-left">
       <h1>🗳️ Visites Électorales</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v57</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v58</span></p>
     </div>
     <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
   </div>
@@ -284,7 +284,7 @@
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
-const APP_VERSION = 'v57';
+const APP_VERSION = 'v58';
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
 
 // ── Liste militants fallback (mise à jour auto depuis serveur) ───
@@ -1156,34 +1156,11 @@ async function enregistrerVisite() {
   afficherFiche(currentPersonne);
   showToast('✅ Enregistré !', 'succes');
 
-  // 2. Envoi direct au Google Sheet + invalider cache après confirmation
+  // 2. Envoi en arrière-plan — NON BLOQUANT — on n'attend pas la réponse
   const paramsObj = new URLSearchParams({ action:'enregistrer', id: String(currentPersonne.id), statut, candidat, notes, observation,
     militant: currentMilitant, nom: currentPersonne.nom+' '+currentPersonne.prenom,
     secteur: currentPersonne.secteur||'' });
-  fetch(SCRIPT_URL, { method:'POST', body: paramsObj })
-    .then(r => r.json())
-    .then(data => {
-      if (data.ok) {
-        // Recharger la fiche depuis serveur pour avoir les données à jour
-        const idFiche = currentPersonne.id;
-        fetch(SCRIPT_URL + '?action=getFiche&id=' + idFiche)
-          .then(r => r.json())
-          .then(p => {
-            // Mettre à jour dans toutesPersonnes en mémoire
-            for (let i = 0; i < toutesPersonnes.length; i++) {
-              if (String(toutesPersonnes[i][0]) === String(idFiche)) {
-                toutesPersonnes[i][3]  = p.statut || '';
-                toutesPersonnes[i][10] = p.candidatActuel || '';
-                toutesPersonnes[i][11] = p.dateDerniereVisite || '';
-                toutesPersonnes[i][12] = p.notes || '';
-                toutesPersonnes[i][14] = p.militant || '';
-                break;
-              }
-            }
-          }).catch(() => {});
-      }
-    })
-    .catch(() => {});
+  fetch(SCRIPT_URL, { method:'POST', body: paramsObj }).catch(() => {});
 }
 
 function reinitialiserVisite() {
@@ -1516,6 +1493,3 @@ chargerMilitants();
 </div>
 </body>
 </html>
-
-
-
