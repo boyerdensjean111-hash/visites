@@ -351,12 +351,16 @@ async function chargerMilitants() {
 
 // ===== GESTION HISTORIQUE MODIFICATIONS =====
 function ouvrirGestion() {
-  var mg=document.getElementById('modalGestion'); mg.style.display='flex';
+  var mg = document.getElementById('modalGestion');
+  if (!mg) { alert('ERREUR: modalGestion introuvable'); return; }
+  mg.style.cssText = 'display:flex !important; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center; padding:20px;';
   chargerHistorique();
 }
 function fermerGestion() {
-  document.getElementById('modalGestion').style.display='none';
+  var mg = document.getElementById('modalGestion');
+  if (mg) mg.style.display = 'none';
 }
+
 
 async function chargerHistorique() {
   const div = document.getElementById('gestionContenu');
