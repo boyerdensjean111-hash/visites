@@ -158,7 +158,7 @@
 <!-- LOGIN -->
 <div id="ecranLogin">
   <div class="login-logo">🗳️ Visites Électorales</div>
-  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v26</span></div>
+  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v27</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -196,7 +196,7 @@
   <div class="header">
     <div class="header-left">
       <h1>🗳️ Visites Électorales</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v26</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v27</span></p>
     </div>
     <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
   </div>
@@ -263,7 +263,7 @@
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
-const APP_VERSION = 'v26';
+const APP_VERSION = 'v27';
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
 
 // Fetch avec timeout pour éviter blocages infinis
@@ -839,24 +839,28 @@ function rechercher() {
   const div = document.getElementById('resultatsRecherche');
   if (q.length < 1) { div.innerHTML = ''; return; }
   const resultats = [];
+  const estNumerique = /^[0-9]+$/.test(q);
   for (let i = 0; i < toutesPersonnes.length; i++) {
     const p = toutesPersonnes[i];
     const id = String(p[0]);
     const nom = String(p[1]||'').toLowerCase();
     const prenom = String(p[2]||'').toLowerCase();
-    const nomUsage = String(p[8]||'').toLowerCase();
-    const nVoie = String(p[6]||'').toLowerCase();
-    const libelleVoie = String(p[7]||'').toLowerCase();
-    // ID : startsWith pour IDs courts
-    const matchId = id === q || id.startsWith(q);
-    // Nom / prénom / nom d'usage
-    const matchNom = nom.indexOf(q) !== -1;
-    const matchPrenom = prenom.indexOf(q) !== -1;
-    const matchCombine = (nom+' '+prenom).indexOf(q) !== -1
-                      || (prenom+' '+nom).indexOf(q) !== -1;
-    if (matchId || matchNom || matchPrenom || matchCombine) {
-      resultats.push(p);
-      if (resultats.length >= 15) break;
+    if (estNumerique) {
+      // Recherche ID uniquement
+      if (id === q || id.startsWith(q)) {
+        resultats.push(p);
+        if (resultats.length >= 15) break;
+      }
+    } else {
+      // Recherche nom / prénom uniquement
+      const matchNom = nom.indexOf(q) !== -1;
+      const matchPrenom = prenom.indexOf(q) !== -1;
+      const matchCombine = (nom+' '+prenom).indexOf(q) !== -1
+                        || (prenom+' '+nom).indexOf(q) !== -1;
+      if (matchNom || matchPrenom || matchCombine) {
+        resultats.push(p);
+        if (resultats.length >= 15) break;
+      }
     }
   }
   if (resultats.length === 0) { div.innerHTML = '<div class="vide">Aucun résultat</div>'; return; }
