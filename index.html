@@ -160,7 +160,7 @@
 <!-- LOGIN -->
 <div id="ecranLogin">
   <div class="login-logo">🗳️ Visites Électorales</div>
-  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v50</span></div>
+  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v51</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -198,7 +198,7 @@
   <div class="header">
     <div class="header-left">
       <h1>🗳️ Visites Électorales</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v50</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v51</span></p>
     </div>
     <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
   </div>
@@ -284,7 +284,7 @@
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
-const APP_VERSION = 'v50';
+const APP_VERSION = 'v51';
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
 
 // ── Liste militants fallback (mise à jour auto depuis serveur) ───
@@ -882,19 +882,24 @@ async function chargerToutesPersonnes() {
 
 // Mise à jour silencieuse des personnes en arrière-plan
 async function rafraichirPersonnesBackground() {
+  // Ne pas rafraîchir si des visites sont en attente d'envoi
+  if (queueCompter() > 0) {
+    setTimeout(rafraichirPersonnesBackground, 15000); // Réessayer dans 15s
+    return;
+  }
   try {
     const resp = await fetch(SCRIPT_URL + '?action=getAllPersonnes');
     const data = await resp.json();
     if (data.personnes && data.personnes.length > 0) {
+      // Fusionner : garder les modifications locales non encore envoyées
       toutesPersonnes = data.personnes;
       try { localStorage.setItem('visites_personnes_cache_' + APP_VERSION, JSON.stringify(toutesPersonnes)); } catch(e) {}
       const div = document.getElementById('resultatsRecherche');
-      if (div.innerHTML.includes('cache')) div.innerHTML = '';
+      if (div && div.innerHTML.includes('cache')) div.innerHTML = '';
       const qn = (document.getElementById('searchNom')||{value:''}).value.trim();
       const qp = (document.getElementById('searchPrenom')||{value:''}).value.trim();
       const qi = (document.getElementById('searchId')||{value:''}).value.trim();
       if (qn.length >= 2 || qp.length >= 2 || qi.length >= 1) rechercher();
-      else { const d=document.getElementById('resultatsRecherche'); if(d) d.innerHTML=''; }
     }
   } catch(e) {}
 }
@@ -1273,12 +1278,19 @@ async function enregistrerVisite() {
   afficherFiche(currentPersonne);
   showToast('✅ Enregistré !', 'succes');
 
-  // 2. Ajouter en file d'attente et envoyer en arrière-plan
-  const paramsObj = { action:'enregistrer', id: String(currentPersonne.id), statut, candidat, notes, observation,
+  // 2. Envoi direct au Google Sheet + invalider cache après confirmation
+  const paramsObj = new URLSearchParams({ action:'enregistrer', id: String(currentPersonne.id), statut, candidat, notes, observation,
     militant: currentMilitant, nom: currentPersonne.nom+' '+currentPersonne.prenom,
-    secteur: currentPersonne.secteur||'' };
-  queueAjouter(paramsObj);
-  syncQueue();
+    secteur: currentPersonne.secteur||'' });
+  fetch(SCRIPT_URL, { method:'POST', body: paramsObj })
+    .then(r => r.json())
+    .then(data => {
+      if (data.ok) {
+        // Invalider le cache personnes → prochain accès rechargera depuis serveur
+        localStorage.removeItem('visites_personnes_cache_' + APP_VERSION);
+      }
+    })
+    .catch(() => {});
 }
 
 function reinitialiserVisite() {
