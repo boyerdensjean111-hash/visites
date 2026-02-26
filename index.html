@@ -1150,7 +1150,11 @@ function buildAdminHtml(data) {
     const mcId = 'histo_' + m.nom.replace(/ /g,'_');
     html += `<div class="militant-card" id="mc-${m.nom.replace(/ /g,'_')}">
       <div style="flex:1">
-        <div class="mc-nom">${emojiConnecte} ${m.nom}${m.role==='admin'?'<span class="role-badge">admin</span>':''} ${statusLabel}</div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <div class="mc-nom">${m.nom}</div>
+          ${m.role==='admin'?'<span class="role-badge">admin</span>':''} 
+          ${connecte ? '<span class="mc-connecte on">🟢 En ligne</span>' : '<span class="mc-connecte off">⚫ Hors ligne</span>'}
+        </div>
         <div class="mc-detail">${nb} visite${nb>1?'s':''} enregistrée${nb>1?'s':''}</div>
         <div style="font-size:11px;color:#888;margin-top:2px;">
           Rôle : <span style="font-weight:600;color:${m.role==='admin'?'#856404':'#1a73e8'}">${m.role==='admin'?'👑 Admin':'⚔️ Militant'}</span>
@@ -1162,7 +1166,6 @@ function buildAdminHtml(data) {
       </div>
       <div style="display:flex;align-items:center;gap:12px;">
         <div class="mc-badge">${nb}</div>
-        ${m.role!=='admin' ? `<div class="toggle-wrap"><label class="toggle"><input type="checkbox" ${actif?'checked':''} onchange="toggleMilitant('${m.nom}', this.checked)"><span class="toggle-slider"></span></label></div>` : ''}
       </div>
     </div>`;
   });
