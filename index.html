@@ -352,13 +352,21 @@ async function chargerMilitants() {
 // ===== GESTION HISTORIQUE MODIFICATIONS =====
 function ouvrirGestion() {
   var mg = document.getElementById('modalGestion');
-  if (!mg) { alert('ERREUR: modalGestion introuvable'); return; }
-  mg.style.cssText = 'display:flex !important; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center; padding:20px;';
+  mg.style.display        = 'flex';
+  mg.style.position       = 'fixed';
+  mg.style.top            = '0';
+  mg.style.left           = '0';
+  mg.style.width          = '100%';
+  mg.style.height         = '100%';
+  mg.style.background     = 'rgba(0,0,0,0.6)';
+  mg.style.zIndex         = '9999';
+  mg.style.alignItems     = 'center';
+  mg.style.justifyContent = 'center';
+  mg.style.padding        = '20px';
   chargerHistorique();
 }
 function fermerGestion() {
-  var mg = document.getElementById('modalGestion');
-  if (mg) mg.style.display = 'none';
+  document.getElementById('modalGestion').style.display = 'none';
 }
 
 
