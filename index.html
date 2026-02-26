@@ -158,7 +158,7 @@
 <!-- LOGIN -->
 <div id="ecranLogin">
   <div class="login-logo">🗳️ Visites Électorales</div>
-  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v25</span></div>
+  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v26</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -196,7 +196,7 @@
   <div class="header">
     <div class="header-left">
       <h1>🗳️ Visites Électorales</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v25</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v26</span></p>
     </div>
     <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
   </div>
@@ -263,7 +263,7 @@
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
-const APP_VERSION = 'v25';
+const APP_VERSION = 'v26';
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
 
 // Fetch avec timeout pour éviter blocages infinis
@@ -854,9 +854,7 @@ function rechercher() {
     const matchPrenom = prenom.indexOf(q) !== -1;
     const matchCombine = (nom+' '+prenom).indexOf(q) !== -1
                       || (prenom+' '+nom).indexOf(q) !== -1;
-    // Adresse : libellé de voie uniquement
-    const matchVoie = libelleVoie.indexOf(q) !== -1;
-    if (matchId || matchNom || matchPrenom || matchCombine || matchVoie) {
+    if (matchId || matchNom || matchPrenom || matchCombine) {
       resultats.push(p);
       if (resultats.length >= 15) break;
     }
