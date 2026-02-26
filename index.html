@@ -160,7 +160,7 @@
 <!-- LOGIN -->
 <div id="ecranLogin">
   <div class="login-logo">🗳️ Visites Électorales</div>
-  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v51</span></div>
+  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v52</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -198,7 +198,7 @@
   <div class="header">
     <div class="header-left">
       <h1>🗳️ Visites Électorales</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v51</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v52</span></p>
     </div>
     <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
   </div>
@@ -284,7 +284,7 @@
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
-const APP_VERSION = 'v51';
+const APP_VERSION = 'v52';
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
 
 // ── Liste militants fallback (mise à jour auto depuis serveur) ───
@@ -317,115 +317,8 @@ let listeMilitants = [];
 let toutesPersonnes = [];
 
 // ── Nettoyage ancien cache localStorage ─────────────────────────
-function nettoyerAncienCache() {
-  const hasCachePersonnes  = !!localStorage.getItem('visites_personnes_cache_' + APP_VERSION);
-  const hasCacheMilitants  = !!localStorage.getItem('visites_militants_cache_' + APP_VERSION);
-  const keysToDelete = [];
-  for (let i = 0; i < localStorage.length; i++) {
-    const k = localStorage.key(i);
-    if (!k) continue;
-    const isOldMilitants = k.startsWith('visites_militants_cache_') && k !== 'visites_militants_cache_' + APP_VERSION;
-    const isOldPersonnes = k.startsWith('visites_personnes_cache_') && k !== 'visites_personnes_cache_' + APP_VERSION;
-    const isOldStats     = k.startsWith('visites_stats_cache_')     && k !== 'visites_stats_cache_'     + APP_VERSION;
-    const isOldAdmin     = k.startsWith('visites_admin_cache_')     && k !== 'visites_admin_cache_'     + APP_VERSION;
-    const isOldDate      = k.startsWith('visites_militants_date_')  && k !== 'visites_militants_date_'  + APP_VERSION;
-    // Ne supprimer les anciens caches que si le cache courant existe déjà
-    if (isOldStats || isOldAdmin) keysToDelete.push(k);
-    if (isOldMilitants && hasCacheMilitants) keysToDelete.push(k);
-    if (isOldPersonnes && hasCachePersonnes) keysToDelete.push(k);
-    if (isOldDate && hasCacheMilitants) keysToDelete.push(k);
-  }
-  keysToDelete.forEach(k => localStorage.removeItem(k));
-  if (keysToDelete.length > 0) console.log('Cache nettoyé :', keysToDelete.length, 'clés supprimées');
-}
-nettoyerAncienCache();
 
-// ── File d'attente enregistrements ──────────────────────────────
-const QUEUE_KEY = 'visites_queue_v39';
-let syncEnCours = false;
-
-function queueAjouter(params) {
-  let queue = [];
-  try { queue = JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]'); } catch(e) {}
-  // Remplacer si même ID déjà en attente
-  queue = queue.filter(p => p.id !== params.id);
-  queue.push({ ...params, _ts: Date.now() });
-  try { localStorage.setItem(QUEUE_KEY, JSON.stringify(queue)); } catch(e) {}
-}
-
-function queueSupprimer(id) {
-  let queue = [];
-  try { queue = JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]'); } catch(e) {}
-  queue = queue.filter(p => p.id !== id);
-  try { localStorage.setItem(QUEUE_KEY, JSON.stringify(queue)); } catch(e) {}
-}
-
-function queueCompter() {
-  try { return JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]').length; } catch(e) { return 0; }
-}
-
-async function syncQueue() {
-  if (syncEnCours) return;
-  let queue = [];
-  try { queue = JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]'); } catch(e) {}
-  if (queue.length === 0) return;
-  syncEnCours = true;
-
-  // ── BATCH : envoyer TOUT en une seule requête ─────────────────
-  try {
-    const body = new URLSearchParams({
-      action: 'enregistrerBatch',
-      visites: JSON.stringify(queue)
-    });
-    const resp = await fetchAvecTimeout(SCRIPT_URL, { method: 'POST', body }, 30000);
-    const data = await resp.json();
-    if (data.ok && data.ids) {
-      // Supprimer de la file seulement les IDs confirmés par le serveur
-      data.ids.forEach(id => queueSupprimer(String(id)));
-    }
-  } catch(e) {
-    // Garder en file, réessayer plus tard
-  }
-
-  syncEnCours = false;
-  const reste = queueCompter();
-  if (reste > 0) setTimeout(syncQueue, 30000);
-}
-
-// ── Récupérer les files d'attente des anciennes versions ────────
-function recupererAnciennesQueues() {
-  const prefixes = ['visites_queue_v36b', 'visites_queue_v36', 'visites_queue_v37',
-                    'visites_queue_v38', 'visites_queue_v39'];
-  let total = 0;
-  prefixes.forEach(oldKey => {
-    if (oldKey === QUEUE_KEY) return;
-    try {
-      const old = JSON.parse(localStorage.getItem(oldKey) || '[]');
-      if (old.length > 0) {
-        // Fusionner dans la queue courante
-        let current = [];
-        try { current = JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]'); } catch(e) {}
-        old.forEach(item => {
-          if (!current.find(c => c.id === item.id)) {
-            current.push(item);
-            total++;
-          }
-        });
-        localStorage.setItem(QUEUE_KEY, JSON.stringify(current));
-        localStorage.removeItem(oldKey); // Supprimer l'ancienne
-      }
-    } catch(e) {}
-  });
-  if (total > 0) {
-    console.log('Récupéré ' + total + ' visite(s) en attente des anciennes versions');
-    syncQueue(); // Envoyer immédiatement
-  }
-}
-
-// Sync au démarrage et toutes les 30s
-recupererAnciennesQueues();
-setInterval(syncQueue, 30000);
-
+// Enregistrement direct — pas de file d'attente
 // ===== MILITANTS =====
 async function chargerMilitants() {
   console.log('chargerMilitants() démarré');
@@ -441,7 +334,7 @@ async function chargerMilitants() {
       const k = localStorage.key(i);
       if (k && k.startsWith('visites_militants_cache_') && k !== CACHE_KEY) {
         const v = localStorage.getItem(k);
-        if (v) { localStorage.setItem(CACHE_KEY, v); break; }
+        if (v) { localStorage.setItem(CACHE_KEY2, v); break; }
       }
     }
   }
@@ -833,28 +726,28 @@ async function chargerToutesPersonnes() {
   const fill = document.getElementById('progressFill');
   const CACHE_KEY = 'visites_personnes_cache_' + APP_VERSION;
 
-  // 0. Récupérer cache personnes d'une ancienne version si absent
-  if (!localStorage.getItem(CACHE_KEY)) {
+  // 0. Récupérer cache d'une ancienne version si absent
+  const CACHE_KEY2 = 'visites_personnes_cache_' + APP_VERSION;
+  if (!localStorage.getItem(CACHE_KEY2)) {
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
       if (k && k.startsWith('visites_personnes_cache_') && k !== CACHE_KEY) {
-        const old = localStorage.getItem(k);
-        if (old) { localStorage.setItem(CACHE_KEY, old); break; }
+        const v = localStorage.getItem(k);
+        if (v) { localStorage.setItem(CACHE_KEY2, v); break; }
       }
     }
   }
 
   // 1. Cache dispo → affichage INSTANTANÉ
-  const cache = localStorage.getItem(CACHE_KEY);
+  const cache = localStorage.getItem(CACHE_KEY2);
   if (cache) {
     try {
       toutesPersonnes = JSON.parse(cache);
       ['searchNom','searchPrenom','searchId'].forEach(id => { const el=document.getElementById(id); if(el) el.disabled=false; });
-      div.innerHTML = `<div class="vide" style="color:var(--vert);">⚡ ${toutesPersonnes.length} personnes (cache)<br><small style="color:#888;">Mise à jour en cours...</small></div>`;
-      setTimeout(() => rafraichirPersonnesBackground(), 500);
-      setTimeout(() => { if (div.innerHTML.includes('cache')) div.innerHTML = ''; }, 3000);
+      div.innerHTML = '';
+      setTimeout(() => rafraichirPersonnesBackground(), 2000);
       return;
-    } catch(e) { localStorage.removeItem(CACHE_KEY); }
+    } catch(e) { localStorage.removeItem(CACHE_KEY2); }
   }
 
   // 2. Pas de cache → sablier + barre
@@ -866,7 +759,7 @@ async function chargerToutesPersonnes() {
     const resp = await fetch(SCRIPT_URL + '?action=getAllPersonnes');
     const data = await resp.json();
     toutesPersonnes = data.personnes || [];
-    try { localStorage.setItem(CACHE_KEY, JSON.stringify(toutesPersonnes)); } catch(e) {}
+    try { localStorage.setItem('visites_personnes_cache_' + APP_VERSION, JSON.stringify(toutesPersonnes)); } catch(e) {}
     clearInterval(timer);
     fill.style.width = '100%';
     setTimeout(() => { bar.style.display = 'none'; }, 400);
@@ -882,11 +775,6 @@ async function chargerToutesPersonnes() {
 
 // Mise à jour silencieuse des personnes en arrière-plan
 async function rafraichirPersonnesBackground() {
-  // Ne pas rafraîchir si des visites sont en attente d'envoi
-  if (queueCompter() > 0) {
-    setTimeout(rafraichirPersonnesBackground, 15000); // Réessayer dans 15s
-    return;
-  }
   try {
     const resp = await fetch(SCRIPT_URL + '?action=getAllPersonnes');
     const data = await resp.json();
@@ -1286,8 +1174,23 @@ async function enregistrerVisite() {
     .then(r => r.json())
     .then(data => {
       if (data.ok) {
-        // Invalider le cache personnes → prochain accès rechargera depuis serveur
-        localStorage.removeItem('visites_personnes_cache_' + APP_VERSION);
+        // Recharger la fiche depuis serveur pour avoir les données à jour
+        const idFiche = currentPersonne.id;
+        fetch(SCRIPT_URL + '?action=getFiche&id=' + idFiche)
+          .then(r => r.json())
+          .then(p => {
+            // Mettre à jour dans toutesPersonnes en mémoire
+            for (let i = 0; i < toutesPersonnes.length; i++) {
+              if (String(toutesPersonnes[i][0]) === String(idFiche)) {
+                toutesPersonnes[i][3]  = p.statut || '';
+                toutesPersonnes[i][10] = p.candidatActuel || '';
+                toutesPersonnes[i][11] = p.dateDerniereVisite || '';
+                toutesPersonnes[i][12] = p.notes || '';
+                toutesPersonnes[i][14] = p.militant || '';
+                break;
+              }
+            }
+          }).catch(() => {});
       }
     })
     .catch(() => {});
