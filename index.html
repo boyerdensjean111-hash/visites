@@ -751,7 +751,7 @@ async function chargerToutesPersonnes() {
   let pct = 0;
   const timer = setInterval(() => { pct = Math.min(pct+4, 88); fill.style.width = pct+'%'; }, 200);
   try {
-    const resp = await fetch(SCRIPT_URL + '?action=getAllPersonnes');
+    const resp = await fetchAvecTimeout(SCRIPT_URL + '?action=getAllPersonnes', {}, 90000);
     const data = await resp.json();
     toutesPersonnes = data.personnes || [];
     try { localStorage.setItem('visites_personnes_cache_' + APP_VERSION, JSON.stringify(toutesPersonnes)); } catch(e) {}
@@ -764,14 +764,14 @@ async function chargerToutesPersonnes() {
   } catch(e) {
     clearInterval(timer); bar.style.display = 'none';
     input.disabled = false; input.placeholder = 'Nom, prénom ou ID...';
-    div.innerHTML = '<div class="vide" style="color:orange;">⚠️ Erreur de chargement — réessayez</div>';
+    div.innerHTML = '<div class="vide" style="color:orange;">⚠️ Délai dépassé (90s)<br><button onclick="chargerToutesPersonnes()" style="margin-top:10px;padding:8px 20px;background:#2755a8;color:white;border:none;border-radius:8px;font-size:14px;cursor:pointer;">🔄 Réessayer</button></div>';
   }
 }
 
 // Mise à jour silencieuse des personnes en arrière-plan
 async function rafraichirPersonnesBackground() {
   try {
-    const resp = await fetch(SCRIPT_URL + '?action=getAllPersonnes');
+    const resp = await fetchAvecTimeout(SCRIPT_URL + '?action=getAllPersonnes', {}, 90000);
     const data = await resp.json();
     if (data.personnes && data.personnes.length > 0) {
       // Fusionner : garder les modifications locales non encore envoyées
@@ -894,7 +894,7 @@ async function rechargerSilencieux() {
   if (now - dernierRechargeAuto < 120000) return; // Max 1 fois toutes les 2 min
   dernierRechargeAuto = now;
   try {
-    const resp = await fetch(SCRIPT_URL + '?action=getAllPersonnes');
+    const resp = await fetchAvecTimeout(SCRIPT_URL + '?action=getAllPersonnes', {}, 90000);
     const data = await resp.json();
     if (data.personnes && data.personnes.length > 0) {
       toutesPersonnes = data.personnes;
