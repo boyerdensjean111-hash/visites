@@ -241,6 +241,14 @@
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
 
+// Fetch avec timeout pour éviter blocages infinis
+function fetchAvecTimeout(url, options, timeout=15000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeout);
+  const opts = options ? {...options, signal: controller.signal} : {signal: controller.signal};
+  return fetch(url, opts).finally(() => clearTimeout(timer));
+}
+
 let currentPersonne = null;
 let currentMilitant = null;
 let currentRole = 'militant';
@@ -251,16 +259,101 @@ let toutesPersonnes = [];
 
 // ===== MILITANTS =====
 async function chargerMilitants() {
+  const sel = document.getElementById('loginNom');
+  const CACHE_KEY = 'visites_militants_cache';
+  const CACHE_DATE_KEY = 'visites_militants_date';
+
+  // ── 1. Cache disponible → affichage INSTANTANÉ ──────────────────────
+  const cache = localStorage.getItem(CACHE_KEY);
+  const cacheDate = localStorage.getItem(CACHE_DATE_KEY);
+  if (cache) {
+    try {
+      listeMilitants = JSON.parse(cache);
+      sel.innerHTML = '<option value="">-- Choisir --</option>';
+      listeMilitants.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m.nom; opt.textContent = m.nom; sel.appendChild(opt);
+      });
+      // Mise à jour silencieuse en arrière-plan
+      setTimeout(() => rafraichirMilitantsBackground(), 1500);
+      return;
+    } catch(e) { localStorage.removeItem(CACHE_KEY); }
+  }
+
+  // ── 2. Pas de cache → sablier + barre de progression ────────────────
+  sel.disabled = true;
+  const loginCard = document.querySelector('.login-card');
+  const loadingDiv = document.createElement('div');
+  loadingDiv.id = 'loginLoading';
+  loadingDiv.innerHTML = `
+    <div style="text-align:center;padding:12px 0 4px;">
+      <div style="font-size:13px;color:#5a6070;margin-bottom:8px;">⏳ Chargement de la liste...</div>
+      <div style="height:6px;background:#e0e4ea;border-radius:3px;overflow:hidden;">
+        <div id="loginBar" style="height:100%;width:0%;background:#2755a8;border-radius:3px;transition:width .2s linear;"></div>
+      </div>
+    </div>`;
+  loginCard.insertBefore(loadingDiv, loginCard.querySelector('.login-field'));
+  
+  // Animation de la barre
+  let pct = 0;
+  const timer = setInterval(() => { 
+    pct = Math.min(pct + 5, 88); 
+    const bar = document.getElementById('loginBar');
+    if (bar) bar.style.width = pct + '%'; 
+  }, 200);
+
   try {
     const resp = await fetch(SCRIPT_URL + '?action=getMilitants');
     const data = await resp.json();
     listeMilitants = data.militants || [];
-    const sel = document.getElementById('loginNom');
-    listeMilitants.forEach(m => {
-      const opt = document.createElement('option');
-      opt.value = m.nom; opt.textContent = m.nom; sel.appendChild(opt);
-    });
-  } catch(e) {}
+
+    // Sauvegarder en cache
+    localStorage.setItem(CACHE_KEY, JSON.stringify(listeMilitants));
+    localStorage.setItem(CACHE_DATE_KEY, new Date().toISOString());
+
+    clearInterval(timer);
+    const bar = document.getElementById('loginBar');
+    if (bar) { bar.style.width = '100%'; }
+    setTimeout(() => {
+      const ld = document.getElementById('loginLoading');
+      if (ld) ld.remove();
+      sel.disabled = false;
+      sel.innerHTML = '<option value="">-- Choisir --</option>';
+      listeMilitants.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m.nom; opt.textContent = m.nom; sel.appendChild(opt);
+      });
+    }, 400);
+  } catch(e) {
+    clearInterval(timer);
+    const ld = document.getElementById('loginLoading');
+    if (ld) ld.innerHTML = '<div style="text-align:center;color:#c0392b;font-size:13px;padding:8px 0;">⚠️ Erreur réseau — réessayez</div>';
+    sel.disabled = false;
+    // Retry automatique après 3 secondes
+    setTimeout(() => { const ld2 = document.getElementById('loginLoading'); if(ld2) ld2.remove(); chargerMilitants(); }, 3000);
+  }
+}
+
+// ── Mise à jour silencieuse des militants en arrière-plan ──────────────
+async function rafraichirMilitantsBackground() {
+  try {
+    const resp = await fetch(SCRIPT_URL + '?action=getMilitants');
+    const data = await resp.json();
+    if (data.militants && data.militants.length > 0) {
+      listeMilitants = data.militants;
+      localStorage.setItem('visites_militants_cache', JSON.stringify(listeMilitants));
+      localStorage.setItem('visites_militants_date', new Date().toISOString());
+      // Mettre à jour le select silencieusement
+      const sel = document.getElementById('loginNom');
+      const valActuelle = sel.value;
+      sel.innerHTML = '<option value="">-- Choisir --</option>';
+      listeMilitants.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m.nom; opt.textContent = m.nom; sel.appendChild(opt);
+      });
+      sel.value = valActuelle; // Garder la sélection
+    }
+  } catch(e) {} // Silencieux
 }
 
 // ===== CHARGEMENT INITIAL DONNÉES (après login) =====
@@ -269,13 +362,32 @@ async function chargerToutesPersonnes() {
   const div = document.getElementById('resultatsRecherche');
   const bar = document.getElementById('progressBar');
   const fill = document.getElementById('progressFill');
+  const CACHE_KEY = 'visites_personnes_cache';
+
+  // 1. Cache dispo → affichage INSTANTANÉ
+  const cache = localStorage.getItem(CACHE_KEY);
+  if (cache) {
+    try {
+      toutesPersonnes = JSON.parse(cache);
+      input.disabled = false;
+      input.placeholder = 'Nom, prénom ou ID...';
+      div.innerHTML = `<div class="vide" style="color:var(--vert);">⚡ ${toutesPersonnes.length} personnes (cache)<br><small style="color:#888;">Mise à jour en cours...</small></div>`;
+      setTimeout(() => rafraichirPersonnesBackground(), 500);
+      setTimeout(() => { if (div.innerHTML.includes('cache')) div.innerHTML = ''; }, 3000);
+      return;
+    } catch(e) { localStorage.removeItem(CACHE_KEY); }
+  }
+
+  // 2. Pas de cache → sablier + barre
   bar.style.display = 'block';
+  div.innerHTML = `<div class="loading"><div class="spinner"></div>⏳ Chargement des données...<br><small>Quelques secondes, une seule fois</small></div>`;
   let pct = 0;
   const timer = setInterval(() => { pct = Math.min(pct+4, 88); fill.style.width = pct+'%'; }, 200);
   try {
     const resp = await fetch(SCRIPT_URL + '?action=getAllPersonnes');
     const data = await resp.json();
     toutesPersonnes = data.personnes || [];
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify(toutesPersonnes)); } catch(e) {}
     clearInterval(timer);
     fill.style.width = '100%';
     setTimeout(() => { bar.style.display = 'none'; }, 400);
@@ -286,8 +398,24 @@ async function chargerToutesPersonnes() {
   } catch(e) {
     clearInterval(timer); bar.style.display = 'none';
     input.disabled = false; input.placeholder = 'Nom, prénom ou ID...';
-    div.innerHTML = '<div class="vide" style="color:orange;">⚠️ Erreur de chargement</div>';
+    div.innerHTML = '<div class="vide" style="color:orange;">⚠️ Erreur de chargement — réessayez</div>';
   }
+}
+
+// Mise à jour silencieuse des personnes en arrière-plan
+async function rafraichirPersonnesBackground() {
+  try {
+    const resp = await fetch(SCRIPT_URL + '?action=getAllPersonnes');
+    const data = await resp.json();
+    if (data.personnes && data.personnes.length > 0) {
+      toutesPersonnes = data.personnes;
+      try { localStorage.setItem('visites_personnes_cache', JSON.stringify(toutesPersonnes)); } catch(e) {}
+      const div = document.getElementById('resultatsRecherche');
+      if (div.innerHTML.includes('cache')) div.innerHTML = '';
+      const q = document.getElementById('searchInput').value.trim();
+      if (q.length >= 2) rechercher();
+    }
+  } catch(e) {}
 }
 
 // ===== PIN =====
@@ -336,15 +464,24 @@ function confirmerDeconnexion() {
   const tabs = document.getElementById('tabsBar');
   const adminTab = Array.from(tabs.children).find(t => t.textContent.includes('Admin'));
   if (adminTab) tabs.removeChild(adminTab);
-  currentMilitant = null; currentRole = 'militant'; toutesPersonnes = [];
+  currentMilitant = null; currentRole = 'militant'; currentPersonne = null;
+  // Ne pas vider toutesPersonnes — cache localStorage toujours valide
   pinSaisi = ''; majDots();
   document.getElementById('loginNom').value = '';
   document.getElementById('loginErreur').textContent = '';
   document.getElementById('ecranLogin').style.display = 'flex';
   document.getElementById('appPrincipale').style.display = 'none';
-  document.getElementById('searchInput').disabled = true;
-  document.getElementById('searchInput').placeholder = '⏳ Chargement des données...';
-  document.getElementById('resultatsRecherche').innerHTML = '<div class="loading"><div class="spinner"></div>Chargement des données...<br><small>Quelques secondes, une seule fois</small></div>';
+  // Fix placeholder : si cache dispo → prêt immédiatement
+  const cacheOk = toutesPersonnes.length > 0;
+  document.getElementById('searchInput').disabled = !cacheOk;
+  document.getElementById('searchInput').placeholder = cacheOk ? 'Nom, prénom ou ID...' : '⏳ Chargement des données...';
+  document.getElementById('resultatsRecherche').innerHTML = cacheOk
+    ? ''
+    : '<div class="loading"><div class="spinner"></div>Chargement des données...<br><small>Quelques secondes, une seule fois</small></div>';
+  document.getElementById('saisieContenu').innerHTML = '<div class="vide"><div style="font-size:40px;margin-bottom:10px;">🔍</div>Recherchez d&rsquo;abord une personne</div>';
+  // Reset throttles pour le prochain militant
+  statsLastLoad = 0;
+  dernierRechargeAuto = 0;
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab')[0].classList.add('active');
@@ -363,17 +500,21 @@ function showPage(page, el) {
 }
 
 // ===== RECHARGEMENT SILENCIEUX EN ARRIÈRE-PLAN =====
+let dernierRechargeAuto = 0;
 async function rechargerSilencieux() {
+  const now = Date.now();
+  if (now - dernierRechargeAuto < 120000) return; // Max 1 fois toutes les 2 min
+  dernierRechargeAuto = now;
   try {
     const resp = await fetch(SCRIPT_URL + '?action=getAllPersonnes');
     const data = await resp.json();
     if (data.personnes && data.personnes.length > 0) {
       toutesPersonnes = data.personnes;
-      // Relancer la recherche si un texte est déjà saisi
+      try { localStorage.setItem('visites_personnes_cache', JSON.stringify(toutesPersonnes)); } catch(e) {}
       const q = document.getElementById('searchInput').value.trim();
       if (q.length >= 2) rechercher();
     }
-  } catch(e) {} // Silencieux — pas d'erreur visible
+  } catch(e) {}
 }
 
 // ===== RECHERCHE LOCALE INSTANTANÉE =====
@@ -415,10 +556,18 @@ function rechercher() {
   }).join('');
 }
 
-function majCacheStatut(id, statut) {
+function majCacheStatut(id, statut, candidat, notes, dateVisite) {
   for (let i=0; i<toutesPersonnes.length; i++) {
-    if (toutesPersonnes[i][0]==id) { toutesPersonnes[i][3]=statut; break; }
+    if (toutesPersonnes[i][0]==id) {
+      toutesPersonnes[i][3] = statut;
+      if (candidat  !== undefined) toutesPersonnes[i][10] = candidat;
+      if (notes     !== undefined) toutesPersonnes[i][12] = notes;
+      if (dateVisite!== undefined) toutesPersonnes[i][11] = dateVisite;
+      break;
+    }
   }
+  // Mettre à jour le cache localStorage aussi
+  try { localStorage.setItem('visites_personnes_cache', JSON.stringify(toutesPersonnes)); } catch(e) {}
 }
 
 async function selectionnerPersonne(id) {
@@ -427,12 +576,58 @@ async function selectionnerPersonne(id) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById('page-saisie').classList.add('active');
   document.querySelectorAll('.tab')[1].classList.add('active');
+
+  // ── Accès direct au cache local → INSTANTANÉ ──────────────────────
+  const local = toutesPersonnes.find(p => p[0] == id);
+  if (local) {
+    // Construire l'objet fiche depuis le cache
+    const p = {
+      id: local[0], nom: local[1], prenom: local[2],
+      statut: local[3], sexe: local[4], age: local[5],
+      nVoie: local[6], libelleVoie: local[7], nomUsage: local[8],
+      bureau: local[9]||'', candidatActuel: local[10]||'',
+      dateDerniereVisite: local[11]||'', notes: local[12]||'',
+      secteur: local[13]||''
+    };
+    currentPersonne = p;
+    afficherFiche(p);
+    // Rafraîchir les détails complets en arrière-plan (notes, candidat à jour)
+    rafraichirFicheBackground(id);
+    return;
+  }
+
+  // ── Fallback : fetch si pas en cache ──────────────────────────────
   document.getElementById('saisieContenu').innerHTML = '<div class="loading"><div class="spinner"></div>Chargement...</div>';
   try {
     const resp = await fetch(SCRIPT_URL + '?action=getFiche&id=' + id);
     const p = await resp.json();
     currentPersonne = p; afficherFiche(p);
   } catch(e) { document.getElementById('saisieContenu').innerHTML = '<div class="vide" style="color:red;">⚠️ Erreur</div>'; }
+}
+
+// Rafraîchit les détails d'une fiche en arrière-plan (notes, candidat, date)
+async function rafraichirFicheBackground(id) {
+  try {
+    const resp = await fetch(SCRIPT_URL + '?action=getFiche&id=' + id);
+    const p = await resp.json();
+    if (!currentPersonne || currentPersonne.id != id) return; // L'utilisateur a changé de page
+    // Mettre à jour seulement si différent
+    const changed = currentPersonne.statut !== p.statut ||
+                    currentPersonne.candidatActuel !== p.candidatActuel ||
+                    currentPersonne.notes !== p.notes;
+    currentPersonne = p;
+    // Mettre à jour le cache local aussi
+    for (let i=0; i<toutesPersonnes.length; i++) {
+      if (toutesPersonnes[i][0] == id) {
+        toutesPersonnes[i][3] = p.statut;
+        toutesPersonnes[i][10] = p.candidatActuel||'';
+        toutesPersonnes[i][11] = p.dateDerniereVisite||'';
+        toutesPersonnes[i][12] = p.notes||'';
+        break;
+      }
+    }
+    if (changed) afficherFiche(p); // Re-render seulement si données changées
+  } catch(e) {}
 }
 
 function afficherFiche(p) {
@@ -498,9 +693,9 @@ function showLoading(texte) {
   fill.style.width = '0%';
   fill.style.transition = 'none';
   setTimeout(() => {
-    fill.style.transition = 'width 2s ease-out';
-    fill.style.width = '85%';
-  }, 50);
+    fill.style.transition = 'width 1.2s ease-out'; // Réduit de 2s à 1.2s
+    fill.style.width = '80%';
+  }, 30);
 }
 function hideLoading() {
   const fill = document.getElementById('overlayBarFill');
@@ -520,12 +715,12 @@ async function enregistrerVisite() {
   showLoading('⏳ Enregistrement en cours...');
   try {
     const params = new URLSearchParams({ action:'enregistrer', id:currentPersonne.id, statut, candidat, notes, militant:currentMilitant, nom:currentPersonne.nom+' '+currentPersonne.prenom, secteur:currentPersonne.secteur||'' });
-    const resp = await fetch(SCRIPT_URL, {method:'POST', body:params});
+    const resp = await fetchAvecTimeout(SCRIPT_URL, {method:'POST', body:params}, 15000);
     const data = await resp.json();
     hideLoading();
     if (data.ok) {
       currentPersonne.statut=statut; currentPersonne.candidatActuel=candidat; currentPersonne.notes=notes;
-      majCacheStatut(currentPersonne.id, statut);
+      majCacheStatut(currentPersonne.id, statut, candidat, notes, new Date().toLocaleDateString('fr-FR'));
       afficherFiche(currentPersonne);
       showToast('✅ Enregistré !','succes');
     } else {
@@ -533,7 +728,8 @@ async function enregistrerVisite() {
     }
   } catch(e) {
     hideLoading();
-    showToast('❌ Erreur connexion','erreur');
+    const msg = e.name === 'AbortError' ? '⏱️ Délai dépassé — réessayez' : '❌ Erreur connexion';
+    showToast(msg, 'erreur');
   }
 }
 
@@ -549,12 +745,12 @@ async function confirmerReinit() {
   const idAReinit = currentPersonne.id;
   showLoading('⏳ Réinitialisation...');
   try {
-    const resp = await fetch(SCRIPT_URL, {method:'POST', body: new URLSearchParams({action:'reinitialiser', id:idAReinit})});
+    const resp = await fetchAvecTimeout(SCRIPT_URL, {method:'POST', body: new URLSearchParams({action:'reinitialiser', id:idAReinit})}, 15000);
     const data = await resp.json();
     hideLoading();
     if (data.ok) {
       currentPersonne.statut='Non visité'; currentPersonne.candidatActuel=''; currentPersonne.notes='';
-      majCacheStatut(idAReinit, 'Non visité');
+      majCacheStatut(idAReinit, 'Non visité', '', '', '');
       afficherFiche(currentPersonne);
       showToast('✅ Modifié !','succes');
     } else {
@@ -566,7 +762,12 @@ async function confirmerReinit() {
   }
 }
 
+let statsLastLoad = 0;
 async function chargerStats() {
+  const now = Date.now();
+  // Ne recharger que si plus de 60 secondes depuis le dernier fetch
+  if (now - statsLastLoad < 60000 && document.getElementById('cptTotal').textContent !== '-') return;
+  statsLastLoad = now;
   try {
     const resp = await fetch(SCRIPT_URL + '?action=stats');
     const data = await resp.json();
@@ -578,9 +779,14 @@ async function chargerStats() {
   } catch(e) { document.getElementById('statsContenu').innerHTML = '<div class="vide" style="color:red;">⚠️ Erreur</div>'; }
 }
 
+let adminLastLoad = 0;
 async function chargerAdmin() {
   if (currentRole !== 'admin') return;
   const div = document.getElementById('adminContenu');
+  const now = Date.now();
+  // Throttle 60s sauf si div vide
+  if (now - adminLastLoad < 60000 && div.innerHTML.includes('militant-card')) return;
+  adminLastLoad = now;
   div.innerHTML = '<div class="loading"><div class="spinner"></div>Chargement...</div>';
   try {
     const resp = await fetch(SCRIPT_URL + '?action=getLogs');
