@@ -160,7 +160,7 @@
 <!-- LOGIN -->
 <div id="ecranLogin">
   <div class="login-logo">🗳️ Visites Électorales</div>
-  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v56</span></div>
+  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v57</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -198,7 +198,7 @@
   <div class="header">
     <div class="header-left">
       <h1>🗳️ Visites Électorales</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v56</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v57</span></p>
     </div>
     <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
   </div>
@@ -284,7 +284,7 @@
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
-const APP_VERSION = 'v56';
+const APP_VERSION = 'v57';
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
 
 // ── Liste militants fallback (mise à jour auto depuis serveur) ───
@@ -720,18 +720,7 @@ async function chargerToutesPersonnes() {
   const div = document.getElementById('resultatsRecherche');
   const bar = document.getElementById('progressBar');
   const fill = document.getElementById('progressFill');
-  const CACHE_KEY = 'visites_personnes_cache_' + APP_VERSION;
-
-  // 0. Récupérer cache d'une ancienne version si absent
-  if (!localStorage.getItem(CACHE_KEY)) {
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (k && k.startsWith('visites_personnes_cache_') && k !== CACHE_KEY) {
-        const v = localStorage.getItem(k);
-        if (v) { localStorage.setItem(CACHE_KEY, v); break; }
-      }
-    }
-  }
+  const CACHE_KEY = 'visites_personnes_cache'; // clé fixe — indépendante de la version
 
   // 1. Cache dispo → affichage INSTANTANÉ
   const cache = localStorage.getItem(CACHE_KEY);
@@ -754,7 +743,7 @@ async function chargerToutesPersonnes() {
     const resp = await fetchAvecTimeout(SCRIPT_URL + '?action=getAllPersonnes', {}, 90000);
     const data = await resp.json();
     toutesPersonnes = data.personnes || [];
-    try { localStorage.setItem('visites_personnes_cache_' + APP_VERSION, JSON.stringify(toutesPersonnes)); } catch(e) {}
+    try { localStorage.setItem('visites_personnes_cache', JSON.stringify(toutesPersonnes)); } catch(e) {}
     clearInterval(timer);
     fill.style.width = '100%';
     setTimeout(() => { bar.style.display = 'none'; }, 400);
@@ -776,7 +765,7 @@ async function rafraichirPersonnesBackground() {
     if (data.personnes && data.personnes.length > 0) {
       // Fusionner : garder les modifications locales non encore envoyées
       toutesPersonnes = data.personnes;
-      try { localStorage.setItem('visites_personnes_cache_' + APP_VERSION, JSON.stringify(toutesPersonnes)); } catch(e) {}
+      try { localStorage.setItem('visites_personnes_cache', JSON.stringify(toutesPersonnes)); } catch(e) {}
       const div = document.getElementById('resultatsRecherche');
       if (div && div.innerHTML.includes('cache')) div.innerHTML = '';
       const qn = (document.getElementById('searchNom')||{value:''}).value.trim();
@@ -898,7 +887,7 @@ async function rechargerSilencieux() {
     const data = await resp.json();
     if (data.personnes && data.personnes.length > 0) {
       toutesPersonnes = data.personnes;
-      try { localStorage.setItem('visites_personnes_cache_' + APP_VERSION, JSON.stringify(toutesPersonnes)); } catch(e) {}
+      try { localStorage.setItem('visites_personnes_cache', JSON.stringify(toutesPersonnes)); } catch(e) {}
       const qn = (document.getElementById('searchNom')||{value:''}).value.trim();
       const qp = (document.getElementById('searchPrenom')||{value:''}).value.trim();
       const qi = (document.getElementById('searchId')||{value:''}).value.trim();
@@ -1527,3 +1516,6 @@ chargerMilitants();
 </div>
 </body>
 </html>
+
+
+
