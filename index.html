@@ -160,7 +160,7 @@
 <!-- LOGIN -->
 <div id="ecranLogin">
   <div class="login-logo">🗳️ Visites Électorales</div>
-  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v34</span></div>
+  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v35</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -198,7 +198,7 @@
   <div class="header">
     <div class="header-left">
       <h1>🗳️ Visites Électorales</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v34</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v35</span></p>
     </div>
     <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
   </div>
@@ -238,7 +238,12 @@
       </div>
       <div style="background:white;border-radius:12px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
         <div style="font-size:12px;font-weight:700;color:#1a3a6b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">📊 Par bureau de vote</div>
-        <div id="cartesBureau"></div>
+      <p style="font-size:11px;color:#999;margin:0 0 8px;">← Glissez pour voir →</p>
+        <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+          <div style="min-width:500px;height:320px;">
+            <canvas id="chartBureau"></canvas>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -274,7 +279,7 @@
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
-const APP_VERSION = 'v34';
+const APP_VERSION = 'v35';
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
 
 // Fetch avec timeout pour éviter blocages infinis
@@ -1175,32 +1180,88 @@ function afficherGraphiques(data) {
     }
   });
 
-  // ── Cartes par bureau ──────────────────────────────────────────
+  // ── Barres par bureau ──────────────────────────────────────────
   const statsBureau = {};
   toutesPersonnes.forEach(p => {
     const bureau = p[9] || 'Inconnu';
     if (!statsBureau[bureau]) statsBureau[bureau] = { v: 0, total: 0 };
     statsBureau[bureau].total++;
-    if (p[3] === 'Visite' || p[3] === 'Visite') statsBureau[bureau].v++;
+    if (p[3] === 'Visité' || p[3] === 'Visite') statsBureau[bureau].v++;
   });
 
   const bureaux = Object.keys(statsBureau).filter(b => b !== 'Inconnu').sort((a,b) => statsBureau[b].total - statsBureau[a].total);
+  const dataVisites = bureaux.map(b => statsBureau[b].v);
+  const dataTotaux  = bureaux.map(b => statsBureau[b].total);
+  const labels = bureaux.map(b => {
+    const short = b.length > 22 ? b.substring(0,22)+'…' : b;
+    return short + '  (' + statsBureau[b].total + ')';
+  });
 
-  const container = document.getElementById('cartesBureau');
-  container.innerHTML = bureaux.map(b => {
-    const s = statsBureau[b];
-    const pct = s.total > 0 ? Math.round(s.v / s.total * 100) : 0;
-    const couleur = pct >= 10 ? '#27ae60' : pct >= 5 ? '#f39c12' : '#e74c3c';
-    return '<div style="margin-bottom:10px;padding:12px 14px;background:#f8f9fc;border-radius:10px;border-left:4px solid '+couleur+';">'
-      + '<div style="font-size:13px;font-weight:700;color:#1a3a6b;margin-bottom:6px;">'+b+'</div>'
-      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'
-      + '<span style="font-size:12px;color:#666;">'+s.total+' inscrits</span>'
-      + '<span style="font-size:13px;font-weight:700;color:'+couleur+';">'+s.v+' visites ('+pct+'%)</span>'
-      + '</div>'
-      + '<div style="background:#e0e0e0;border-radius:4px;height:8px;overflow:hidden;">'
-      + '<div style="width:'+pct+'%;background:'+couleur+';height:100%;border-radius:4px;"></div>'
-      + '</div></div>';
-  }).join('');
+  if (chartBureau) chartBureau.destroy();
+  chartBureau = new Chart(document.getElementById('chartBureau'), {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Total inscrits',
+          data: dataTotaux,
+          backgroundColor: 'rgba(39,85,168,0.15)',
+          borderColor: '#2755a8',
+          borderWidth: 1,
+          borderRadius: 4
+        },
+        {
+          label: 'Visités',
+          data: dataVisites,
+          backgroundColor: '#27ae60',
+          borderRadius: 4
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      indexAxis: 'y',
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { font: { size: 12, weight: '600' }, padding: 14, usePointStyle: true }
+        },
+        tooltip: {
+          callbacks: {
+            afterBody: function(items) {
+              const b = bureaux[items[0].dataIndex];
+              const s = statsBureau[b];
+              const pct = Math.round(s.v / s.total * 100);
+              return 'Progression : ' + pct + '%';
+            }
+          }
+        },
+        datalabels: {
+          anchor: 'end',
+          align: 'end',
+          formatter: function(value, ctx) {
+            if (ctx.datasetIndex === 1 && value > 0) {
+              const b = bureaux[ctx.dataIndex];
+              const pct = Math.round(value / statsBureau[b].total * 100);
+              return value + ' (' + pct + '%)';
+            }
+            return '';
+          },
+          font: { size: 11, weight: '700' },
+          color: '#1a3a6b',
+          padding: { left: 4 }
+        }
+      },
+      scales: {
+        x: { grid: { color: '#f0f2f5' }, ticks: { font: { size: 11 } } },
+        y: { ticks: { font: { size: 11 } } }
+      },
+      layout: { padding: { right: 80 } }
+    },
+    plugins: [ChartDataLabels]
+  });
 }
 async function chargerStats() {
   const CACHE_KEY = 'visites_stats_cache_'     + APP_VERSION;
