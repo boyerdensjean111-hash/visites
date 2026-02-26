@@ -160,7 +160,7 @@
 <!-- LOGIN -->
 <div id="ecranLogin">
   <div class="login-logo">🗳️ Visites Électorales</div>
-  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v37</span></div>
+  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v38</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -198,7 +198,7 @@
   <div class="header">
     <div class="header-left">
       <h1>🗳️ Visites Électorales</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v37</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v38</span></p>
     </div>
     <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
   </div>
@@ -214,6 +214,7 @@
         <input type="text" id="searchNom" placeholder="Nom" oninput="rechercherDebounce()" autocomplete="off" style="flex:1;" disabled>
         <input type="text" id="searchPrenom" placeholder="Prénom" oninput="rechercherDebounce()" autocomplete="off" style="flex:1;" disabled>
         <input type="text" id="searchId" placeholder="ID" oninput="rechercherDebounce()" autocomplete="off" style="width:80px;" disabled>
+        <button onclick="resetRecherche()" style="background:#e74c3c;color:white;border:none;border-radius:8px;padding:0 12px;font-size:18px;cursor:pointer;flex-shrink:0;" title="Effacer">Reset</button>
       </div>
       <div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
     </div>
@@ -283,7 +284,7 @@
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
-const APP_VERSION = 'v37';
+const APP_VERSION = 'v38';
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
 
 // Fetch avec timeout pour éviter blocages infinis
@@ -921,6 +922,15 @@ async function rechargerSilencieux() {
 
 // ===== RECHERCHE LOCALE INSTANTANÉE =====
 // toutesPersonnes format: [id, nom, prenom, statut, sexe, age, nVoie, libelleVoie, nomUsage]
+function resetRecherche() {
+  ['searchNom','searchPrenom','searchId'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  const div = document.getElementById('resultatsRecherche');
+  if (div) div.innerHTML = '';
+}
+
 function rechercherDebounce() { clearTimeout(searchTimeout); searchTimeout = setTimeout(rechercher, 150); }
 function rechercher() {
   const qNom    = (document.getElementById('searchNom')||{value:''}).value.trim().toLowerCase();
