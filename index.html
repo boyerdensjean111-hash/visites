@@ -723,19 +723,18 @@ async function chargerToutesPersonnes() {
   const CACHE_KEY = 'visites_personnes_cache_' + APP_VERSION;
 
   // 0. Récupérer cache d'une ancienne version si absent
-  const CACHE_KEY2 = 'visites_personnes_cache_' + APP_VERSION;
-  if (!localStorage.getItem(CACHE_KEY2)) {
+  if (!localStorage.getItem(CACHE_KEY)) {
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
       if (k && k.startsWith('visites_personnes_cache_') && k !== CACHE_KEY) {
         const v = localStorage.getItem(k);
-        if (v) { localStorage.setItem(CACHE_KEY2, v); break; }
+        if (v) { localStorage.setItem(CACHE_KEY, v); break; }
       }
     }
   }
 
   // 1. Cache dispo → affichage INSTANTANÉ
-  const cache = localStorage.getItem(CACHE_KEY2);
+  const cache = localStorage.getItem(CACHE_KEY);
   if (cache) {
     try {
       toutesPersonnes = JSON.parse(cache);
@@ -743,7 +742,7 @@ async function chargerToutesPersonnes() {
       div.innerHTML = '';
       setTimeout(() => rafraichirPersonnesBackground(), 2000);
       return;
-    } catch(e) { localStorage.removeItem(CACHE_KEY2); }
+    } catch(e) { localStorage.removeItem(CACHE_KEY); }
   }
 
   // 2. Pas de cache → sablier + barre
@@ -1202,23 +1201,18 @@ function fermerModal() {
 async function confirmerReinit() {
   fermerModal();
   const idAReinit = currentPersonne.id;
-  showLoading('⏳ Réinitialisation...');
-  try {
-    const resp = await fetchAvecTimeout(SCRIPT_URL, {method:'POST', body: new URLSearchParams({action:'reinitialiser', id:idAReinit})}, 15000);
-    const data = await resp.json();
-    hideLoading();
-    if (data.ok) {
-      currentPersonne.statut='Non visité'; currentPersonne.candidatActuel=''; currentPersonne.notes='';
-      majCacheStatut(idAReinit, 'Non visité', '', '', '');
-      afficherFiche(currentPersonne);
-      showToast('✅ Modifié !','succes');
-    } else {
-      showToast('❌ Erreur serveur','erreur');
-    }
-  } catch(e) {
-    hideLoading();
-    showToast('❌ Erreur connexion','erreur');
-  }
+
+  // Mise à jour IMMÉDIATE locale → UI instantanée
+  currentPersonne.statut = 'Non visité';
+  currentPersonne.candidatActuel = '';
+  currentPersonne.notes = '';
+  majCacheStatut(idAReinit, 'Non visité', '', '', '');
+  afficherFiche(currentPersonne);
+  showToast('✅ Modifié !', 'succes');
+
+  // Envoi direct au serveur en arrière-plan (sans attendre)
+  fetch(SCRIPT_URL, {method:'POST', body: new URLSearchParams({action:'reinitialiser', id:idAReinit})})
+    .catch(() => {});
 }
 
 let statsLastLoad = 0;
