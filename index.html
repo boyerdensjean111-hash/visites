@@ -160,7 +160,7 @@
 <!-- LOGIN -->
 <div id="ecranLogin">
   <div class="login-logo">🗳️ Visites Électorales</div>
-  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v45</span></div>
+  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v46</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -198,7 +198,7 @@
   <div class="header">
     <div class="header-left">
       <h1>🗳️ Visites Électorales</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v45</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v46</span></p>
     </div>
     <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
   </div>
@@ -284,7 +284,7 @@
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
-const APP_VERSION = 'v45';
+const APP_VERSION = 'v46';
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
 
 // Fetch avec timeout pour éviter blocages infinis
@@ -302,6 +302,27 @@ let pinSaisi = '';
 let searchTimeout = null;
 let listeMilitants = [];
 let toutesPersonnes = [];
+
+// ── Nettoyage ancien cache localStorage ─────────────────────────
+function nettoyerAncienCache() {
+  const keysToDelete = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (!k) continue;
+    // Garder seulement la version courante
+    const isOldMilitants = k.startsWith('visites_militants_cache_') && k !== 'visites_militants_cache_' + APP_VERSION;
+    const isOldPersonnes = k.startsWith('visites_personnes_cache_') && k !== 'visites_personnes_cache_' + APP_VERSION;
+    const isOldStats     = k.startsWith('visites_stats_cache_')     && k !== 'visites_stats_cache_'     + APP_VERSION;
+    const isOldAdmin     = k.startsWith('visites_admin_cache_')     && k !== 'visites_admin_cache_'     + APP_VERSION;
+    const isOldDate      = k.startsWith('visites_militants_date_')  && k !== 'visites_militants_date_'  + APP_VERSION;
+    if (isOldMilitants || isOldPersonnes || isOldStats || isOldAdmin || isOldDate) {
+      keysToDelete.push(k);
+    }
+  }
+  keysToDelete.forEach(k => localStorage.removeItem(k));
+  if (keysToDelete.length > 0) console.log('Cache nettoyé :', keysToDelete.length, 'clés supprimées');
+}
+nettoyerAncienCache();
 
 // ── File d'attente enregistrements ──────────────────────────────
 const QUEUE_KEY = 'visites_queue_v39';
@@ -391,9 +412,12 @@ setInterval(syncQueue, 30000);
 
 // ===== MILITANTS =====
 async function chargerMilitants() {
+  console.log('chargerMilitants() démarré');
   const sel = document.getElementById('loginNom');
+  if (!sel) { console.error('loginNom introuvable !'); return; }
   const CACHE_KEY = 'visites_militants_cache_' + APP_VERSION;
   const CACHE_DATE_KEY = 'visites_militants_date_'  + APP_VERSION;
+  console.log('CACHE_KEY:', CACHE_KEY, '| cache existe:', !!localStorage.getItem(CACHE_KEY));
 
   // ── 0. Récupérer cache militants d'une ancienne version si absent ────
   if (!localStorage.getItem(CACHE_KEY)) {
@@ -449,8 +473,10 @@ async function chargerMilitants() {
   }, 200);
 
   try {
+    console.log('Fetch getMilitants...');
     const resp = await fetchAvecTimeout(SCRIPT_URL + '?action=getMilitants', {}, 20000);
     const data = await resp.json();
+    console.log('getMilitants réponse:', data);
     listeMilitants = data.militants || [];
 
     // Sauvegarder en cache
