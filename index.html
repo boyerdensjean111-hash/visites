@@ -347,7 +347,9 @@ async function chargerMilitants() {
     if (ld) ld.innerHTML = '<div style="text-align:center;color:#c0392b;font-size:13px;padding:8px 0;">⚠️ Erreur réseau — réessayez</div>';
     sel.disabled = false;
     // Retry automatique après 3 secondes
-    setTimeout(() => { const ld2 = document.getElementById('loginLoading'); if(ld2) ld2.remove(); chargerMilitants();
+    setTimeout(() => { const ld2 = document.getElementById('loginLoading'); if(ld2) ld2.remove(); chargerMilitants(); }, 3000);
+  }
+}
 
 // ===== GESTION HISTORIQUE MODIFICATIONS =====
 function ouvrirGestion() {
@@ -461,8 +463,6 @@ async function restaurerVisite(id, ancStatut, ancCandidat, ancNotes, ancMilitant
   } catch(e) {
     btn.disabled = false; btn.textContent = '↩️ Restaurer';
     showToast('❌ Erreur connexion', 'erreur');
-  }
-} }, 3000);
   }
 }
 
