@@ -160,7 +160,7 @@
 <!-- LOGIN -->
 <div id="ecranLogin">
   <div class="login-logo">🗳️ Visites Électorales</div>
-  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v54</span></div>
+  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v55</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -198,7 +198,7 @@
   <div class="header">
     <div class="header-left">
       <h1>🗳️ Visites Électorales</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v54</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v55</span></p>
     </div>
     <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
   </div>
@@ -284,7 +284,7 @@
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
-const APP_VERSION = 'v54';
+const APP_VERSION = 'v55';
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
 
 // ── Liste militants fallback (mise à jour auto depuis serveur) ───
@@ -1092,25 +1092,24 @@ function afficherFiche(p) {
         <label>Observation</label>
         <textarea id="fObservation" placeholder="Observation complémentaire..." style="min-height:70px;">${p.observation||''}</textarea>
       </div>
-      ${p.statut==='Visité' ? `
-        ${p.militant && p.militant !== currentMilitant ? `
-        <div style="background:#fff3cd;border:1.5px solid #f0ad4e;border-radius:10px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px;">
-          <span style="font-size:22px;">⚠️</span>
-          <div style="font-size:13px;color:#856404;line-height:1.5;">
-            Visite enregistrée par <strong>${p.militant}</strong> le ${p.dateDerniereVisite||'—'}<br>
-            <span style="font-size:12px;">Voulez-vous quand même modifier ?</span>
+      <div id="btnZone">
+        ${p.statut && p.statut !== 'Non visité' ? `
+          ${p.militant && p.militant !== currentMilitant ? `
+          <div style="background:#fff3cd;border:1.5px solid #f0ad4e;border-radius:10px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px;">
+            <span style="font-size:22px;">⚠️</span>
+            <div style="font-size:13px;color:#856404;line-height:1.5;">
+              Visite enregistrée par <strong>${p.militant}</strong> le ${p.dateDerniereVisite||'—'}<br>
+              <span style="font-size:12px;">Voulez-vous quand même modifier ?</span>
+            </div>
           </div>
-        </div>
-        <button class="btn-rouge" onclick="reinitialiserVisite()">✏️ Modifier malgré tout</button>
+          ` : ``}
+          <button class="btn-rouge" onclick="reinitialiserVisite()">✏️ Modifier l'enregistrement</button>
         ` : `
-        <button class="btn-rouge" onclick="reinitialiserVisite()">✏️ Modifier l'enregistrement</button>
+          <button class="btn-vert" onclick="enregistrerVisite()">✅ Enregistrer la visite</button>
         `}
-      ` : `
-        <button class="btn-vert" id="btnEnregistrer" onclick="enregistrerVisite()">✅ Enregistrer la visite</button>
-      `}
+      </div>
     </div>
-  </div>
-  <div id="btnZone"></div>`;
+  </div>`;
 }
 
 function retourRecherche() {
@@ -1200,17 +1199,9 @@ async function enregistrerVisite() {
 
 function reinitialiserVisite() {
   if (!currentPersonne) return;
-  // Déverrouiller le formulaire avec valeurs existantes (sans tout effacer)
-  const fStatut = document.getElementById('fStatut');
-  const fCandidat = document.getElementById('fCandidat');
-  const fNotes = document.getElementById('fNotes');
-  const fObs = document.getElementById('fObservation');
+  // Remplacer le bouton Modifier par Enregistrer directement
   const btnZone = document.getElementById('btnZone');
-  if (fStatut) { fStatut.disabled = false; fStatut.value = currentPersonne.statut || 'Visité'; }
-  if (fCandidat) { fCandidat.disabled = false; fCandidat.value = currentPersonne.candidatActuel || ''; }
-  if (fNotes) { fNotes.disabled = false; fNotes.value = currentPersonne.notes || ''; }
-  if (fObs) { fObs.disabled = false; }
-  if (btnZone) btnZone.innerHTML = `<button class="btn-vert" id="btnEnregistrer" onclick="enregistrerVisite()">✅ Enregistrer la visite</button>`;
+  if (btnZone) btnZone.innerHTML = `<button class="btn-vert" onclick="enregistrerVisite()">✅ Enregistrer la visite</button>`;
 }
 function fermerModal() {
   document.getElementById('modalOverlay').classList.remove('ouvert');
