@@ -321,12 +321,10 @@ let toutesPersonnes = [];
 // Enregistrement direct — pas de file d'attente
 // ===== MILITANTS =====
 async function chargerMilitants() {
-  console.log('chargerMilitants() démarré');
   const sel = document.getElementById('loginNom');
   if (!sel) { console.error('loginNom introuvable !'); return; }
   const CACHE_KEY = 'visites_militants_cache_' + APP_VERSION;
   const CACHE_DATE_KEY = 'visites_militants_date_'  + APP_VERSION;
-  console.log('CACHE_KEY:', CACHE_KEY, '| cache existe:', !!localStorage.getItem(CACHE_KEY));
 
   // ── 0. Récupérer cache d'une ancienne version ou utiliser fallback ──
   if (!localStorage.getItem(CACHE_KEY)) {
@@ -334,7 +332,7 @@ async function chargerMilitants() {
       const k = localStorage.key(i);
       if (k && k.startsWith('visites_militants_cache_') && k !== CACHE_KEY) {
         const v = localStorage.getItem(k);
-        if (v) { localStorage.setItem(CACHE_KEY2, v); break; }
+        if (v) { localStorage.setItem(CACHE_KEY, v); break; }
       }
     }
   }
@@ -380,10 +378,8 @@ async function chargerMilitants() {
   }, 200);
 
   try {
-    console.log('Fetch getMilitants...');
     const resp = await fetch(SCRIPT_URL + '?action=getMilitants');
     const data = await resp.json();
-    console.log('getMilitants réponse:', data);
     listeMilitants = data.militants || [];
 
     // Sauvegarder en cache
