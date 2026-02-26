@@ -160,7 +160,7 @@
 <!-- LOGIN -->
 <div id="ecranLogin">
   <div class="login-logo">🗳️ Visites Électorales</div>
-  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v53</span></div>
+  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v54</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -198,7 +198,7 @@
   <div class="header">
     <div class="header-left">
       <h1>🗳️ Visites Électorales</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v53</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v54</span></p>
     </div>
     <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
   </div>
@@ -284,7 +284,7 @@
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
-const APP_VERSION = 'v53';
+const APP_VERSION = 'v54';
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
 
 // ── Liste militants fallback (mise à jour auto depuis serveur) ───
@@ -1108,7 +1108,9 @@ function afficherFiche(p) {
       ` : `
         <button class="btn-vert" id="btnEnregistrer" onclick="enregistrerVisite()">✅ Enregistrer la visite</button>
       `}
-    </div>`;
+    </div>
+  </div>
+  <div id="btnZone"></div>`;
 }
 
 function retourRecherche() {
@@ -1198,7 +1200,17 @@ async function enregistrerVisite() {
 
 function reinitialiserVisite() {
   if (!currentPersonne) return;
-  document.getElementById('modalOverlay').classList.add('ouvert');
+  // Déverrouiller le formulaire avec valeurs existantes (sans tout effacer)
+  const fStatut = document.getElementById('fStatut');
+  const fCandidat = document.getElementById('fCandidat');
+  const fNotes = document.getElementById('fNotes');
+  const fObs = document.getElementById('fObservation');
+  const btnZone = document.getElementById('btnZone');
+  if (fStatut) { fStatut.disabled = false; fStatut.value = currentPersonne.statut || 'Visité'; }
+  if (fCandidat) { fCandidat.disabled = false; fCandidat.value = currentPersonne.candidatActuel || ''; }
+  if (fNotes) { fNotes.disabled = false; fNotes.value = currentPersonne.notes || ''; }
+  if (fObs) { fObs.disabled = false; }
+  if (btnZone) btnZone.innerHTML = `<button class="btn-vert" id="btnEnregistrer" onclick="enregistrerVisite()">✅ Enregistrer la visite</button>`;
 }
 function fermerModal() {
   document.getElementById('modalOverlay').classList.remove('ouvert');
