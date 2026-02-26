@@ -160,7 +160,7 @@
 <!-- LOGIN -->
 <div id="ecranLogin">
   <div class="login-logo">🗳️ Visites Électorales</div>
-  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v55</span></div>
+  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v56</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -198,7 +198,7 @@
   <div class="header">
     <div class="header-left">
       <h1>🗳️ Visites Électorales</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v55</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v56</span></p>
     </div>
     <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
   </div>
@@ -284,7 +284,7 @@
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
-const APP_VERSION = 'v55';
+const APP_VERSION = 'v56';
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
 
 // ── Liste militants fallback (mise à jour auto depuis serveur) ───
@@ -763,7 +763,7 @@ async function chargerToutesPersonnes() {
     setTimeout(() => { if (div.innerHTML.includes('chargées')) div.innerHTML = ''; }, 3000);
   } catch(e) {
     clearInterval(timer); bar.style.display = 'none';
-    input.disabled = false; input.placeholder = 'Nom, prénom ou ID...';
+    ['searchNom','searchPrenom','searchId'].forEach(id => { const el=document.getElementById(id); if(el) el.disabled=false; });
     div.innerHTML = '<div class="vide" style="color:orange;">⚠️ Délai dépassé (90s)<br><button onclick="chargerToutesPersonnes()" style="margin-top:10px;padding:8px 20px;background:#2755a8;color:white;border:none;border-radius:8px;font-size:14px;cursor:pointer;">🔄 Réessayer</button></div>';
   }
 }
