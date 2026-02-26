@@ -160,7 +160,7 @@
 <!-- LOGIN -->
 <div id="ecranLogin">
   <div class="login-logo">🗳️ Visites Électorales</div>
-  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v43</span></div>
+  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v44</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -198,7 +198,7 @@
   <div class="header">
     <div class="header-left">
       <h1>🗳️ Visites Électorales</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v43</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v44</span></p>
     </div>
     <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
   </div>
@@ -284,7 +284,7 @@
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
-const APP_VERSION = 'v43';
+const APP_VERSION = 'v44';
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
 
 // Fetch avec timeout pour éviter blocages infinis
@@ -425,6 +425,7 @@ async function chargerMilitants() {
 
   // ── 2. Pas de cache → sablier + barre de progression ────────────────
   sel.disabled = true;
+  sel.innerHTML = '<option value="">⏳ Chargement...</option>';
   const loginCard = document.querySelector('.login-card');
   const loadingDiv = document.createElement('div');
   loadingDiv.id = 'loginLoading';
@@ -435,7 +436,9 @@ async function chargerMilitants() {
         <div id="loginBar" style="height:100%;width:0%;background:#2755a8;border-radius:3px;transition:width .2s linear;"></div>
       </div>
     </div>`;
-  loginCard.insertBefore(loadingDiv, loginCard.querySelector('.login-field'));
+  const firstField = loginCard.querySelector('.login-field');
+  if (firstField) loginCard.insertBefore(loadingDiv, firstField);
+  else loginCard.prepend(loadingDiv);
   
   // Animation de la barre
   let pct = 0;
@@ -446,7 +449,7 @@ async function chargerMilitants() {
   }, 200);
 
   try {
-    const resp = await fetch(SCRIPT_URL + '?action=getMilitants');
+    const resp = await fetchAvecTimeout(SCRIPT_URL + '?action=getMilitants', null, 20000);
     const data = await resp.json();
     listeMilitants = data.militants || [];
 
@@ -472,8 +475,8 @@ async function chargerMilitants() {
     const ld = document.getElementById('loginLoading');
     if (ld) ld.innerHTML = '<div style="text-align:center;color:#c0392b;font-size:13px;padding:8px 0;">⚠️ Erreur réseau — réessayez</div>';
     sel.disabled = false;
-    // Retry automatique après 3 secondes
-    setTimeout(() => { const ld2 = document.getElementById('loginLoading'); if(ld2) ld2.remove(); chargerMilitants(); }, 3000);
+    // Retry automatique après 5 secondes
+    setTimeout(() => { const ld2 = document.getElementById('loginLoading'); if(ld2) ld2.innerHTML = '<div style="text-align:center;padding:8px;"><div style="color:#e74c3c;font-size:13px;margin-bottom:8px;">⚠️ Chargement échoué</div><button onclick="document.getElementById(\'loginLoading\').remove();chargerMilitants()" style="background:#2755a8;color:white;border:none;border-radius:8px;padding:8px 20px;font-size:13px;cursor:pointer;">🔄 Réessayer</button></div>'; }, 5000);
   }
 }
 
