@@ -158,7 +158,7 @@
 <!-- LOGIN -->
 <div id="ecranLogin">
   <div class="login-logo">🗳️ Visites Électorales</div>
-  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v24</span></div>
+  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v25</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -196,7 +196,7 @@
   <div class="header">
     <div class="header-left">
       <h1>🗳️ Visites Électorales</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v24</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v25</span></p>
     </div>
     <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
   </div>
@@ -263,6 +263,7 @@
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
+const APP_VERSION = 'v25';
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
 
 // Fetch avec timeout pour éviter blocages infinis
@@ -284,8 +285,8 @@ let toutesPersonnes = [];
 // ===== MILITANTS =====
 async function chargerMilitants() {
   const sel = document.getElementById('loginNom');
-  const CACHE_KEY = 'visites_militants_cache';
-  const CACHE_DATE_KEY = 'visites_militants_date';
+  const CACHE_KEY = 'visites_militants_cache_' + APP_VERSION;
+  const CACHE_DATE_KEY = 'visites_militants_date_'  + APP_VERSION;
 
   // ── 1. Cache disponible → affichage INSTANTANÉ ──────────────────────
   const cache = localStorage.getItem(CACHE_KEY);
@@ -492,7 +493,7 @@ async function changerPin(nom) {
       // Mettre à jour cache local
       const m = listeMilitants.find(x => x.nom === nom);
       if (m) m.pin = newPin;
-      localStorage.setItem('visites_militants_cache', JSON.stringify(listeMilitants));
+      localStorage.setItem('visites_militants_cache_' + APP_VERSION, JSON.stringify(listeMilitants));
       input.value = '';
       showToast('✅ PIN modifié pour ' + nom, 'succes');
     } else { showToast('❌ Erreur serveur', 'erreur'); }
@@ -649,8 +650,8 @@ async function rafraichirMilitantsBackground() {
     const data = await resp.json();
     if (data.militants && data.militants.length > 0) {
       listeMilitants = data.militants;
-      localStorage.setItem('visites_militants_cache', JSON.stringify(listeMilitants));
-      localStorage.setItem('visites_militants_date', new Date().toISOString());
+      localStorage.setItem('visites_militants_cache_' + APP_VERSION, JSON.stringify(listeMilitants));
+      localStorage.setItem('visites_militants_date_'  + APP_VERSION, new Date().toISOString());
       // Mettre à jour le select silencieusement
       const sel = document.getElementById('loginNom');
       const valActuelle = sel.value;
@@ -670,7 +671,7 @@ async function chargerToutesPersonnes() {
   const div = document.getElementById('resultatsRecherche');
   const bar = document.getElementById('progressBar');
   const fill = document.getElementById('progressFill');
-  const CACHE_KEY = 'visites_personnes_cache';
+  const CACHE_KEY = 'visites_personnes_cache_' + APP_VERSION;
 
   // 1. Cache dispo → affichage INSTANTANÉ
   const cache = localStorage.getItem(CACHE_KEY);
@@ -717,7 +718,7 @@ async function rafraichirPersonnesBackground() {
     const data = await resp.json();
     if (data.personnes && data.personnes.length > 0) {
       toutesPersonnes = data.personnes;
-      try { localStorage.setItem('visites_personnes_cache', JSON.stringify(toutesPersonnes)); } catch(e) {}
+      try { localStorage.setItem('visites_personnes_cache_' + APP_VERSION, JSON.stringify(toutesPersonnes)); } catch(e) {}
       const div = document.getElementById('resultatsRecherche');
       if (div.innerHTML.includes('cache')) div.innerHTML = '';
       const q = document.getElementById('searchInput').value.trim();
@@ -760,7 +761,7 @@ async function seConnecter() {
   document.getElementById('ecranLogin').style.display = 'none';
   document.getElementById('appPrincipale').style.display = 'block';
   fetch(SCRIPT_URL, { method:'POST', body: new URLSearchParams({ action:'logConnexion', militant: currentMilitant }) });
-  localStorage.removeItem('visites_stats_cache'); // Forcer refresh stats à chaque connexion
+  localStorage.removeItem('visites_stats_cache_'     + APP_VERSION); // Forcer refresh stats à chaque connexion
   statsLastLoad = 0;
   chargerToutesPersonnes();
   chargerStats();
@@ -793,8 +794,8 @@ function confirmerDeconnexion() {
   statsLastLoad = 0;
   dernierRechargeAuto = 0;
   adminLastLoad = 0;
-  localStorage.removeItem('visites_stats_cache');
-  localStorage.removeItem('visites_admin_cache');
+  localStorage.removeItem('visites_stats_cache_'     + APP_VERSION);
+  localStorage.removeItem('visites_admin_cache_'     + APP_VERSION);
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab')[0].classList.add('active');
@@ -823,7 +824,7 @@ async function rechargerSilencieux() {
     const data = await resp.json();
     if (data.personnes && data.personnes.length > 0) {
       toutesPersonnes = data.personnes;
-      try { localStorage.setItem('visites_personnes_cache', JSON.stringify(toutesPersonnes)); } catch(e) {}
+      try { localStorage.setItem('visites_personnes_cache_' + APP_VERSION, JSON.stringify(toutesPersonnes)); } catch(e) {}
       const q = document.getElementById('searchInput').value.trim();
       if (q.length >= 2) rechercher();
     }
@@ -891,7 +892,7 @@ function majCacheStatut(id, statut, candidat, notes, dateVisite, militant) {
     }
   }
   // Mettre à jour le cache localStorage aussi
-  try { localStorage.setItem('visites_personnes_cache', JSON.stringify(toutesPersonnes)); } catch(e) {}
+  try { localStorage.setItem('visites_personnes_cache_' + APP_VERSION, JSON.stringify(toutesPersonnes)); } catch(e) {}
 }
 
 async function selectionnerPersonne(id) {
@@ -1106,7 +1107,7 @@ function afficherStats(data) {
   document.getElementById('statsContenu').innerHTML = '<div class="vide">Progression globale affichée ci-dessus</div>';
 }
 async function chargerStats() {
-  const CACHE_KEY = 'visites_stats_cache';
+  const CACHE_KEY = 'visites_stats_cache_'     + APP_VERSION;
   // 1. Cache dispo → affichage INSTANTANÉ
   const cache = localStorage.getItem(CACHE_KEY);
   if (cache) {
@@ -1179,7 +1180,7 @@ function buildAdminHtml(data) {
 async function chargerAdmin() {
   if (currentRole !== 'admin') return;
   const div = document.getElementById('adminContenu');
-  const CACHE_KEY = 'visites_admin_cache';
+  const CACHE_KEY = 'visites_admin_cache_'     + APP_VERSION;
   // 1. Cache dispo → affichage INSTANTANÉ
   const cache = localStorage.getItem(CACHE_KEY);
   if (cache) {
