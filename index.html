@@ -160,7 +160,7 @@
 <!-- LOGIN -->
 <div id="ecranLogin">
   <div class="login-logo">🗳️ Visites Électorales</div>
-  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v36</span></div>
+  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v37</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -198,7 +198,7 @@
   <div class="header">
     <div class="header-left">
       <h1>🗳️ Visites Électorales</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v36</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v37</span></p>
     </div>
     <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
   </div>
@@ -210,7 +210,11 @@
   <div class="page active" id="page-recherche">
     <div class="search-box">
       <label>Rechercher un inscrit</label>
-      <input type="text" id="searchInput" placeholder="⏳ Chargement des données..." oninput="rechercherDebounce()" autocomplete="off" style="margin-top:8px;" disabled>
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <input type="text" id="searchNom" placeholder="Nom" oninput="rechercherDebounce()" autocomplete="off" style="flex:1;" disabled>
+        <input type="text" id="searchPrenom" placeholder="Prénom" oninput="rechercherDebounce()" autocomplete="off" style="flex:1;" disabled>
+        <input type="text" id="searchId" placeholder="ID" oninput="rechercherDebounce()" autocomplete="off" style="width:80px;" disabled>
+      </div>
       <div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
     </div>
     <div id="resultatsRecherche" class="resultats">
@@ -279,7 +283,7 @@
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
-const APP_VERSION = 'v36';
+const APP_VERSION = 'v37';
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
 
 // Fetch avec timeout pour éviter blocages infinis
@@ -297,6 +301,57 @@ let pinSaisi = '';
 let searchTimeout = null;
 let listeMilitants = [];
 let toutesPersonnes = [];
+
+// ── File d'attente enregistrements ──────────────────────────────
+const QUEUE_KEY = 'visites_queue_v36b';
+let syncEnCours = false;
+
+function queueAjouter(params) {
+  let queue = [];
+  try { queue = JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]'); } catch(e) {}
+  // Remplacer si même ID déjà en attente
+  queue = queue.filter(p => p.id !== params.id);
+  queue.push({ ...params, _ts: Date.now() });
+  try { localStorage.setItem(QUEUE_KEY, JSON.stringify(queue)); } catch(e) {}
+}
+
+function queueSupprimer(id) {
+  let queue = [];
+  try { queue = JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]'); } catch(e) {}
+  queue = queue.filter(p => p.id !== id);
+  try { localStorage.setItem(QUEUE_KEY, JSON.stringify(queue)); } catch(e) {}
+}
+
+function queueCompter() {
+  try { return JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]').length; } catch(e) { return 0; }
+}
+
+async function syncQueue() {
+  if (syncEnCours) return;
+  let queue = [];
+  try { queue = JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]'); } catch(e) {}
+  if (queue.length === 0) return;
+  syncEnCours = true;
+  for (const params of [...queue]) {
+    try {
+      const p = new URLSearchParams(params);
+      const resp = await fetchAvecTimeout(SCRIPT_URL, { method: 'POST', body: p }, 20000);
+      const data = await resp.json();
+      if (data.ok) {
+        queueSupprimer(params.id);
+      }
+    } catch(e) {
+      // Garder en file, réessayer plus tard
+    }
+  }
+  syncEnCours = false;
+  // Relancer si reste des éléments
+  const reste = queueCompter();
+  if (reste > 0) setTimeout(syncQueue, 10000);
+}
+
+// Sync au démarrage et toutes les 30s
+setInterval(syncQueue, 30000);
 
 // ===== MILITANTS =====
 async function chargerMilitants() {
@@ -503,7 +558,7 @@ async function changerPin(nom) {
   input.disabled = true;
   try {
     const params = new URLSearchParams({ action:'changerPin', nom, pin: newPin });
-    const resp = await fetchAvecTimeout(SCRIPT_URL, {method:'POST', body:params}, 15000);
+    const resp = await fetchAvecTimeout(SCRIPT_URL, {method:'POST', body:params}, 30000);
     const data = await resp.json();
     if (data.ok) {
       // Mettre à jour cache local
@@ -642,7 +697,7 @@ async function restaurerVisite(id, ancStatut, ancCandidat, ancNotes, ancMilitant
       candidat: ancCandidat, notes: ancNotes,
       militant: currentMilitant, source: 'restauration'
     });
-    const resp = await fetchAvecTimeout(SCRIPT_URL, {method:'POST', body:params}, 15000);
+    const resp = await fetchAvecTimeout(SCRIPT_URL, {method:'POST', body:params}, 30000);
     const data = await resp.json();
     if (data.ok) {
       btn.textContent = '✅ Restauré';
@@ -683,7 +738,6 @@ async function rafraichirMilitantsBackground() {
 
 // ===== CHARGEMENT INITIAL DONNÉES (après login) =====
 async function chargerToutesPersonnes() {
-  const input = document.getElementById('searchInput');
   const div = document.getElementById('resultatsRecherche');
   const bar = document.getElementById('progressBar');
   const fill = document.getElementById('progressFill');
@@ -694,8 +748,7 @@ async function chargerToutesPersonnes() {
   if (cache) {
     try {
       toutesPersonnes = JSON.parse(cache);
-      input.disabled = false;
-      input.placeholder = 'Nom, prénom ou ID...';
+      ['searchNom','searchPrenom','searchId'].forEach(id => { const el=document.getElementById(id); if(el) el.disabled=false; });
       div.innerHTML = `<div class="vide" style="color:var(--vert);">⚡ ${toutesPersonnes.length} personnes (cache)<br><small style="color:#888;">Mise à jour en cours...</small></div>`;
       setTimeout(() => rafraichirPersonnesBackground(), 500);
       setTimeout(() => { if (div.innerHTML.includes('cache')) div.innerHTML = ''; }, 3000);
@@ -716,8 +769,7 @@ async function chargerToutesPersonnes() {
     clearInterval(timer);
     fill.style.width = '100%';
     setTimeout(() => { bar.style.display = 'none'; }, 400);
-    input.disabled = false;
-    input.placeholder = 'Nom, prénom ou ID...';
+    ['searchNom','searchPrenom','searchId'].forEach(id => { const el=document.getElementById(id); if(el) el.disabled=false; });
     div.innerHTML = `<div class="vide" style="color:var(--vert);">✅ ${toutesPersonnes.length} personnes chargées<br>Recherche instantanée !</div>`;
     setTimeout(() => { if (div.innerHTML.includes('chargées')) div.innerHTML = ''; }, 3000);
   } catch(e) {
@@ -737,8 +789,11 @@ async function rafraichirPersonnesBackground() {
       try { localStorage.setItem('visites_personnes_cache_' + APP_VERSION, JSON.stringify(toutesPersonnes)); } catch(e) {}
       const div = document.getElementById('resultatsRecherche');
       if (div.innerHTML.includes('cache')) div.innerHTML = '';
-      const q = document.getElementById('searchInput').value.trim();
-      if (q.length >= 2) rechercher();
+      const qn = (document.getElementById('searchNom')||{value:''}).value.trim();
+      const qp = (document.getElementById('searchPrenom')||{value:''}).value.trim();
+      const qi = (document.getElementById('searchId')||{value:''}).value.trim();
+      if (qn.length >= 2 || qp.length >= 2 || qi.length >= 1) rechercher();
+      else { const d=document.getElementById('resultatsRecherche'); if(d) d.innerHTML=''; }
     }
   } catch(e) {}
 }
@@ -809,8 +864,13 @@ function confirmerDeconnexion() {
   document.getElementById('appPrincipale').style.display = 'none';
   // Fix placeholder : si cache dispo → prêt immédiatement
   const cacheOk = toutesPersonnes.length > 0;
-  document.getElementById('searchInput').disabled = !cacheOk;
-  document.getElementById('searchInput').placeholder = cacheOk ? 'Nom, prénom ou ID...' : '⏳ Chargement des données...';
+  ['searchNom','searchPrenom','searchId'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.disabled = !cacheOk;
+      if (!cacheOk) el.placeholder = '⏳ Chargement...';
+    }
+  });
   document.getElementById('resultatsRecherche').innerHTML = cacheOk
     ? ''
     : '<div class="loading"><div class="spinner"></div>Chargement des données...<br><small>Quelques secondes, une seule fois</small></div>';
@@ -850,8 +910,11 @@ async function rechargerSilencieux() {
     if (data.personnes && data.personnes.length > 0) {
       toutesPersonnes = data.personnes;
       try { localStorage.setItem('visites_personnes_cache_' + APP_VERSION, JSON.stringify(toutesPersonnes)); } catch(e) {}
-      const q = document.getElementById('searchInput').value.trim();
-      if (q.length >= 2) rechercher();
+      const qn = (document.getElementById('searchNom')||{value:''}).value.trim();
+      const qp = (document.getElementById('searchPrenom')||{value:''}).value.trim();
+      const qi = (document.getElementById('searchId')||{value:''}).value.trim();
+      if (qn.length >= 2 || qp.length >= 2 || qi.length >= 1) rechercher();
+      else { const d=document.getElementById('resultatsRecherche'); if(d) d.innerHTML=''; }
     }
   } catch(e) {}
 }
@@ -860,32 +923,31 @@ async function rechargerSilencieux() {
 // toutesPersonnes format: [id, nom, prenom, statut, sexe, age, nVoie, libelleVoie, nomUsage]
 function rechercherDebounce() { clearTimeout(searchTimeout); searchTimeout = setTimeout(rechercher, 150); }
 function rechercher() {
-  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const qNom    = (document.getElementById('searchNom')||{value:''}).value.trim().toLowerCase();
+  const qPrenom  = (document.getElementById('searchPrenom')||{value:''}).value.trim().toLowerCase();
+  const qId      = (document.getElementById('searchId')||{value:''}).value.trim();
   const div = document.getElementById('resultatsRecherche');
-  if (q.length < 1) { div.innerHTML = ''; return; }
+  if (!qNom && !qPrenom && !qId) { div.innerHTML = ''; return; }
   const resultats = [];
-  const estNumerique = /^[0-9]+$/.test(q);
   for (let i = 0; i < toutesPersonnes.length; i++) {
     const p = toutesPersonnes[i];
     const id = String(p[0]);
     const nom = String(p[1]||'').toLowerCase();
     const prenom = String(p[2]||'').toLowerCase();
-    if (estNumerique) {
-      // Recherche ID : exact si < 3 chiffres, startsWith si >= 3 chiffres
-      const matchId = q.length >= 3 ? id.startsWith(q) : id === q;
-      if (matchId) {
-        resultats.push(p);
-      }
-    } else {
-      // Recherche nom / prénom uniquement
-      const matchNom = nom.indexOf(q) !== -1;
-      const matchPrenom = prenom.indexOf(q) !== -1;
-      const matchCombine = (nom+' '+prenom).indexOf(q) !== -1
-                        || (prenom+' '+nom).indexOf(q) !== -1;
-      if (matchNom || matchPrenom || matchCombine) {
-        resultats.push(p);
-      }
+
+    // Chaque champ rempli doit correspondre (ET logique)
+    let ok = true;
+    if (qId) {
+      const matchId = qId.length >= 3 ? id.startsWith(qId) : id === qId;
+      if (!matchId) ok = false;
     }
+    if (qNom && ok) {
+      if (nom.indexOf(qNom) === -1) ok = false;
+    }
+    if (qPrenom && ok) {
+      if (prenom.indexOf(qPrenom) === -1) ok = false;
+    }
+    if (ok) resultats.push(p);
   }
   if (resultats.length === 0) { div.innerHTML = '<div class="vide">Aucun résultat</div>'; return; }
   const affichage = resultats.slice(0, 500);
@@ -1024,7 +1086,14 @@ function afficherFiche(p) {
         </select>
       </div>
       <div class="field"><label>Candidat soutenu</label><select id="fCandidat">${cOpts}</select></div>
-      <div class="field"><label>Notes</label><textarea id="fNotes" placeholder="Remarques...">${p.notes||''}</textarea></div>
+      <div class="field">
+        <label>Notes <span style="font-size:11px;font-weight:400;color:#999;">— Ajouter le nom ou Prénom</span></label>
+        <textarea id="fNotes" placeholder="Remarques...">${p.notes||''}</textarea>
+      </div>
+      <div class="field">
+        <label>Observation</label>
+        <textarea id="fObservation" placeholder="Observation complémentaire..." style="min-height:70px;">${p.observation||''}</textarea>
+      </div>
       ${p.statut==='Visité' ? `
         ${p.militant && p.militant !== currentMilitant ? `
         <div style="background:#fff3cd;border:1.5px solid #f0ad4e;border-radius:10px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px;">
@@ -1077,25 +1146,29 @@ async function enregistrerVisite() {
   const statut = document.getElementById('fStatut').value;
   const candidat = document.getElementById('fCandidat').value;
   const notes = document.getElementById('fNotes').value;
-  showLoading('⏳ Enregistrement en cours...');
-  try {
-    const params = new URLSearchParams({ action:'enregistrer', id:currentPersonne.id, statut, candidat, notes, militant:currentMilitant, nom:currentPersonne.nom+' '+currentPersonne.prenom, secteur:currentPersonne.secteur||'' });
-    const resp = await fetchAvecTimeout(SCRIPT_URL, {method:'POST', body:params}, 15000);
-    const data = await resp.json();
-    hideLoading();
-    if (data.ok) {
-      currentPersonne.statut=statut; currentPersonne.candidatActuel=candidat; currentPersonne.notes=notes;
-      majCacheStatut(currentPersonne.id, statut, candidat, notes, new Date().toLocaleDateString('fr-FR'), currentMilitant);
-      afficherFiche(currentPersonne);
-      showToast('✅ Enregistré !','succes');
-    } else {
-      showToast('❌ Erreur serveur','erreur');
-    }
-  } catch(e) {
-    hideLoading();
-    const msg = e.name === 'AbortError' ? '⏱️ Délai dépassé — réessayez' : '❌ Erreur connexion';
-    showToast(msg, 'erreur');
+  const observation = document.getElementById('fObservation') ? document.getElementById('fObservation').value : '';
+
+  // 1. Mise à jour IMMÉDIATE du cache local → UI instantanée
+  currentPersonne.statut = statut;
+  currentPersonne.candidatActuel = candidat;
+  currentPersonne.notes = notes;
+  currentPersonne.observation = observation;
+  const idxP = toutesPersonnes.findIndex(p => String(p[0]) === String(currentPersonne.id));
+  if (idxP !== -1) {
+    toutesPersonnes[idxP][3] = statut;
+    toutesPersonnes[idxP][10] = candidat;
+    toutesPersonnes[idxP][12] = notes;
   }
+  majCacheStatut(currentPersonne.id, statut, candidat, notes, new Date().toLocaleDateString('fr-FR'), currentMilitant);
+  afficherFiche(currentPersonne);
+  showToast('✅ Enregistré !', 'succes');
+
+  // 2. Ajouter en file d'attente et envoyer en arrière-plan
+  const paramsObj = { action:'enregistrer', id: String(currentPersonne.id), statut, candidat, notes, observation,
+    militant: currentMilitant, nom: currentPersonne.nom+' '+currentPersonne.prenom,
+    secteur: currentPersonne.secteur||'' };
+  queueAjouter(paramsObj);
+  syncQueue();
 }
 
 function reinitialiserVisite() {
