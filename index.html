@@ -137,7 +137,7 @@
 <!-- LOGIN -->
 <div id="ecranLogin">
   <div class="login-logo">🗳️ Visites Électorales</div>
-  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v91</span></div>
+  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v92</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -175,7 +175,7 @@
   <div class="header">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v91</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v92</span></p>
     </div>
     <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
   </div>
@@ -245,7 +245,7 @@
   </div>
 
   <!-- POPUP AJOUTER MILITANT -->
-  <div id="modalAjoutMilitant" class="modal-overlay">
+  <div id="modalAjoutMilitant" class="modal-overlay" style="z-index:600;">
     <div class="modal-box" style="max-width:360px;">
       <h3>➕ Ajouter un militant</h3>
       <div class="field" style="margin-bottom:12px;">
@@ -274,7 +274,7 @@
   </div>
 
   <!-- POPUP SUPPRIMER MILITANT -->
-  <div id="modalSupprimerMilitant" class="modal-overlay">
+  <div id="modalSupprimerMilitant" class="modal-overlay" style="z-index:600;">
     <div class="modal-box" style="max-width:340px;">
       <h3 style="color:#c0392b;">🗑️ Supprimer le militant ?</h3>
       <p style="margin:16px 0;text-align:center;font-size:15px;">
@@ -377,7 +377,7 @@
 // CONFIG v65 — Sync auto + Réinitialisation
 // ============================================
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
-const APP_VERSION = 'v91';
+const APP_VERSION = 'v92';
 const MAX_RESULTATS = 50;
 const SYNC_INTERVAL = 15000;
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
@@ -1691,10 +1691,16 @@ function ouvrirFicheDepuisObs() {
 // AJOUTER UN MILITANT
 // ============================================
 function ouvrirAjoutMilitant() {
-  $('nouveauNom').value = '';
-  $('nouveauPin').value = '';
-  $('nouveauRole').value = 'militant';
   ouvrirModal('modalAjoutMilitant');
+  // Reset les champs après ouverture
+  setTimeout(() => {
+    const nom = $('nouveauNom');
+    const pin = $('nouveauPin');
+    const role = $('nouveauRole');
+    if (nom) nom.value = '';
+    if (pin) pin.value = '';
+    if (role) role.value = 'militant';
+  }, 50);
 }
 
 async function confirmerAjoutMilitant() {
