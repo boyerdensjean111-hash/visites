@@ -137,7 +137,7 @@
 <!-- LOGIN -->
 <div id="ecranLogin">
   <div class="login-logo">🗳️ Visites Électorales</div>
-  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v78</span></div>
+  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v79</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -175,7 +175,7 @@
   <div class="header">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v78</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v79</span></p>
     </div>
     <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
   </div>
@@ -304,12 +304,23 @@
   </div>
 </div>
 
+<!-- OVERLAY CHARGEMENT -->
+<div id="overlayChargement" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center;flex-direction:column;">
+  <div style="background:white;border-radius:16px;padding:30px 40px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.3);">
+    <div style="width:50px;height:50px;border:4px solid #e0e4ea;border-top-color:#2755a8;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 16px;"></div>
+    <div id="overlayTexte" style="font-size:16px;font-weight:600;color:#1a3a6b;">Enregistrement...</div>
+    <div style="margin-top:12px;width:200px;height:6px;background:#e0e4ea;border-radius:3px;overflow:hidden;">
+      <div id="overlayProgress" style="height:100%;width:0%;background:linear-gradient(90deg,#2755a8,#27ae60);border-radius:3px;transition:width 0.3s;"></div>
+    </div>
+  </div>
+</div>
+
 <script>
 // ============================================
 // CONFIG v65 — Sync auto + Réinitialisation
 // ============================================
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
-const APP_VERSION = 'v78';
+const APP_VERSION = 'v79';
 const MAX_RESULTATS = 50;
 const SYNC_INTERVAL = 15000;
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
@@ -985,10 +996,39 @@ function afficherFiche(p) {
 }
 
 // ============================================
+// OVERLAY CHARGEMENT
+// ============================================
+let isProcessing = false;
+
+function afficherOverlay(texte = 'Enregistrement...') {
+  if (isProcessing) return false;
+  isProcessing = true;
+  $('overlayTexte').textContent = texte;
+  $('overlayProgress').style.width = '0%';
+  $('overlayChargement').style.display = 'flex';
+  
+  // Animation de la barre de progression
+  setTimeout(() => $('overlayProgress').style.width = '30%', 100);
+  setTimeout(() => $('overlayProgress').style.width = '60%', 500);
+  setTimeout(() => $('overlayProgress').style.width = '80%', 1000);
+  
+  return true;
+}
+
+function masquerOverlay(succes = true) {
+  $('overlayProgress').style.width = '100%';
+  setTimeout(() => {
+    $('overlayChargement').style.display = 'none';
+    isProcessing = false;
+  }, 300);
+}
+
+// ============================================
 // ENREGISTRER VISITE
 // ============================================
 function enregistrerVisite() {
   if (!currentPersonne) return;
+  if (isProcessing) return;
 
   if (currentPersonneServeur && 
       currentPersonneServeur.militant !== currentMilitant &&
@@ -1006,43 +1046,58 @@ function forcerEnregistrement() {
   executerEnregistrement();
 }
 
-function executerEnregistrement() {
+async function executerEnregistrement() {
+  if (!afficherOverlay('Enregistrement en cours...')) return;
+  
   const statut = $('fStatut').value;
   const candidat = $('fCandidat').value;
   const notes = $('fNotes').value;
   const observation = $('fObservation')?.value || '';
 
-  currentPersonne.statut = statut;
-  currentPersonne.candidatActuel = candidat;
-  currentPersonne.notes = notes;
-  currentPersonne.observation = observation;
-  currentPersonne.militant = currentMilitant;
-  currentPersonneServeur = null;
+  try {
+    // Appel serveur
+    const params = new URLSearchParams({
+      action: 'enregistrer',
+      id: String(currentPersonne.id),
+      statut, candidat, notes, observation,
+      militant: currentMilitant,
+      nom: currentPersonne.nom + ' ' + currentPersonne.prenom,
+      secteur: currentPersonne.secteur || ''
+    });
+    
+    await fetch(SCRIPT_URL, { method: 'POST', body: params });
+    
+    // Mise à jour locale après succès serveur
+    currentPersonne.statut = statut;
+    currentPersonne.candidatActuel = candidat;
+    currentPersonne.notes = notes;
+    currentPersonne.observation = observation;
+    currentPersonne.militant = currentMilitant;
+    currentPersonneServeur = null;
 
-  const idx = toutesPersonnes.findIndex(p => String(p[0]) === String(currentPersonne.id));
-  if (idx !== -1) {
-    toutesPersonnes[idx][3] = statut;
-    toutesPersonnes[idx][10] = candidat;
-    toutesPersonnes[idx][12] = notes;
-    toutesPersonnes[idx][14] = currentMilitant;
-    toutesPersonnes[idx][15] = observation;  // ← AJOUT: sauvegarder observation
+    // Mise à jour robuste de toutesPersonnes
+    const id = currentPersonne.id;
+    for (let i = 0; i < toutesPersonnes.length; i++) {
+      if (String(toutesPersonnes[i][0]) === String(id)) {
+        toutesPersonnes[i][3] = statut;
+        toutesPersonnes[i][10] = candidat;
+        toutesPersonnes[i][12] = notes;
+        toutesPersonnes[i][14] = currentMilitant;
+        toutesPersonnes[i][15] = observation;
+        break;
+      }
+    }
+    
+    try { localStorage.setItem(CACHE_KEY_PERSONNES, JSON.stringify(toutesPersonnes)); } catch(e) {}
+
+    masquerOverlay(true);
+    afficherFiche(currentPersonne);
+    showToast('✅ Enregistré !', 'succes');
+    
+  } catch(e) {
+    masquerOverlay(false);
+    showToast('❌ Erreur: ' + e.message, 'erreur');
   }
-  
-  try { localStorage.setItem(CACHE_KEY_PERSONNES, JSON.stringify(toutesPersonnes)); } catch(e) {}
-
-  afficherFiche(currentPersonne);
-  showToast('✅ Enregistré !', 'succes');
-
-  const params = new URLSearchParams({
-    action: 'enregistrer',
-    id: String(currentPersonne.id),
-    statut, candidat, notes, observation,
-    militant: currentMilitant,
-    nom: currentPersonne.nom + ' ' + currentPersonne.prenom,
-    secteur: currentPersonne.secteur || ''
-  });
-  
-  fetch(SCRIPT_URL, { method: 'POST', body: params }).catch(() => {});
 }
 
 // ============================================
@@ -1057,8 +1112,7 @@ function demanderReinitialisation() {
 async function confirmerReinitialisation() {
   fermerModal('modalReinit');
   if (!currentPersonne) return;
-
-  showToast('🗑️ Réinitialisation...', '');
+  if (!afficherOverlay('Réinitialisation...')) return;
 
   try {
     // Appel serveur avec militant
@@ -1089,7 +1143,6 @@ async function confirmerReinitialisation() {
         toutesPersonnes[i][12] = '';
         toutesPersonnes[i][14] = '';
         toutesPersonnes[i][15] = '';
-        console.log('✅ Personne mise à jour:', id, toutesPersonnes[i]);
         break;
       }
     }
@@ -1097,11 +1150,12 @@ async function confirmerReinitialisation() {
     // Sauvegarder le cache
     try { localStorage.setItem(CACHE_KEY_PERSONNES, JSON.stringify(toutesPersonnes)); } catch(e) {}
     
+    masquerOverlay(true);
     afficherFiche(currentPersonne);
     showToast('🗑️ Visite réinitialisée', 'succes');
     
   } catch(e) {
-    console.error('Erreur réinitialisation:', e);
+    masquerOverlay(false);
     showToast('❌ Erreur', 'erreur');
   }
 }
