@@ -137,7 +137,7 @@
 <!-- LOGIN -->
 <div id="ecranLogin">
   <div class="login-logo">🗳️ Visites Électorales</div>
-  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v66</span></div>
+  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v67</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -175,7 +175,7 @@
   <div class="header">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v66</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v67</span></p>
     </div>
     <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
   </div>
@@ -309,7 +309,7 @@
 // CONFIG v65 — Sync auto + Réinitialisation
 // ============================================
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
-const APP_VERSION = 'v66';
+const APP_VERSION = 'v67';
 const MAX_RESULTATS = 50;
 const SYNC_INTERVAL = 15000;
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
@@ -643,8 +643,10 @@ function seConnecter() {
   const prenom = militant.nom.split(' ').pop();
   $('btnUser').textContent = '👤 ' + prenom + (currentRole === 'admin' ? ' 👑' : '') + ' — Quitter';
   
-  if (currentRole === 'superviseur' || currentRole === 'admin') {
+  if (currentRole === 'superviseur' || currentRole === 'admin' || currentRole === 'responsable bureaux' || currentRole === 'manager') {
     ajouterOnglet('stats', '📊 Stats');
+  }
+  if (currentRole === 'superviseur' || currentRole === 'admin') {
     ajouterOnglet('observations', '📝 Obs');
   }
   if (currentRole === 'admin') {
@@ -1182,7 +1184,7 @@ function buildAdminHtml(data) {
     const nb = compteurs[m.nom] || 0;
     const nbSupp = suppressions[m.nom] || 0;
     const connecte = connectes[m.nom];
-    const badgeRole = m.role === 'admin' ? '<span class="role-badge">admin</span>' : m.role === 'superviseur' ? '<span class="role-badge" style="background:#d4edda;color:#155724;">superviseur</span>' : '';
+    const badgeRole = m.role === 'admin' ? '<span class="role-badge">admin</span>' : m.role === 'superviseur' ? '<span class="role-badge" style="background:#d4edda;color:#155724;">superviseur</span>' : m.role === 'responsable bureaux' ? '<span class="role-badge" style="background:#d1ecf1;color:#0c5460;">resp. bureaux</span>' : m.role === 'manager' ? '<span class="role-badge" style="background:#e2d5f1;color:#5e3d8a;">manager</span>' : '';
     const suppText = nbSupp > 0 ? ` <span style="color:#e74c3c;font-size:11px;">(-${nbSupp} supp.)</span>` : '';
     
     html += `<div class="militant-card" style="${connecte ? 'border-left:4px solid #27ae60;' : ''}">
@@ -1377,14 +1379,39 @@ async function chargerHistorique() {
 
 function afficherGestionMilitants() {
   const div = $('gestionContenu');
-  div.innerHTML = listeMilitants.map(m => `
-    <div style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">
-      <div>
-        <div style="font-weight:700;font-size:14px;">${m.nom}</div>
-        <div style="font-size:12px;color:${m.actif !== false ? '#27ae60' : '#e74c3c'};">${m.actif !== false ? '✅ Actif' : '🔴 Désactivé'}</div>
+  const roles = ['militant', 'manager', 'responsable bureaux', 'superviseur', 'admin'];
+  
+  div.innerHTML = listeMilitants.map(m => {
+    const roleOptions = roles.map(r => `<option value="${r}" ${m.role === r ? 'selected' : ''}>${r}</option>`).join('');
+    const isAdmin = m.role === 'admin';
+    
+    return `<div style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:14px;margin-bottom:10px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div>
+          <div style="font-weight:700;font-size:14px;">${m.nom}</div>
+          <div style="font-size:12px;color:${m.actif !== false ? '#27ae60' : '#e74c3c'};">${m.actif !== false ? '✅ Actif' : '🔴 Désactivé'}</div>
+        </div>
+        ${!isAdmin ? `<label class="toggle"><input type="checkbox" ${m.actif !== false ? 'checked' : ''} onchange="toggleMilitant('${m.nom}', this.checked)"><span class="toggle-slider"></span></label>` : ''}
       </div>
-      ${m.role !== 'admin' ? `<label class="toggle"><input type="checkbox" ${m.actif !== false ? 'checked' : ''} onchange="toggleMilitant('${m.nom}', this.checked)"><span class="toggle-slider"></span></label>` : ''}
-    </div>`).join('');
+      <div style="display:flex;align-items:center;gap:10px;">
+        <label style="font-size:12px;color:#666;white-space:nowrap;">Rôle :</label>
+        <select onchange="changerRole('${m.nom}', this.value)" style="flex:1;padding:8px 10px;border:1.5px solid #e0e4ea;border-radius:8px;font-size:13px;background:white;" ${isAdmin ? 'disabled' : ''}>
+          ${roleOptions}
+        </select>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function changerRole(nom, role) {
+  try {
+    await fetch(SCRIPT_URL, { method: 'POST', body: new URLSearchParams({ action: 'changerRole', nom, role }) });
+    const m = listeMilitants.find(x => x.nom === nom);
+    if (m) m.role = role;
+    showToast('✅ Rôle modifié : ' + role, 'succes');
+  } catch(e) {
+    showToast('❌ Erreur', 'erreur');
+  }
 }
 
 async function toggleMilitant(nom, actif) {
