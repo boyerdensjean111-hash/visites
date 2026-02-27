@@ -137,7 +137,7 @@
 <!-- LOGIN -->
 <div id="ecranLogin">
   <div class="login-logo">🗳️ Visites Électorales</div>
-  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v103</span></div>
+  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v104</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -175,7 +175,7 @@
   <div class="header">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v103</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v104</span></p>
     </div>
     <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
   </div>
@@ -380,7 +380,7 @@
 // CONFIG v65 — Sync auto + Réinitialisation
 // ============================================
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
-const APP_VERSION = 'v103';
+const APP_VERSION = 'v104';
 const MAX_RESULTATS = 50;
 const SYNC_INTERVAL = 15000;
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
@@ -1022,7 +1022,7 @@ function afficherResultats(resultats) {
     const nomUsageInfo = nomUsage && nomUsage !== p[1] ? `<div style="font-size:11px;color:#8e44ad;font-style:italic;">Usage : ${nomUsage}</div>` : '';
     
     html.push(`<div class="resultat-item ${isVisite ? 'visite' : 'non-visite'}" onclick="selectionnerPersonne(${p[0]})" style="display:flex;align-items:center;gap:10px;">
-      <div style="font-size:18px;font-weight:700;color:#1a1a1a;min-width:40px;">#${p[0]}</div>
+      <div style="font-size:16px;font-weight:700;color:#1a1a1a;min-width:55px;">ID→${p[0]}</div>
       <div class="ri-info" style="flex:1;">
         <div class="ri-nom">${p[1]} ${p[2]}</div>
         <div class="ri-detail">${[sexeIcon + (age ? ' ' + age : ''), adresse].filter(Boolean).join(' · ')}${militantInfo}</div>
