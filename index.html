@@ -49,6 +49,7 @@
   .btn-vert { background:var(--vert); color:white; width:100%; padding:14px; font-size:15px; margin-top:10px; border:none; border-radius:9px; font-family:'DM Sans',sans-serif; font-weight:600; cursor:pointer; }
   .btn-rouge { background:var(--rouge); color:white; width:100%; padding:14px; font-size:15px; margin-top:8px; border:none; border-radius:9px; font-family:'DM Sans',sans-serif; font-weight:600; cursor:pointer; }
   .btn-orange { background:var(--orange); color:white; width:100%; padding:14px; font-size:15px; margin-top:8px; border:none; border-radius:9px; font-family:'DM Sans',sans-serif; font-weight:600; cursor:pointer; }
+  .btn-gris { background:#95a5a6; color:white; width:100%; padding:14px; font-size:15px; margin-top:8px; border:none; border-radius:9px; font-family:'DM Sans',sans-serif; font-weight:600; cursor:pointer; }
   .resultats { margin-top:12px; }
   .resultat-item { background:white; border-radius:10px; padding:13px 14px; margin-bottom:8px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 1px 4px rgba(0,0,0,0.07); cursor:pointer; border-left:4px solid transparent; }
   .resultat-item:active { transform:scale(0.98); }
@@ -122,36 +123,21 @@
   .modal-btn-ok { background:var(--rouge); color:white; }
   .modal-btn-cancel { background:var(--gris); color:var(--texte); }
 
-  .mc-historique { margin-top:8px; border-top:1px solid rgba(255,255,255,0.1); padding-top:8px; display:none; }
-  .mc-historique.open { display:block; }
-  .mc-histo-btn { font-size:11px; color:#4a6fa5; cursor:pointer; text-decoration:underline; margin-top:4px; display:inline-block; }
-  .mc-histo-item { font-size:11px; color:#555; padding:3px 0; border-bottom:1px solid #f0f0f0; display:flex; justify-content:space-between; }
-  .mc-histo-item:last-child { border-bottom:none; }
-
   .toggle { position:relative; width:44px; height:24px; cursor:pointer; }
   .toggle input { opacity:0; width:0; height:0; }
   .toggle-slider { position:absolute; inset:0; background:#ccc; border-radius:24px; transition:.3s; }
   .toggle-slider:before { content:''; position:absolute; height:18px; width:18px; left:3px; bottom:3px; background:white; border-radius:50%; transition:.3s; }
   .toggle input:checked + .toggle-slider { background:var(--vert); }
   .toggle input:checked + .toggle-slider:before { transform:translateX(20px); }
-  .mc-connecte { font-size:11px; font-weight:600; padding:2px 8px; border-radius:10px; }
-  .mc-connecte.on { background:#d5f5e3; color:#1e8449; }
-  .mc-connecte.off { background:#fde8e8; color:#c0392b; }
-
-  .loading-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:600; display:none; flex-direction:column; align-items:center; justify-content:center; gap:20px; }
-  .loading-overlay.visible { display:flex; }
-  .loading-overlay .big-spinner { width:56px; height:56px; border:5px solid rgba(255,255,255,0.3); border-top-color:white; border-radius:50%; animation:spin .8s linear infinite; }
-  .loading-overlay .loading-text { color:white; font-size:16px; font-weight:600; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 </head>
 <body>
 
 <!-- LOGIN -->
 <div id="ecranLogin">
   <div class="login-logo">🗳️ Visites Électorales</div>
-  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v64</span></div>
+  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v65</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -189,7 +175,7 @@
   <div class="header">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v64</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v65</span></p>
     </div>
     <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
   </div>
@@ -263,12 +249,6 @@
   </div>
 </div>
 
-<!-- OVERLAY CHARGEMENT -->
-<div class="loading-overlay" id="loadingOverlay">
-  <div class="big-spinner"></div>
-  <div class="loading-text" id="loadingText">⏳ Chargement...</div>
-</div>
-
 <!-- POPUP DÉCONNEXION -->
 <div class="modal-overlay" id="modalDeconnexion">
   <div class="modal-box">
@@ -293,14 +273,26 @@
   </div>
 </div>
 
+<!-- POPUP RÉINITIALISATION -->
+<div class="modal-overlay" id="modalReinit">
+  <div class="modal-box">
+    <h3>🗑️ Réinitialiser la visite</h3>
+    <p id="reinitMessage">Cette action va effacer les données de visite. Continuer ?</p>
+    <div class="modal-actions">
+      <button class="modal-btn-cancel" onclick="fermerModal('modalReinit')">Annuler</button>
+      <button class="modal-btn-ok" onclick="confirmerReinitialisation()">Oui, réinitialiser</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ============================================
-// CONFIG v62 — Sync automatique
+// CONFIG v65 — Sync auto + Réinitialisation
 // ============================================
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
-const APP_VERSION = 'v64';
+const APP_VERSION = 'v65';
 const MAX_RESULTATS = 50;
-const SYNC_INTERVAL = 15000; // 15 secondes
+const SYNC_INTERVAL = 15000;
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
 const CACHE_KEY_PERSONNES = 'visites_personnes_v3';
 const CACHE_KEY_MILITANTS = 'visites_militants_v3';
@@ -309,7 +301,7 @@ const CACHE_KEY_MILITANTS = 'visites_militants_v3';
 // ÉTAT GLOBAL
 // ============================================
 let currentPersonne = null;
-let currentPersonneServeur = null; // Pour détecter les conflits
+let currentPersonneServeur = null;
 let currentMilitant = null;
 let currentRole = 'militant';
 let pinSaisi = '';
@@ -400,13 +392,10 @@ function showPage(page) {
 }
 
 // ============================================
-// SYNC AUTOMATIQUE — Toutes les 30s
+// SYNC AUTOMATIQUE — Toutes les 15s
 // ============================================
 function demarrerSync() {
-  // Arrêter l'ancien si existe
   if (syncInterval) clearInterval(syncInterval);
-  
-  // Sync immédiat puis toutes les 30s
   syncInterval = setInterval(syncAuto, SYNC_INTERVAL);
   console.log('🔄 Sync auto démarré (15s)');
 }
@@ -425,7 +414,6 @@ async function syncAuto() {
   setSyncIndicator(true);
 
   try {
-    // 1. Sync des personnes
     const resp = await fetchRapide(SCRIPT_URL + '?action=getAllPersonnes', {}, 30000);
     const data = await resp.json();
     
@@ -450,7 +438,6 @@ async function syncAuto() {
         verifierConflitFiche(currentPersonne.id);
       }
       
-      // Mettre à jour stats si onglet ouvert
       if (statsCache) {
         statsCache.visites = nouveauxVisites;
         statsCache.pct = Math.round(nouveauxVisites / toutesPersonnes.length * 100);
@@ -461,7 +448,6 @@ async function syncAuto() {
       updateLastSync();
     }
     
-    // 2. Sync des logs/admin (qui est en ligne)
     if (currentRole === 'admin' || currentRole === 'superviseur') {
       await syncAdmin();
     }
@@ -474,16 +460,12 @@ async function syncAuto() {
   setSyncIndicator(false);
 }
 
-// Sync admin séparé (logs, connectés)
 async function syncAdmin() {
   try {
     const resp = await fetchRapide(SCRIPT_URL + '?action=getLogs', {}, 10000);
     const data = await resp.json();
-    
-    // Mettre à jour le cache
     adminCache = buildAdminHtml(data);
     
-    // Si on est sur la page admin, rafraîchir l'affichage
     const pageAdmin = $('page-admin');
     if (pageAdmin?.classList.contains('active')) {
       $('adminContenu').innerHTML = adminCache;
@@ -493,7 +475,6 @@ async function syncAdmin() {
   }
 }
 
-// Mettre à jour les compteurs stats sans redessiner les graphiques
 function majCompteurStats() {
   if (!statsCache) return;
   $('cptTotal').textContent = toutesPersonnes.length;
@@ -501,7 +482,6 @@ function majCompteurStats() {
   $('cptPct').textContent = statsCache.pct + '%';
 }
 
-// Sync manuel (bouton refresh)
 async function syncManuel() {
   showToast('🔄 Synchronisation...', '');
   await syncAuto();
@@ -512,20 +492,17 @@ async function syncManuel() {
 // DÉTECTION DE CONFLIT
 // ============================================
 async function verifierConflitFiche(id) {
-  // Chercher dans le cache mis à jour
   const serveur = toutesPersonnes.find(p => p[0] == id);
   if (!serveur || !currentPersonne) return;
 
   const statutServeur = serveur[3];
   const militantServeur = serveur[14];
 
-  // Si quelqu'un d'autre a modifié
   if (statutServeur === 'Visité' && 
       militantServeur && 
       militantServeur !== currentMilitant &&
       currentPersonne.statut !== 'Visité') {
     
-    // Alerte conflit
     currentPersonneServeur = {
       statut: statutServeur,
       militant: militantServeur,
@@ -537,7 +514,6 @@ async function verifierConflitFiche(id) {
 }
 
 function afficherAlerteConflit(militant, candidat) {
-  // Mettre à jour la fiche avec alerte
   const alerteHtml = `
     <div class="alerte-conflit">
       <div class="titre">⚠️ Modifié par ${militant}</div>
@@ -661,7 +637,7 @@ function seConnecter() {
   fetch(SCRIPT_URL, { method: 'POST', body: new URLSearchParams({ action: 'logConnexion', militant: currentMilitant }) }).catch(() => {});
   
   chargerToutesPersonnes();
-  demarrerSync(); // ← DÉMARRER SYNC AUTO
+  demarrerSync();
 }
 
 function ajouterOnglet(page, label) {
@@ -687,7 +663,7 @@ function seDeconnecter() {
 
 function confirmerDeconnexion() {
   fermerModal('modalDeconnexion');
-  arreterSync(); // ← ARRÊTER SYNC
+  arreterSync();
   
   document.querySelectorAll('.tab[data-page="stats"], .tab[data-page="admin"]').forEach(t => t.remove());
   
@@ -863,8 +839,6 @@ function selectionnerPersonne(id) {
       observation: local[15] || ''
     };
     afficherFiche(currentPersonne);
-    
-    // Vérifier version serveur
     verifierFicheServeur(id);
     return;
   }
@@ -883,19 +857,15 @@ async function verifierFicheServeur(id) {
     
     if (!currentPersonne || currentPersonne.id != id) return;
     
-    // Vérifier si quelqu'un d'autre a enregistré
     if (p.statut === 'Visité' && p.militant && p.militant !== currentMilitant) {
       if (currentPersonne.statut !== 'Visité' || currentPersonne.militant !== p.militant) {
         currentPersonneServeur = p;
         afficherAlerteConflit(p.militant, p.candidatActuel);
-        
-        // Mettre à jour l'affichage
         currentPersonne = p;
         afficherFiche(p);
       }
     }
     
-    // Mettre à jour cache
     const idx = toutesPersonnes.findIndex(x => x[0] == id);
     if (idx !== -1) {
       toutesPersonnes[idx][3] = p.statut;
@@ -952,7 +922,8 @@ function afficherFiche(p) {
       <div class="field"><label>Notes</label><textarea id="fNotes" placeholder="Remarques...">${p.notes || ''}</textarea></div>
       <div class="field"><label>Observation</label><textarea id="fObservation" placeholder="Observation...">${p.observation || ''}</textarea></div>
       <button class="btn-vert" onclick="enregistrerVisite()">✅ Enregistrer</button>
-      <button class="btn-orange" onclick="syncManuel()" style="margin-top:8px;">🔄 Rafraîchir depuis serveur</button>
+      ${isVisite ? `<button class="btn-rouge" onclick="demanderReinitialisation()">🗑️ Réinitialiser cette visite</button>` : ''}
+      <button class="btn-gris" onclick="syncManuel()">🔄 Rafraîchir depuis serveur</button>
     </div>`;
 }
 
@@ -962,7 +933,6 @@ function afficherFiche(p) {
 function enregistrerVisite() {
   if (!currentPersonne) return;
 
-  // Vérifier conflit
   if (currentPersonneServeur && 
       currentPersonneServeur.militant !== currentMilitant &&
       currentPersonneServeur.statut === 'Visité') {
@@ -985,7 +955,6 @@ function executerEnregistrement() {
   const notes = $('fNotes').value;
   const observation = $('fObservation')?.value || '';
 
-  // Mise à jour locale
   currentPersonne.statut = statut;
   currentPersonne.candidatActuel = candidat;
   currentPersonne.notes = notes;
@@ -1006,7 +975,6 @@ function executerEnregistrement() {
   afficherFiche(currentPersonne);
   showToast('✅ Enregistré !', 'succes');
 
-  // Envoi serveur
   const params = new URLSearchParams({
     action: 'enregistrer',
     id: String(currentPersonne.id),
@@ -1017,6 +985,57 @@ function executerEnregistrement() {
   });
   
   fetch(SCRIPT_URL, { method: 'POST', body: params }).catch(() => {});
+}
+
+// ============================================
+// RÉINITIALISER VISITE
+// ============================================
+function demanderReinitialisation() {
+  if (!currentPersonne) return;
+  $('reinitMessage').textContent = `Réinitialiser la visite de ${currentPersonne.nom} ${currentPersonne.prenom} ?`;
+  ouvrirModal('modalReinit');
+}
+
+async function confirmerReinitialisation() {
+  fermerModal('modalReinit');
+  if (!currentPersonne) return;
+
+  showToast('🗑️ Réinitialisation...', '');
+
+  try {
+    // Appel serveur avec militant
+    await fetch(SCRIPT_URL, { 
+      method: 'POST', 
+      body: new URLSearchParams({ 
+        action: 'reinitialiser', 
+        id: String(currentPersonne.id),
+        militant: currentMilitant  // ← IMPORTANT pour le log
+      }) 
+    });
+    
+    // Mise à jour locale
+    currentPersonne.statut = 'Non visité';
+    currentPersonne.candidatActuel = '';
+    currentPersonne.notes = '';
+    currentPersonne.militant = '';
+    currentPersonne.dateDerniereVisite = '';
+    
+    const idx = toutesPersonnes.findIndex(p => p[0] == currentPersonne.id);
+    if (idx !== -1) {
+      toutesPersonnes[idx][3] = 'Non visité';
+      toutesPersonnes[idx][10] = '';
+      toutesPersonnes[idx][12] = '';
+      toutesPersonnes[idx][14] = '';
+    }
+    
+    try { localStorage.setItem(CACHE_KEY_PERSONNES, JSON.stringify(toutesPersonnes)); } catch(e) {}
+    
+    afficherFiche(currentPersonne);
+    showToast('🗑️ Visite réinitialisée', 'succes');
+    
+  } catch(e) {
+    showToast('❌ Erreur', 'erreur');
+  }
 }
 
 // ============================================
@@ -1118,10 +1137,7 @@ function buildAdminHtml(data) {
   const logs = data.logs || [];
   const connectes = data.connectes || {};
   
-  // Compter les militants en ligne
   const nbEnLigne = Object.keys(connectes).length;
-  
-  // Total visites et suppressions
   const totalVisites = Object.values(compteurs).reduce((a, b) => a + b, 0);
   const totalSuppressions = Object.values(suppressions).reduce((a, b) => a + b, 0);
   
@@ -1134,7 +1150,6 @@ function buildAdminHtml(data) {
   
   html += '<div class="section-title">👥 Activité par militant</div>';
   
-  // Trier: en ligne d'abord, puis par nombre de visites
   const militantsTries = [...listeMilitants].sort((a, b) => {
     const aEnLigne = connectes[a.nom] ? 1 : 0;
     const bEnLigne = connectes[b.nom] ? 1 : 0;
