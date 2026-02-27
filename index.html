@@ -137,7 +137,7 @@
 <!-- LOGIN -->
 <div id="ecranLogin">
   <div class="login-logo">🗳️ Visites Électorales</div>
-  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v99</span></div>
+  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v102</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -175,7 +175,7 @@
   <div class="header">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v99</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v102</span></p>
     </div>
     <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
   </div>
@@ -192,6 +192,9 @@
         <input type="text" id="searchPrenom" placeholder="Prénom" autocomplete="off" style="flex:1;" disabled>
         <input type="text" id="searchId" placeholder="ID" autocomplete="off" style="width:70px;" disabled>
         <button id="btnReset" style="background:#e74c3c;color:white;border:none;border-radius:8px;padding:0 12px;font-size:18px;cursor:pointer;" title="Effacer">✕</button>
+      </div>
+      <div style="margin-top:8px;">
+        <input type="text" id="searchNomUsage" placeholder="Nom d'usage" autocomplete="off" style="width:100%;" disabled>
       </div>
       <div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
     </div>
@@ -377,7 +380,7 @@
 // CONFIG v65 — Sync auto + Réinitialisation
 // ============================================
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
-const APP_VERSION = 'v99';
+const APP_VERSION = 'v102';
 const MAX_RESULTATS = 50;
 const SYNC_INTERVAL = 15000;
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
@@ -592,9 +595,10 @@ async function syncAuto() {
       }
       
       const qNom = $('searchNom')?.value;
+      const qNomUsage = $('searchNomUsage')?.value;
       const qPrenom = $('searchPrenom')?.value;
       const qId = $('searchId')?.value;
-      if (qNom || qPrenom || qId) rechercher();
+      if (qNom || qNomUsage || qPrenom || qId) rechercher();
       
       if (currentPersonne) {
         verifierConflitFiche(currentPersonne.id);
@@ -909,7 +913,7 @@ async function chargerToutesPersonnes() {
 }
 
 function activerRecherche() {
-  ['searchNom', 'searchPrenom', 'searchId'].forEach(id => {
+  ['searchNom', 'searchNomUsage', 'searchPrenom', 'searchId'].forEach(id => {
     const el = $(id);
     if (el) el.disabled = false;
   });
@@ -919,7 +923,7 @@ function activerRecherche() {
 // RECHERCHE
 // ============================================
 function initRecherche() {
-  ['searchNom', 'searchPrenom', 'searchId'].forEach(id => {
+  ['searchNom', 'searchNomUsage', 'searchPrenom', 'searchId'].forEach(id => {
     const el = $(id);
     if (el) el.oninput = () => {
       clearTimeout(searchTimeout);
@@ -937,7 +941,7 @@ function retourRecherche() {
 }
 
 function resetRecherche() {
-  ['searchNom', 'searchPrenom', 'searchId'].forEach(id => {
+  ['searchNom', 'searchNomUsage', 'searchPrenom', 'searchId'].forEach(id => {
     const el = $(id);
     if (el) el.value = '';
   });
@@ -946,17 +950,18 @@ function resetRecherche() {
 
 function rechercher() {
   const qNom = ($('searchNom')?.value || '').trim().toLowerCase();
+  const qNomUsage = ($('searchNomUsage')?.value || '').trim().toLowerCase();
   const qPrenom = ($('searchPrenom')?.value || '').trim().toLowerCase();
   const qId = ($('searchId')?.value || '').trim();
   const div = $('resultatsRecherche');
 
-  if (!qNom && !qPrenom && !qId) {
+  if (!qNom && !qNomUsage && !qPrenom && !qId) {
     div.innerHTML = '';
     return;
   }
 
   // Si recherche par ID exact
-  if (qId && !qNom && !qPrenom) {
+  if (qId && !qNom && !qNomUsage && !qPrenom) {
     const exact = toutesPersonnes.find(p => String(p[0]) === qId);
     if (exact) {
       afficherResultats([exact]);
@@ -972,10 +977,12 @@ function rechercher() {
     const id = String(p[0]);
     const nom = (p[1] || '').toLowerCase();
     const prenom = (p[2] || '').toLowerCase();
+    const nomUsage = (p[8] || '').toLowerCase();
 
     let ok = true;
     if (qId && id !== qId && !id.startsWith(qId)) ok = false;
     if (qNom && ok && nom.indexOf(qNom) === -1) ok = false;
+    if (qNomUsage && ok && nomUsage.indexOf(qNomUsage) === -1) ok = false;
     if (qPrenom && ok && prenom.indexOf(qPrenom) === -1) ok = false;
     
     if (ok) resultats.push(p);
@@ -1040,7 +1047,7 @@ function selectionnerPersonne(id) {
       bureau: local[9] || '', candidatActuel: local[10] || '',
       dateDerniereVisite: local[11] || '', notes: local[12] || '',
       secteur: local[13] || '', militant: local[14] || '',
-      observation: local[15] || ''
+      observation: local[15] || '', mail: local[16] || '', tel: local[17] || ''
     };
     afficherFiche(currentPersonne);
     verifierFicheServeur(id);
@@ -1129,7 +1136,14 @@ function afficherFiche(p) {
         </select>
       </div>
       <div class="field"><label>Candidat soutenu</label><select id="fCandidat">${cOpts}</select></div>
-      <div class="field"><label>Notes</label><textarea id="fNotes" placeholder="Remarques...">${p.notes || ''}</textarea></div>
+      <div class="field"><label>Notes <span style="font-weight:400;color:#888;font-size:11px;">= (Nom / Prénom) du référent</span></label><textarea id="fNotes" placeholder="Remarques...">${p.notes || ''}</textarea></div>
+      <div class="field">
+        <label>📇 Contact</label>
+        <div style="display:flex;gap:8px;">
+          <div style="flex:1;"><input type="email" id="fMail" placeholder="📧 Adresse mail" value="${p.mail || ''}" style="width:100%;"></div>
+          <div style="flex:1;"><input type="tel" id="fTel" placeholder="📞 Téléphone" value="${p.tel || ''}" style="width:100%;"></div>
+        </div>
+      </div>
       ${(currentRole === 'admin' || currentRole === 'superviseur') ? `<div class="field"><label>Observation</label><textarea id="fObservation" placeholder="Observation...">${p.observation || ''}</textarea></div>` : ''}
       ${(p.statut === 'Non visité' || currentRole === 'admin' || currentRole === 'superviseur' || currentRole === 'responsable bureaux') ? `<button class="btn-vert" onclick="enregistrerVisite()">✅ Enregistrer</button>` : '<div style="background:#f8d7da;color:#721c24;padding:12px;border-radius:8px;text-align:center;margin-top:10px;font-size:13px;">🔒 Modification réservée aux responsables</div>'}
     </div>`;
@@ -1193,13 +1207,15 @@ async function executerEnregistrement() {
   const candidat = $('fCandidat').value;
   const notes = $('fNotes').value;
   const observation = $('fObservation')?.value || '';
+  const mail = $('fMail')?.value || '';
+  const tel = $('fTel')?.value || '';
 
   try {
     // Appel serveur
     const params = new URLSearchParams({
       action: 'enregistrer',
       id: String(currentPersonne.id),
-      statut, candidat, notes, observation,
+      statut, candidat, notes, observation, mail, tel,
       militant: currentMilitant,
       nom: currentPersonne.nom + ' ' + currentPersonne.prenom,
       secteur: currentPersonne.secteur || ''
@@ -1213,6 +1229,8 @@ async function executerEnregistrement() {
     currentPersonne.notes = notes;
     currentPersonne.observation = observation;
     currentPersonne.militant = currentMilitant;
+    currentPersonne.mail = mail;
+    currentPersonne.tel = tel;
     currentPersonneServeur = null;
 
     // Mise à jour robuste de toutesPersonnes
