@@ -137,7 +137,7 @@
 <!-- LOGIN -->
 <div id="ecranLogin">
   <div class="login-logo">🗳️ Visites Électorales</div>
-  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v67</span></div>
+  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v68</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -175,7 +175,7 @@
   <div class="header">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v67</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v68</span></p>
     </div>
     <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
   </div>
@@ -309,7 +309,7 @@
 // CONFIG v65 — Sync auto + Réinitialisation
 // ============================================
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
-const APP_VERSION = 'v67';
+const APP_VERSION = 'v68';
 const MAX_RESULTATS = 50;
 const SYNC_INTERVAL = 15000;
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
@@ -1393,14 +1393,47 @@ function afficherGestionMilitants() {
         </div>
         ${!isAdmin ? `<label class="toggle"><input type="checkbox" ${m.actif !== false ? 'checked' : ''} onchange="toggleMilitant('${m.nom}', this.checked)"><span class="toggle-slider"></span></label>` : ''}
       </div>
-      <div style="display:flex;align-items:center;gap:10px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
         <label style="font-size:12px;color:#666;white-space:nowrap;">Rôle :</label>
         <select onchange="changerRole('${m.nom}', this.value)" style="flex:1;padding:8px 10px;border:1.5px solid #e0e4ea;border-radius:8px;font-size:13px;background:white;" ${isAdmin ? 'disabled' : ''}>
           ${roleOptions}
         </select>
       </div>
+      <div style="display:flex;align-items:center;gap:10px;background:#f8f9fa;padding:10px;border-radius:8px;">
+        <label style="font-size:12px;color:#666;white-space:nowrap;">🔑 PIN :</label>
+        <input type="text" id="pin_${m.nom.replace(/\s/g, '_')}" value="${m.pin}" style="flex:1;padding:8px 10px;border:1.5px solid #e0e4ea;border-radius:8px;font-size:14px;font-family:monospace;font-weight:700;text-align:center;letter-spacing:4px;" maxlength="4" pattern="[0-9]*" inputmode="numeric">
+        <button onclick="modifierPin('${m.nom}')" style="background:#2755a8;color:white;border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">💾 Sauver</button>
+        <button onclick="reinitialiserPin('${m.nom}')" style="background:#e67e22;color:white;border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">🔄</button>
+      </div>
     </div>`;
   }).join('');
+}
+
+async function modifierPin(nom) {
+  const inputId = 'pin_' + nom.replace(/\s/g, '_');
+  const newPin = $(inputId).value.trim();
+  
+  if (!newPin || newPin.length !== 4 || !/^\d{4}$/.test(newPin)) {
+    showToast('❌ PIN invalide (4 chiffres)', 'erreur');
+    return;
+  }
+  
+  try {
+    await fetch(SCRIPT_URL, { method: 'POST', body: new URLSearchParams({ action: 'changerPin', nom, pin: newPin }) });
+    const m = listeMilitants.find(x => x.nom === nom);
+    if (m) m.pin = newPin;
+    localStorage.setItem(CACHE_KEY_MILITANTS, JSON.stringify(listeMilitants));
+    showToast('✅ PIN modifié !', 'succes');
+  } catch(e) {
+    showToast('❌ Erreur', 'erreur');
+  }
+}
+
+function reinitialiserPin(nom) {
+  const newPin = String(Math.floor(1000 + Math.random() * 9000));
+  const inputId = 'pin_' + nom.replace(/\s/g, '_');
+  $(inputId).value = newPin;
+  showToast('🔄 Nouveau PIN généré : ' + newPin + ' (cliquez Sauver)', 'warning');
 }
 
 async function changerRole(nom, role) {
