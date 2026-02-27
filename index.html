@@ -137,7 +137,7 @@
 <!-- LOGIN -->
 <div id="ecranLogin">
   <div class="login-logo">🗳️ Visites Électorales</div>
-  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v82</span></div>
+  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v85</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -175,7 +175,7 @@
   <div class="header">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v82</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v85</span></p>
     </div>
     <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
   </div>
@@ -318,17 +318,91 @@
   </div>
 </div>
 
+<!-- POPUP MISE À JOUR -->
+<div id="popupMiseAJour" style="display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#e67e22,#d35400);color:white;padding:14px 20px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,0.3);z-index:999;text-align:center;max-width:90%;animation:toastIn .3s ease;">
+  <div style="font-weight:700;font-size:15px;margin-bottom:8px;">🆕 Nouvelle version disponible !</div>
+  <div style="font-size:13px;opacity:.9;margin-bottom:12px;">Une mise à jour est prête. Rafraîchissez pour l'obtenir.</div>
+  <div style="display:flex;gap:10px;justify-content:center;">
+    <button onclick="fermerPopupMaj()" style="background:rgba(255,255,255,0.2);color:white;border:none;padding:8px 16px;border-radius:8px;font-size:13px;cursor:pointer;">Plus tard</button>
+    <button onclick="rafraichirPage()" style="background:white;color:#d35400;border:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">🔄 Rafraîchir</button>
+  </div>
+</div>
+
 <script>
 // ============================================
 // CONFIG v65 — Sync auto + Réinitialisation
 // ============================================
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
-const APP_VERSION = 'v82';
+const APP_VERSION = 'v85';
 const MAX_RESULTATS = 50;
 const SYNC_INTERVAL = 15000;
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
 const CACHE_KEY_PERSONNES = 'visites_personnes_v3';
 const CACHE_KEY_MILITANTS = 'visites_militants_v3';
+const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
+const VERSION_CHECK_INTERVAL = 60000; // Vérifier toutes les 60 secondes
+
+// ============================================
+// VÉRIFICATION MISE À JOUR
+// ============================================
+let updateCheckTimer = null;
+let updateDismissed = false;
+
+async function verifierMiseAJour() {
+  if (updateDismissed) return;
+  
+  try {
+    // Ajouter un timestamp pour éviter le cache
+    const resp = await fetch(VERSION_CHECK_URL + '?t=' + Date.now(), { 
+      cache: 'no-store',
+      headers: { 'Cache-Control': 'no-cache' }
+    });
+    const html = await resp.text();
+    
+    // Chercher APP_VERSION dans le HTML
+    const match = html.match(/APP_VERSION\s*=\s*['"]([^'"]+)['"]/);
+    if (match && match[1]) {
+      const versionServeur = match[1];
+      
+      if (versionServeur !== APP_VERSION) {
+        console.log('🆕 Nouvelle version détectée:', versionServeur, '(actuelle:', APP_VERSION + ')');
+        afficherPopupMaj(versionServeur);
+      }
+    }
+  } catch(e) {
+    console.log('Erreur vérification version:', e);
+  }
+}
+
+function afficherPopupMaj(nouvelleVersion) {
+  const popup = $('popupMiseAJour');
+  if (popup) {
+    popup.querySelector('div:first-child').innerHTML = `🆕 Nouvelle version ${nouvelleVersion} disponible !`;
+    popup.style.display = 'block';
+  }
+}
+
+function fermerPopupMaj() {
+  $('popupMiseAJour').style.display = 'none';
+  updateDismissed = true;
+  // Revérifier dans 5 minutes au cas où
+  setTimeout(() => { updateDismissed = false; }, 300000);
+}
+
+function rafraichirPage() {
+  // Vider le cache et recharger
+  try {
+    localStorage.removeItem(CACHE_KEY_PERSONNES);
+    localStorage.removeItem(CACHE_KEY_MILITANTS);
+  } catch(e) {}
+  location.reload(true);
+}
+
+function demarrerVerificationMaj() {
+  // Vérifier après 10 secondes puis toutes les minutes
+  setTimeout(verifierMiseAJour, 10000);
+  updateCheckTimer = setInterval(verifierMiseAJour, VERSION_CHECK_INTERVAL);
+}
 
 // ============================================
 // ÉTAT GLOBAL
@@ -674,6 +748,7 @@ function seConnecter() {
   
   chargerToutesPersonnes();
   demarrerSync();
+  demarrerVerificationMaj();
 }
 
 function ajouterOnglet(page, label) {
@@ -979,7 +1054,7 @@ function afficherFiche(p) {
         <h3 style="font-size:13px;font-weight:700;color:var(--bleu);text-transform:uppercase;letter-spacing:.5px;margin:0;padding:0;border:none;">✏️ Enregistrer une visite</h3>
         <div style="display:flex;gap:8px;">
           <button onclick="syncManuel()" style="background:#95a5a6;color:white;border:none;border-radius:8px;width:36px;height:36px;font-size:18px;cursor:pointer;" title="Rafraîchir">🔄</button>
-          ${isVisite ? `<button onclick="demanderReinitialisation()" style="background:#c0392b;color:white;border:none;border-radius:8px;width:36px;height:36px;font-size:18px;cursor:pointer;" title="Réinitialiser">🗑️</button>` : ''}
+          ${isVisite && (currentRole === 'admin' || currentRole === 'superviseur') ? `<button onclick="demanderReinitialisation()" style="background:#c0392b;color:white;border:none;border-radius:8px;width:36px;height:36px;font-size:18px;cursor:pointer;" title="Réinitialiser">🗑️</button>` : ''}
         </div>
       </div>
       <div class="field">
@@ -993,7 +1068,7 @@ function afficherFiche(p) {
       </div>
       <div class="field"><label>Candidat soutenu</label><select id="fCandidat">${cOpts}</select></div>
       <div class="field"><label>Notes</label><textarea id="fNotes" placeholder="Remarques...">${p.notes || ''}</textarea></div>
-      <div class="field"><label>Observation</label><textarea id="fObservation" placeholder="Observation...">${p.observation || ''}</textarea></div>
+      ${(currentRole === 'admin' || currentRole === 'superviseur') ? `<div class="field"><label>Observation</label><textarea id="fObservation" placeholder="Observation...">${p.observation || ''}</textarea></div>` : ''}
       <button class="btn-vert" onclick="enregistrerVisite()">✅ Enregistrer</button>
     </div>`;
 }
