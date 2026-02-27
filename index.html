@@ -6,7 +6,7 @@
 <title>Visites Électorales</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root { --bleu:#1a3a6b; --bleu-clair:#2755a8; --rouge:#c0392b; --vert:#27ae60; --gris:#f0f2f5; --texte:#1a1a2e; --texte2:#5a6070; }
+  :root { --bleu:#1a3a6b; --bleu-clair:#2755a8; --rouge:#c0392b; --vert:#27ae60; --gris:#f0f2f5; --texte:#1a1a2e; --texte2:#5a6070; --orange:#e67e22; }
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   body { font-family:'DM Sans',sans-serif; background:var(--gris); color:var(--texte); min-height:100vh; max-width:480px; margin:0 auto; }
   #ecranLogin { min-height:100vh; background:var(--bleu); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:30px 24px; }
@@ -32,6 +32,9 @@
   .header-left h1 { font-family:'Bebas Neue',sans-serif; font-size:20px; color:white; letter-spacing:1.5px; line-height:1; }
   .header-left p { color:rgba(255,255,255,0.6); font-size:11px; margin-top:1px; }
   .header-user { background:rgba(255,255,255,0.15); color:white; font-size:12px; font-weight:600; padding:6px 12px; border-radius:20px; cursor:pointer; border:none; font-family:'DM Sans',sans-serif; }
+  .sync-indicator { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; background:#27ae60; animation:pulse 2s infinite; }
+  .sync-indicator.syncing { background:#e67e22; animation:spin .8s linear infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
   .tabs { display:flex; background:white; border-bottom:2px solid var(--gris); }
   .tab { flex:1; padding:12px 6px; text-align:center; font-size:12px; font-weight:600; color:var(--texte2); cursor:pointer; border-bottom:3px solid transparent; transition:all .2s; white-space:nowrap; }
   .tab.active { color:var(--bleu-clair); border-bottom-color:var(--bleu-clair); }
@@ -45,6 +48,7 @@
   textarea { min-height:70px; resize:vertical; }
   .btn-vert { background:var(--vert); color:white; width:100%; padding:14px; font-size:15px; margin-top:10px; border:none; border-radius:9px; font-family:'DM Sans',sans-serif; font-weight:600; cursor:pointer; }
   .btn-rouge { background:var(--rouge); color:white; width:100%; padding:14px; font-size:15px; margin-top:8px; border:none; border-radius:9px; font-family:'DM Sans',sans-serif; font-weight:600; cursor:pointer; }
+  .btn-orange { background:var(--orange); color:white; width:100%; padding:14px; font-size:15px; margin-top:8px; border:none; border-radius:9px; font-family:'DM Sans',sans-serif; font-weight:600; cursor:pointer; }
   .resultats { margin-top:12px; }
   .resultat-item { background:white; border-radius:10px; padding:13px 14px; margin-bottom:8px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 1px 4px rgba(0,0,0,0.07); cursor:pointer; border-left:4px solid transparent; }
   .resultat-item:active { transform:scale(0.98); }
@@ -80,6 +84,7 @@
   .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#1a1a2e; color:white; padding:12px 22px; border-radius:30px; font-size:14px; font-weight:500; box-shadow:0 4px 20px rgba(0,0,0,0.3); z-index:999; animation:toastIn .3s ease; white-space:nowrap; }
   .toast.succes { background:var(--vert); }
   .toast.erreur { background:var(--rouge); }
+  .toast.warning { background:var(--orange); }
   @keyframes toastIn { from { opacity:0; transform:translateX(-50%) translateY(10px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
   .vide { text-align:center; color:var(--texte2); padding:30px 20px; font-size:14px; }
   .btn-retour { display:flex; align-items:center; gap:6px; color:var(--bleu-clair); font-size:14px; font-weight:600; background:none; border:none; cursor:pointer; padding:0 0 12px 0; }
@@ -92,7 +97,6 @@
   .mc-detail { font-size:12px; color:var(--texte2); margin-top:3px; }
   .mc-badge { font-family:'Bebas Neue',sans-serif; font-size:28px; color:var(--bleu-clair); }
   .log-item { background:white; border-radius:8px; padding:10px 12px; margin-bottom:6px; display:flex; align-items:center; gap:10px; box-shadow:0 1px 3px rgba(0,0,0,0.06); }
-  .log-icon { font-size:18px; }
   .log-info { flex:1; }
   .log-action { font-size:13px; font-weight:600; }
   .log-detail { font-size:11px; color:var(--texte2); margin-top:1px; }
@@ -100,12 +104,12 @@
   .section-title { font-size:12px; font-weight:700; color:var(--texte2); text-transform:uppercase; letter-spacing:.5px; margin-bottom:8px; }
   .btn-refresh { background:var(--bleu-clair); color:white; border:none; border-radius:8px; padding:8px 16px; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:600; cursor:pointer; margin-bottom:12px; }
   .role-badge { font-size:10px; font-weight:700; padding:2px 8px; border-radius:10px; margin-left:8px; background:#fff3cd; color:#856404; }
-  .alerte-visite { background:#d5f5e3; border:2px solid #27ae60; border-radius:10px; padding:12px 16px; margin-bottom:12px; display:flex; align-items:center; gap:10px; }
-  .alerte-visite .av-icon { font-size:24px; }
-  .alerte-visite .av-texte { font-size:13px; font-weight:600; color:#1e8449; line-height:1.4; }
   .progress-bar { height:4px; background:#e0e4ea; border-radius:2px; margin-top:8px; overflow:hidden; display:none; }
+  .progress-fill { height:100%; background:var(--bleu-clair); border-radius:2px; transition:width .3s; width:0%; }
+  .alerte-conflit { background:#fff3cd; border:2px solid var(--orange); border-radius:10px; padding:12px; margin-bottom:12px; }
+  .alerte-conflit .titre { font-weight:700; color:#856404; font-size:14px; margin-bottom:4px; }
+  .alerte-conflit .detail { font-size:12px; color:#856404; }
 
-  /* POPUP MODALE */
   .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:500; display:none; align-items:center; justify-content:center; padding:20px; }
   .modal-overlay.ouvert { display:flex; animation:fadeIn .2s ease; }
   @keyframes fadeIn { from{opacity:0} to{opacity:1} }
@@ -116,17 +120,14 @@
   .modal-actions { display:flex; gap:10px; }
   .modal-actions button { flex:1; padding:12px; border:none; border-radius:10px; font-family:'DM Sans',sans-serif; font-size:14px; font-weight:600; cursor:pointer; }
   .modal-btn-ok { background:var(--rouge); color:white; }
+  .modal-btn-cancel { background:var(--gris); color:var(--texte); }
 
-  /* HISTORIQUE CONNEXION DÉROULANT */
   .mc-historique { margin-top:8px; border-top:1px solid rgba(255,255,255,0.1); padding-top:8px; display:none; }
   .mc-historique.open { display:block; }
   .mc-histo-btn { font-size:11px; color:#4a6fa5; cursor:pointer; text-decoration:underline; margin-top:4px; display:inline-block; }
   .mc-histo-item { font-size:11px; color:#555; padding:3px 0; border-bottom:1px solid #f0f0f0; display:flex; justify-content:space-between; }
   .mc-histo-item:last-child { border-bottom:none; }
-  .mc-histo-duree { color:#888; font-size:10px; }
 
-  /* TOGGLE ON/OFF */
-  .toggle-wrap { display:flex; align-items:center; gap:8px; }
   .toggle { position:relative; width:44px; height:24px; cursor:pointer; }
   .toggle input { opacity:0; width:0; height:0; }
   .toggle-slider { position:absolute; inset:0; background:#ccc; border-radius:24px; transition:.3s; }
@@ -136,18 +137,11 @@
   .mc-connecte { font-size:11px; font-weight:600; padding:2px 8px; border-radius:10px; }
   .mc-connecte.on { background:#d5f5e3; color:#1e8449; }
   .mc-connecte.off { background:#fde8e8; color:#c0392b; }
-  .modal-btn-cancel { background:var(--gris); color:var(--texte); }
 
-  /* OVERLAY CHARGEMENT */
   .loading-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:600; display:none; flex-direction:column; align-items:center; justify-content:center; gap:20px; }
   .loading-overlay.visible { display:flex; }
   .loading-overlay .big-spinner { width:56px; height:56px; border:5px solid rgba(255,255,255,0.3); border-top-color:white; border-radius:50%; animation:spin .8s linear infinite; }
-  .loading-overlay .loading-text { color:white; font-size:16px; font-weight:600; letter-spacing:.5px; }
-  .loading-overlay .overlay-bar-wrap { width:220px; height:6px; background:rgba(255,255,255,0.25); border-radius:3px; overflow:hidden; }
-  .loading-overlay .overlay-bar-fill { height:100%; width:0%; background:white; border-radius:3px; transition:width .2s linear; }
-
-  /* SABLIER BOUTON — supprimé */
-  .progress-fill { height:100%; background:var(--bleu-clair); border-radius:2px; transition:width .3s; width:0%; }
+  .loading-overlay .loading-text { color:white; font-size:16px; font-weight:600; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
@@ -157,7 +151,7 @@
 <!-- LOGIN -->
 <div id="ecranLogin">
   <div class="login-logo">🗳️ Visites Électorales</div>
-  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v60</span></div>
+  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v63</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -194,30 +188,28 @@
 <div id="appPrincipale">
   <div class="header">
     <div class="header-left">
-      <h1>🗳️ Visites Électorales</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v60</span></p>
+      <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites</h1>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v63</span></p>
     </div>
     <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
   </div>
   <div class="tabs" id="tabsBar">
-    <div class="tab active" onclick="showPage('recherche',this)">🔍 Recherche</div>
-    <div class="tab" onclick="showPage('saisie',this)">✏️ Saisie</div>
+    <div class="tab active" data-page="recherche">🔍 Recherche</div>
+    <div class="tab" data-page="saisie">✏️ Saisie</div>
   </div>
 
   <div class="page active" id="page-recherche">
     <div class="search-box">
-      <label>Rechercher un inscrit</label>
+      <label>Rechercher un inscrit <span id="lastSync" style="float:right;font-weight:400;opacity:.6;"></span></label>
       <div style="display:flex;gap:8px;margin-top:8px;">
-        <input type="text" id="searchNom" placeholder="Nom" oninput="rechercherDebounce()" autocomplete="off" style="flex:1;" disabled>
-        <input type="text" id="searchPrenom" placeholder="Prénom" oninput="rechercherDebounce()" autocomplete="off" style="flex:1;" disabled>
-        <input type="text" id="searchId" placeholder="ID" oninput="rechercherDebounce()" autocomplete="off" style="width:80px;" disabled>
-        <button onclick="resetRecherche()" style="background:#e74c3c;color:white;border:none;border-radius:8px;padding:0 12px;font-size:18px;cursor:pointer;flex-shrink:0;" title="Effacer">Reset</button>
+        <input type="text" id="searchNom" placeholder="Nom" autocomplete="off" style="flex:1;" disabled>
+        <input type="text" id="searchPrenom" placeholder="Prénom" autocomplete="off" style="flex:1;" disabled>
+        <input type="text" id="searchId" placeholder="ID" autocomplete="off" style="width:70px;" disabled>
+        <button id="btnReset" style="background:#e74c3c;color:white;border:none;border-radius:8px;padding:0 12px;font-size:18px;cursor:pointer;" title="Effacer">✕</button>
       </div>
       <div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
     </div>
-    <div id="resultatsRecherche" class="resultats">
-      <div class="loading"><div class="spinner"></div>Chargement des données...<br><small>Première connexion : ~1 minute, une seule fois</small></div>
-    </div>
+    <div id="resultatsRecherche" class="resultats"></div>
   </div>
 
   <div class="page" id="page-saisie">
@@ -232,7 +224,7 @@
       <div class="cpt-item"><div class="cpt-num" id="cptVisites">-</div><div class="cpt-label">VISITÉS</div></div>
       <div class="cpt-item"><div class="cpt-num" id="cptPct">-</div><div class="cpt-label">PROGRESSION</div></div>
     </div>
-    <div id="statsContenu"><div class="loading"><div class="spinner"></div>Chargement...</div></div>
+    <div id="statsContenu"></div>
     <div id="statsGraphiques" style="display:none;">
       <div style="background:white;border-radius:12px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
         <div style="font-size:12px;font-weight:700;color:#1a3a6b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">🥧 Visités / Non visités</div>
@@ -240,11 +232,9 @@
       </div>
       <div style="background:white;border-radius:12px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
         <div style="font-size:12px;font-weight:700;color:#1a3a6b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">📊 Par bureau de vote</div>
-      <p style="font-size:11px;color:#999;margin:0 0 8px;">← Glissez pour voir →</p>
+        <p style="font-size:11px;color:#999;margin:0 0 8px;">← Glissez →</p>
         <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
-          <div style="min-width:500px;height:320px;">
-            <canvas id="chartBureau"></canvas>
-          </div>
+          <div style="min-width:500px;height:320px;"><canvas id="chartBureau"></canvas></div>
         </div>
       </div>
     </div>
@@ -255,13 +245,12 @@
       <button class="btn-refresh" onclick="forceChargerAdmin()">🔄 Actualiser</button>
       <button class="btn-refresh" style="background:#e67e22;" onclick="ouvrirGestion()">⚙️ Gestion</button>
     </div>
-    <div id="adminContenu"><div class="loading"><div class="spinner"></div>Chargement...</div></div>
+    <div id="adminContenu"></div>
   </div>
 
   <!-- POPUP GESTION -->
-  <div id="modalGestion" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:700;align-items:center;justify-content:center;padding:20px;">
+  <div id="modalGestion" class="modal-overlay">
     <div style="background:white;border-radius:16px;max-width:500px;width:95%;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 10px 40px rgba(0,0,0,0.3);">
-      <!-- Header -->
       <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px 12px;border-bottom:1px solid #f0f2f5;flex-shrink:0;">
         <div style="display:flex;align-items:center;gap:10px;">
           <button id="gestionBtnRetour" onclick="retourMenuGestion()" style="display:none;background:none;border:none;font-size:18px;cursor:pointer;color:#2755a8;padding:0;">←</button>
@@ -269,1187 +258,15 @@
         </div>
         <button onclick="fermerGestion()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#888;line-height:1;">✕</button>
       </div>
-      <!-- Contenu scrollable -->
-      <div id="gestionContenu" style="overflow-y:auto;padding:16px;flex:1;">
-        <!-- Menu principal injecté par JS -->
-      </div>
+      <div id="gestionContenu" style="overflow-y:auto;padding:16px;flex:1;"></div>
     </div>
   </div>
-
 </div>
-
-
-<script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
-const APP_VERSION = 'v60';
-const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
-
-// ── Liste militants fallback (mise à jour auto depuis serveur) ───
-const MILITANTS_FALLBACK = [
-  {nom:'Boyer Denis',       pin:'1234', role:'admin',      actif:true},
-  {nom:'Béatrice savigny',  pin:'3456', role:'militant',   actif:true},
-  {nom:'Emilie Candassamy', pin:'7726', role:'militant',   actif:true},
-  {nom:'Wilfrid Rivière',   pin:'1258', role:'militant',   actif:true},
-  {nom:'Emmanuelle probs',  pin:'1426', role:'militant',   actif:true},
-  {nom:'Payet Johnny',      pin:'1452', role:'superviseur',actif:true},
-  {nom:'brice gigant',      pin:'2030', role:'militant',   actif:true},
-  {nom:'Ludovic Métro',     pin:'2112', role:'militant',   actif:true},
-  {nom:'Julien Doro',       pin:'2350', role:'militant',   actif:true}
-];
-
-// Fetch avec timeout pour éviter blocages infinis
-function fetchAvecTimeout(url, options, timeout=15000) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeout);
-  const opts = options ? {...options, signal: controller.signal} : {signal: controller.signal};
-  return fetch(url, opts).finally(() => clearTimeout(timer));
-}
-
-let currentPersonne = null;
-let currentMilitant = null;
-let currentRole = 'militant';
-let pinSaisi = '';
-let searchTimeout = null;
-let listeMilitants = [];
-let toutesPersonnes = [];
-
-// ── Nettoyage ancien cache localStorage ─────────────────────────
-
-// Enregistrement direct — pas de file d'attente
-// ===== MILITANTS =====
-async function chargerMilitants() {
-  const sel = document.getElementById('loginNom');
-  if (!sel) { console.error('loginNom introuvable !'); return; }
-  const CACHE_KEY = 'visites_militants_cache_' + APP_VERSION;
-  const CACHE_DATE_KEY = 'visites_militants_date_'  + APP_VERSION;
-
-  // ── 0. Récupérer cache d'une ancienne version ou utiliser fallback ──
-  if (!localStorage.getItem(CACHE_KEY)) {
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (k && k.startsWith('visites_militants_cache_') && k !== CACHE_KEY) {
-        const v = localStorage.getItem(k);
-        if (v) { localStorage.setItem(CACHE_KEY, v); break; }
-      }
-    }
-  }
-
-  // ── 1. Affichage IMMÉDIAT : cache ou fallback ────────────────────────
-  const cache = localStorage.getItem(CACHE_KEY);
-  const cacheDate = localStorage.getItem(CACHE_DATE_KEY);
-  const source = cache ? JSON.parse(cache) : MILITANTS_FALLBACK;
-  listeMilitants = source;
-  sel.innerHTML = '<option value="">-- Choisir --</option>';
-  listeMilitants.forEach(m => {
-    const opt = document.createElement('option');
-    opt.value = m.nom; opt.textContent = m.nom; sel.appendChild(opt);
-  });
-  sel.disabled = false;
-  // Mise à jour silencieuse en arrière-plan
-  setTimeout(() => rafraichirMilitantsBackground(), 500);
-  return;
-
-  // ── 2. Pas de cache → sablier + barre de progression ────────────────
-  sel.disabled = true;
-  sel.innerHTML = '<option value="">⏳ Chargement...</option>';
-  const loginCard = document.querySelector('.login-card');
-  const loadingDiv = document.createElement('div');
-  loadingDiv.id = 'loginLoading';
-  loadingDiv.innerHTML = `
-    <div style="text-align:center;padding:12px 0 4px;">
-      <div style="font-size:13px;color:#5a6070;margin-bottom:8px;">⏳ Chargement de la liste...</div>
-      <div style="height:6px;background:#e0e4ea;border-radius:3px;overflow:hidden;">
-        <div id="loginBar" style="height:100%;width:0%;background:#2755a8;border-radius:3px;transition:width .2s linear;"></div>
-      </div>
-    </div>`;
-  const firstField = loginCard.querySelector('.login-field');
-  if (firstField) loginCard.insertBefore(loadingDiv, firstField);
-  else loginCard.prepend(loadingDiv);
-  
-  // Animation de la barre
-  let pct = 0;
-  const timer = setInterval(() => { 
-    pct = Math.min(pct + 5, 88); 
-    const bar = document.getElementById('loginBar');
-    if (bar) bar.style.width = pct + '%'; 
-  }, 200);
-
-  try {
-    const resp = await fetch(SCRIPT_URL + '?action=getMilitants');
-    const data = await resp.json();
-    listeMilitants = data.militants || [];
-
-    // Sauvegarder en cache
-    localStorage.setItem(CACHE_KEY, JSON.stringify(listeMilitants));
-    localStorage.setItem(CACHE_DATE_KEY, new Date().toISOString());
-
-    clearInterval(timer);
-    const bar = document.getElementById('loginBar');
-    if (bar) { bar.style.width = '100%'; }
-    setTimeout(() => {
-      const ld = document.getElementById('loginLoading');
-      if (ld) ld.remove();
-      sel.disabled = false;
-      sel.innerHTML = '<option value="">-- Choisir --</option>';
-      listeMilitants.forEach(m => {
-        const opt = document.createElement('option');
-        opt.value = m.nom; opt.textContent = m.nom; sel.appendChild(opt);
-      });
-    }, 400);
-  } catch(e) {
-    clearInterval(timer);
-    const ld = document.getElementById('loginLoading');
-    if (ld) ld.innerHTML = '<div style="text-align:center;color:#c0392b;font-size:13px;padding:8px 0;">⚠️ Erreur réseau — réessayez</div>';
-    sel.disabled = false;
-    // Retry automatique après 5 secondes
-    setTimeout(() => { const ld2 = document.getElementById('loginLoading'); if(ld2) ld2.innerHTML = '<div style="text-align:center;padding:8px;"><div style="color:#e74c3c;font-size:13px;margin-bottom:8px;">⚠️ Chargement échoué</div><button onclick="document.getElementById(\'loginLoading\').remove();chargerMilitants()" style="background:#2755a8;color:white;border:none;border-radius:8px;padding:8px 20px;font-size:13px;cursor:pointer;">🔄 Réessayer</button></div>'; }, 5000);
-  }
-}
-
-// ===== MENU GESTION =====
-function ouvrirGestion() {
-  var mg = document.getElementById('modalGestion');
-  mg.style.display        = 'flex';
-  mg.style.position       = 'fixed';
-  mg.style.top            = '0';
-  mg.style.left           = '0';
-  mg.style.width          = '100%';
-  mg.style.height         = '100%';
-  mg.style.background     = 'rgba(0,0,0,0.6)';
-  mg.style.zIndex         = '9999';
-  mg.style.alignItems     = 'center';
-  mg.style.justifyContent = 'center';
-  mg.style.padding        = '20px';
-  afficherMenuGestion();
-}
-function fermerGestion() {
-  document.getElementById('modalGestion').style.display = 'none';
-}
-function afficherMenuGestion() {
-  document.getElementById('gestionTitre').textContent = '⚙️ Gestion';
-  document.getElementById('gestionBtnRetour').style.display = 'none';
-  document.getElementById('gestionContenu').innerHTML = `
-    <div style="display:flex;flex-direction:column;gap:10px;">
-      <button onclick="ouvrirSectionGestion('historique')" style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:14px;width:100%;">
-        <span style="font-size:28px;">📋</span>
-        <div>
-          <div style="font-weight:700;font-size:14px;color:#1a3a6b;">Historique des modifications</div>
-          <div style="font-size:12px;color:#888;margin-top:2px;">Voir et restaurer les visites modifiées</div>
-        </div>
-        <span style="margin-left:auto;color:#ccc;font-size:18px;">›</span>
-      </button>
-      <button onclick="ouvrirSectionGestion('militants')" style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:14px;width:100%;">
-        <span style="font-size:28px;">👥</span>
-        <div>
-          <div style="font-weight:700;font-size:14px;color:#1a3a6b;">Gérer les militants</div>
-          <div style="font-size:12px;color:#888;margin-top:2px;">Activer / désactiver les accès</div>
-        </div>
-        <span style="margin-left:auto;color:#ccc;font-size:18px;">›</span>
-      </button>
-      <button onclick="ouvrirSectionGestion('pin')" style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:14px;width:100%;">
-        <span style="font-size:28px;">🔑</span>
-        <div>
-          <div style="font-weight:700;font-size:14px;color:#1a3a6b;">Gérer les accès PIN</div>
-          <div style="font-size:12px;color:#888;margin-top:2px;">Modifier les codes PIN des militants</div>
-        </div>
-        <span style="margin-left:auto;color:#ccc;font-size:18px;">›</span>
-      </button>
-      <button onclick="ouvrirSectionGestion('export')" style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:14px;width:100%;">
-        <span style="font-size:28px;">📊</span>
-        <div>
-          <div style="font-weight:700;font-size:14px;color:#1a3a6b;">Export / Statistiques avancées</div>
-          <div style="font-size:12px;color:#888;margin-top:2px;">Visites par militant, par bureau</div>
-        </div>
-        <span style="margin-left:auto;color:#ccc;font-size:18px;">›</span>
-      </button>
-    </div>`;
-}
-function retourMenuGestion() {
-  afficherMenuGestion();
-}
-function ouvrirSectionGestion(section) {
-  document.getElementById('gestionBtnRetour').style.display = 'inline-block';
-  const div = document.getElementById('gestionContenu');
-  if (section === 'historique') {
-    document.getElementById('gestionTitre').textContent = '📋 Historique';
-    chargerHistorique();
-  } else if (section === 'militants') {
-    document.getElementById('gestionTitre').textContent = '👥 Militants';
-    afficherGestionMilitants();
-  } else if (section === 'pin') {
-    document.getElementById('gestionTitre').textContent = '🔑 Accès PIN';
-    afficherGestionPin();
-  } else if (section === 'export') {
-    document.getElementById('gestionTitre').textContent = '📊 Export / Stats';
-    afficherExport();
-  }
-}
-
-function afficherGestionMilitants() {
-  const div = document.getElementById('gestionContenu');
-  let html = '';
-  listeMilitants.forEach(m => {
-    const actif = m.actif !== false;
-    html += `
-    <div style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">
-      <div>
-        <div style="font-weight:700;font-size:14px;">${m.nom}${m.role==='admin'?'<span style="font-size:10px;background:#fff3cd;color:#856404;padding:2px 6px;border-radius:8px;margin-left:6px;">admin</span>':''}</div>
-        <div style="font-size:12px;color:${actif?'#27ae60':'#e74c3c'};margin-top:3px;">${actif?'✅ Actif':'🔴 Désactivé'}</div>
-      </div>
-      ${m.role!=='admin'?`<label class="toggle"><input type="checkbox" ${actif?'checked':''} onchange="toggleMilitant('${m.nom}', this.checked)"><span class="toggle-slider"></span></label>`:''}
-    </div>`;
-  });
-  div.innerHTML = html || '<div class="vide">Aucun militant</div>';
-}
-
-function afficherGestionPin() {
-  const div = document.getElementById('gestionContenu');
-  let html = '<div style="font-size:12px;color:#888;margin-bottom:12px;">Cliquez sur un militant pour modifier son PIN</div>';
-  listeMilitants.forEach(m => {
-    html += `
-    <div style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:14px;margin-bottom:10px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-        <div style="font-weight:700;font-size:14px;">${m.nom}</div>
-        <span style="font-size:12px;color:#888;">PIN actuel : ••••</span>
-      </div>
-      <div style="display:flex;gap:8px;">
-        <input type="number" id="pin_${m.nom.replace(/ /g,'_')}" placeholder="Nouveau PIN (4 chiffres)" maxlength="4"
-          style="flex:1;padding:9px 12px;border:1.5px solid #e0e4ea;border-radius:8px;font-size:14px;">
-        <button onclick="changerPin('${m.nom}')" 
-          style="background:#1a3a6b;color:white;border:none;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer;">
-          💾 Sauver
-        </button>
-      </div>
-    </div>`;
-  });
-  div.innerHTML = html;
-}
-
-async function changerPin(nom) {
-  const input = document.getElementById('pin_' + nom.replace(/ /g,'_'));
-  const newPin = input.value.trim();
-  if (newPin.length !== 4 || isNaN(newPin)) {
-    showToast('⚠️ PIN doit être 4 chiffres', 'erreur'); return;
-  }
-  input.disabled = true;
-  try {
-    const params = new URLSearchParams({ action:'changerPin', nom, pin: newPin });
-    const resp = await fetchAvecTimeout(SCRIPT_URL, {method:'POST', body:params}, 30000);
-    const data = await resp.json();
-    if (data.ok) {
-      // Mettre à jour cache local
-      const m = listeMilitants.find(x => x.nom === nom);
-      if (m) m.pin = newPin;
-      localStorage.setItem('visites_militants_cache_' + APP_VERSION, JSON.stringify(listeMilitants));
-      input.value = '';
-      showToast('✅ PIN modifié pour ' + nom, 'succes');
-    } else { showToast('❌ Erreur serveur', 'erreur'); }
-  } catch(e) { showToast('❌ Erreur connexion', 'erreur'); }
-  input.disabled = false;
-}
-
-async function afficherExport() {
-  const div = document.getElementById('gestionContenu');
-  div.innerHTML = '<div class="loading"><div class="spinner"></div>Calcul en cours...</div>';
-  // Calculer depuis le cache local
-  const stats = {};
-  const statsBureau = {};
-  toutesPersonnes.forEach(p => {
-    const m = p[14] || '—';
-    const bureau = p[9] || '—';
-    const visite = p[3] === 'Visité';
-    if (!stats[m]) stats[m] = { total:0, visites:0 };
-    if (!statsBureau[bureau]) statsBureau[bureau] = { total:0, visites:0 };
-    stats[m].total++;
-    statsBureau[bureau].total++;
-    if (visite) { stats[m].visites++; statsBureau[bureau].visites++; }
-  });
-  let html = '<div style="font-weight:700;font-size:13px;color:#1a3a6b;margin-bottom:10px;">👥 Par militant</div>';
-  const sortedM = Object.entries(stats).filter(([k]) => k !== '—').sort((a,b) => b[1].visites - a[1].visites);
-  sortedM.forEach(([nom, s]) => {
-    const pct = s.total > 0 ? Math.round(s.visites/s.total*100) : 0;
-    html += `<div style="background:white;border:1px solid #e0e4ea;border-radius:10px;padding:12px;margin-bottom:8px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <div style="font-weight:600;font-size:13px;">${nom}</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#1a3a6b;">${s.visites}</div>
-      </div>
-      <div style="height:4px;background:#e0e4ea;border-radius:2px;margin-top:6px;">
-        <div style="height:100%;width:${pct}%;background:#27ae60;border-radius:2px;"></div>
-      </div>
-      <div style="font-size:11px;color:#888;margin-top:4px;">${pct}% de ${s.total} inscrits</div>
-    </div>`;
-  });
-  html += '<div style="font-weight:700;font-size:13px;color:#1a3a6b;margin:16px 0 10px;">🏢 Par bureau</div>';
-  Object.entries(statsBureau).sort((a,b) => b[1].visites - a[1].visites).forEach(([bureau, s]) => {
-    const pct = s.total > 0 ? Math.round(s.visites/s.total*100) : 0;
-    html += `<div style="background:white;border:1px solid #e0e4ea;border-radius:10px;padding:12px;margin-bottom:8px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <div style="font-weight:600;font-size:12px;">${bureau}</div>
-        <div style="font-size:13px;font-weight:700;color:#1a3a6b;">${s.visites}/${s.total} · ${pct}%</div>
-      </div>
-      <div style="height:4px;background:#e0e4ea;border-radius:2px;margin-top:6px;">
-        <div style="height:100%;width:${pct}%;background:#2755a8;border-radius:2px;"></div>
-      </div>
-    </div>`;
-  });
-  div.innerHTML = html;
-}
-
-
-async function chargerHistorique() {
-  const div = document.getElementById('gestionContenu');
-  div.innerHTML = '<div class="loading"><div class="spinner"></div>Chargement...</div>';
-  try {
-    const resp = await fetch(SCRIPT_URL + '?action=getHistorique');
-    const data = await resp.json();
-    const histo = data.historique || [];
-    if (!histo.length) {
-      div.innerHTML = '<div class="vide">Aucune modification enregistrée</div>';
-      return;
-    }
-    // Grouper par militant modifiant
-    const parMilitant = {};
-    histo.forEach(h => {
-      const k = h.militantNouv || '?';
-      if (!parMilitant[k]) parMilitant[k] = [];
-      parMilitant[k].push(h);
-    });
-    let html = '';
-    Object.keys(parMilitant).forEach(militant => {
-      const lignes = parMilitant[militant];
-      const mcId = 'histo_gest_' + militant.replace(/ /g,'_');
-      html += `
-      <div style="background:white;border-radius:10px;padding:14px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.08);">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <div>
-            <div style="font-weight:700;font-size:14px;">⚔️ ${militant}</div>
-            <div style="font-size:12px;color:#888;">${lignes.length} modification${lignes.length>1?'s':''}</div>
-          </div>
-          <span onclick="toggleHistoGest('${mcId}')" style="font-size:12px;color:#2755a8;cursor:pointer;font-weight:600;">📋 Voir ▼</span>
-        </div>
-        <div id="${mcId}" style="display:none;margin-top:10px;border-top:1px solid #f0f2f5;padding-top:10px;">
-          ${lignes.map(h => `
-          <div style="background:#f9f9f9;border-radius:8px;padding:10px;margin-bottom:8px;border-left:3px solid #e67e22;">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
-              <div style="flex:1;">
-                <div style="font-size:13px;font-weight:600;">👤 ${h.nomPersonne} <span style="color:#888;font-weight:400;">ID ${h.id}</span></div>
-                <div style="font-size:11px;color:#888;margin-top:3px;">🕐 ${h.date} · par <strong>${h.militantAnc||'?'}</strong> → <strong>${h.militantNouv}</strong></div>
-                <div style="font-size:11px;margin-top:4px;">
-                  <span style="color:#c0392b;">Avant : ${h.ancStatut||'—'} · ${h.ancCandidat||'—'}</span><br>
-                  <span style="color:#27ae60;">Après : ${h.nouvStatut||'—'} · ${h.nouvCandidat||'—'}</span>
-                </div>
-              </div>
-              <button onclick="restaurerVisite(${h.id},'${h.ancStatut}','${h.ancCandidat}','${h.ancNotes}','${h.militantAnc}',this)" 
-                style="background:#1a3a6b;color:white;border:none;border-radius:8px;padding:7px 10px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">
-                ↩️ Restaurer
-              </button>
-            </div>
-          </div>`).join('')}
-        </div>
-      </div>`;
-    });
-    div.innerHTML = html;
-  } catch(e) {
-    div.innerHTML = '<div class="vide" style="color:red;">⚠️ Erreur chargement</div>';
-  }
-}
-
-function toggleHistoGest(id) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  const visible = el.style.display !== 'none';
-  el.style.display = visible ? 'none' : 'block';
-  const btn = el.previousElementSibling.querySelector('span[onclick]');
-  if (btn) btn.textContent = visible ? '📋 Voir ▼' : '📋 Masquer ▲';
-}
-
-async function restaurerVisite(id, ancStatut, ancCandidat, ancNotes, ancMilitant, btn) {
-  if (!confirm('Restaurer la visite de ' + ancMilitant + ' ?')) return;
-  btn.disabled = true;
-  btn.textContent = '⏳...';
-  try {
-    const params = new URLSearchParams({
-      action: 'restaurer', id, statut: ancStatut,
-      candidat: ancCandidat, notes: ancNotes,
-      militant: currentMilitant, source: 'restauration'
-    });
-    const resp = await fetchAvecTimeout(SCRIPT_URL, {method:'POST', body:params}, 30000);
-    const data = await resp.json();
-    if (data.ok) {
-      btn.textContent = '✅ Restauré';
-      btn.style.background = '#27ae60';
-      majCacheStatut(id, ancStatut, ancCandidat, ancNotes, '', ancMilitant);
-      showToast('✅ Visite restaurée !', 'succes');
-    } else {
-      btn.disabled = false; btn.textContent = '↩️ Restaurer';
-      showToast('❌ Erreur restauration', 'erreur');
-    }
-  } catch(e) {
-    btn.disabled = false; btn.textContent = '↩️ Restaurer';
-    showToast('❌ Erreur connexion', 'erreur');
-  }
-}
-
-// ── Mise à jour silencieuse des militants en arrière-plan ──────────────
-async function rafraichirMilitantsBackground() {
-  try {
-    const resp = await fetch(SCRIPT_URL + '?action=getMilitants');
-    const data = await resp.json();
-    if (data.militants && data.militants.length > 0) {
-      listeMilitants = data.militants;
-      localStorage.setItem('visites_militants_cache_' + APP_VERSION, JSON.stringify(listeMilitants));
-      localStorage.setItem('visites_militants_date_'  + APP_VERSION, new Date().toISOString());
-      // Mettre à jour le select silencieusement
-      const sel = document.getElementById('loginNom');
-      const valActuelle = sel.value;
-      sel.innerHTML = '<option value="">-- Choisir --</option>';
-      listeMilitants.forEach(m => {
-        const opt = document.createElement('option');
-        opt.value = m.nom; opt.textContent = m.nom; sel.appendChild(opt);
-      });
-      sel.value = valActuelle; // Garder la sélection
-    }
-  } catch(e) {} // Silencieux
-}
-
-// ===== CHARGEMENT INITIAL DONNÉES (après login) =====
-async function chargerToutesPersonnes() {
-  const div = document.getElementById('resultatsRecherche');
-  const bar = document.getElementById('progressBar');
-  const fill = document.getElementById('progressFill');
-  const CACHE_KEY = 'visites_personnes_cache'; // clé fixe — indépendante de la version
-
-  // 1. Cache dispo → affichage INSTANTANÉ
-  const cache = localStorage.getItem(CACHE_KEY);
-  if (cache) {
-    try {
-      toutesPersonnes = JSON.parse(cache);
-      ['searchNom','searchPrenom','searchId'].forEach(id => { const el=document.getElementById(id); if(el) el.disabled=false; });
-      div.innerHTML = '';
-      setTimeout(() => rafraichirPersonnesBackground(), 2000);
-      return;
-    } catch(e) { localStorage.removeItem(CACHE_KEY); }
-  }
-
-  // 2. Pas de cache → sablier + barre
-  bar.style.display = 'block';
-  div.innerHTML = `<div class="loading"><div class="spinner"></div>⏳ Chargement des données...<br><small>Première connexion : ~1 minute, une seule fois</small></div>`;
-  let pct = 0;
-  const timer = setInterval(() => { pct = Math.min(pct+4, 88); fill.style.width = pct+'%'; }, 200);
-  try {
-    const resp = await fetchAvecTimeout(SCRIPT_URL + '?action=getAllPersonnes', {}, 90000);
-    const data = await resp.json();
-    toutesPersonnes = data.personnes || [];
-    try { localStorage.setItem('visites_personnes_cache', JSON.stringify(toutesPersonnes)); } catch(e) {}
-    clearInterval(timer);
-    fill.style.width = '100%';
-    setTimeout(() => { bar.style.display = 'none'; }, 400);
-    ['searchNom','searchPrenom','searchId'].forEach(id => { const el=document.getElementById(id); if(el) el.disabled=false; });
-    div.innerHTML = `<div class="vide" style="color:var(--vert);">✅ ${toutesPersonnes.length} personnes chargées<br>Recherche instantanée !</div>`;
-    setTimeout(() => { if (div.innerHTML.includes('chargées')) div.innerHTML = ''; }, 3000);
-  } catch(e) {
-    clearInterval(timer); bar.style.display = 'none';
-    ['searchNom','searchPrenom','searchId'].forEach(id => { const el=document.getElementById(id); if(el) el.disabled=false; });
-    div.innerHTML = '<div class="vide" style="color:orange;">⚠️ Délai dépassé (90s)<br><button onclick="chargerToutesPersonnes()" style="margin-top:10px;padding:8px 20px;background:#2755a8;color:white;border:none;border-radius:8px;font-size:14px;cursor:pointer;">🔄 Réessayer</button></div>';
-  }
-}
-
-// Mise à jour silencieuse des personnes en arrière-plan
-async function rafraichirPersonnesBackground() {
-  try {
-    const resp = await fetchAvecTimeout(SCRIPT_URL + '?action=getAllPersonnes', {}, 90000);
-    const data = await resp.json();
-    if (data.personnes && data.personnes.length > 0) {
-      // Fusionner : garder les modifications locales non encore envoyées
-      toutesPersonnes = data.personnes;
-      try { localStorage.setItem('visites_personnes_cache', JSON.stringify(toutesPersonnes)); } catch(e) {}
-      const div = document.getElementById('resultatsRecherche');
-      if (div && div.innerHTML.includes('cache')) div.innerHTML = '';
-      const qn = (document.getElementById('searchNom')||{value:''}).value.trim();
-      const qp = (document.getElementById('searchPrenom')||{value:''}).value.trim();
-      const qi = (document.getElementById('searchId')||{value:''}).value.trim();
-      if (qn.length >= 2 || qp.length >= 2 || qi.length >= 1) rechercher();
-    }
-  } catch(e) {}
-}
-
-// ===== PIN =====
-function ajouterPin(c) {
-  if (pinSaisi.length >= 4) return;
-  pinSaisi += c; majDots();
-  if (pinSaisi.length === 4) setTimeout(seConnecter, 200);
-}
-function effacerPin() { pinSaisi = pinSaisi.slice(0,-1); majDots(); }
-function resetPin() { pinSaisi = ''; majDots(); document.getElementById('loginErreur').textContent = ''; }
-function majDots() {
-  for (let i=0; i<4; i++) document.getElementById('dot'+i).classList.toggle('filled', i < pinSaisi.length);
-}
-
-// ===== CONNEXION =====
-async function seConnecter() {
-  const nom = document.getElementById('loginNom').value;
-  const errDiv = document.getElementById('loginErreur');
-  if (!nom) { errDiv.textContent = '⚠️ Choisissez votre nom'; return; }
-  if (pinSaisi.length < 4) { errDiv.textContent = '⚠️ Entrez votre PIN'; return; }
-  const militant = listeMilitants.find(m => m.nom === nom && String(m.pin) === pinSaisi);
-  if (!militant) { errDiv.textContent = '❌ PIN incorrect'; pinSaisi = ''; majDots(); return; }
-  currentMilitant = militant.nom;
-  currentRole = militant.role || 'militant';
-  const prenom = militant.nom.split(' ').pop();
-  document.getElementById('btnUser').textContent = '👤 ' + prenom + (currentRole==='admin'?' 👑':'') + ' — Quitter';
-  if (currentRole === 'superviseur' || currentRole === 'admin') {
-    const tabs = document.getElementById('tabsBar');
-    const ts = document.createElement('div');
-    ts.className = 'tab'; ts.textContent = '📊 Stats';
-    ts.onclick = function() { showPage('stats', this); };
-    tabs.appendChild(ts);
-  }
-  if (currentRole === 'admin') {
-    const tabs = document.getElementById('tabsBar');
-    const t = document.createElement('div');
-    t.className = 'tab'; t.textContent = '👁️ Admin';
-    t.onclick = function() { showPage('admin', this); };
-    tabs.appendChild(t);
-  }
-  document.getElementById('ecranLogin').style.display = 'none';
-  document.getElementById('appPrincipale').style.display = 'block';
-  fetch(SCRIPT_URL, { method:'POST', body: new URLSearchParams({ action:'logConnexion', militant: currentMilitant }) });
-  localStorage.removeItem('visites_stats_cache_'     + APP_VERSION); // Forcer refresh stats à chaque connexion
-  statsLastLoad = 0;
-  chargerToutesPersonnes();
-  chargerStats();
-}
-
-function seDeconnecter() {
-  document.getElementById('modalDeconnexion').classList.add('ouvert');
-}
-function confirmerDeconnexion() {
-  document.getElementById('modalDeconnexion').classList.remove('ouvert');
-  const tabs = document.getElementById('tabsBar');
-  const adminTab = Array.from(tabs.children).find(t => t.textContent.includes('Admin'));
-  if (adminTab) tabs.removeChild(adminTab);
-  const statsTab = Array.from(tabs.children).find(t => t.textContent.includes('Stats'));
-  if (statsTab) tabs.removeChild(statsTab);
-  currentMilitant = null; currentRole = 'militant'; currentPersonne = null;
-  // Ne pas vider toutesPersonnes — cache localStorage toujours valide
-  pinSaisi = ''; majDots();
-  document.getElementById('loginNom').value = '';
-  document.getElementById('loginErreur').textContent = '';
-  document.getElementById('ecranLogin').style.display = 'flex';
-  document.getElementById('appPrincipale').style.display = 'none';
-  // Fix placeholder : si cache dispo → prêt immédiatement
-  const cacheOk = toutesPersonnes.length > 0;
-  ['searchNom','searchPrenom','searchId'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.disabled = !cacheOk;
-      if (!cacheOk) el.placeholder = '⏳ Chargement...';
-    }
-  });
-  document.getElementById('resultatsRecherche').innerHTML = cacheOk
-    ? ''
-    : '<div class="loading"><div class="spinner"></div>Chargement des données...<br><small>Première connexion : ~1 minute, une seule fois</small></div>';
-  document.getElementById('saisieContenu').innerHTML = '<div class="vide"><div style="font-size:40px;margin-bottom:10px;">🔍</div>Recherchez d\'abord une personne</div>';
-  // Reset throttles pour le prochain militant
-  statsLastLoad = 0;
-  dernierRechargeAuto = 0;
-  adminLastLoad = 0;
-  localStorage.removeItem('visites_stats_cache_'     + APP_VERSION);
-  localStorage.removeItem('visites_admin_cache_'     + APP_VERSION);
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab')[0].classList.add('active');
-  document.getElementById('page-recherche').classList.add('active');
-}
-
-// ===== NAVIGATION =====
-function showPage(page, el) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('page-'+page).classList.add('active');
-  el.classList.add('active');
-  if (page === 'stats') chargerStats();
-  if (page === 'admin') chargerAdmin();
-  if (page === 'recherche' && toutesPersonnes.length > 0) rechargerSilencieux();
-}
-
-// ===== RECHARGEMENT SILENCIEUX EN ARRIÈRE-PLAN =====
-let dernierRechargeAuto = 0;
-async function rechargerSilencieux() {
-  const now = Date.now();
-  if (now - dernierRechargeAuto < 120000) return; // Max 1 fois toutes les 2 min
-  dernierRechargeAuto = now;
-  try {
-    const resp = await fetchAvecTimeout(SCRIPT_URL + '?action=getAllPersonnes', {}, 90000);
-    const data = await resp.json();
-    if (data.personnes && data.personnes.length > 0) {
-      toutesPersonnes = data.personnes;
-      try { localStorage.setItem('visites_personnes_cache', JSON.stringify(toutesPersonnes)); } catch(e) {}
-      const qn = (document.getElementById('searchNom')||{value:''}).value.trim();
-      const qp = (document.getElementById('searchPrenom')||{value:''}).value.trim();
-      const qi = (document.getElementById('searchId')||{value:''}).value.trim();
-      if (qn.length >= 2 || qp.length >= 2 || qi.length >= 1) rechercher();
-      else { const d=document.getElementById('resultatsRecherche'); if(d) d.innerHTML=''; }
-    }
-  } catch(e) {}
-}
-
-// ===== RECHERCHE LOCALE INSTANTANÉE =====
-// toutesPersonnes format: [id, nom, prenom, statut, sexe, age, nVoie, libelleVoie, nomUsage]
-function resetRecherche() {
-  ['searchNom','searchPrenom','searchId'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = '';
-  });
-  const div = document.getElementById('resultatsRecherche');
-  if (div) div.innerHTML = '';
-}
-
-function rechercherDebounce() { clearTimeout(searchTimeout); searchTimeout = setTimeout(rechercher, 150); }
-function rechercher() {
-  const qNom    = (document.getElementById('searchNom')||{value:''}).value.trim().toLowerCase();
-  const qPrenom  = (document.getElementById('searchPrenom')||{value:''}).value.trim().toLowerCase();
-  const qId      = (document.getElementById('searchId')||{value:''}).value.trim();
-  const div = document.getElementById('resultatsRecherche');
-  if (!qNom && !qPrenom && !qId) { div.innerHTML = ''; return; }
-  const resultats = [];
-  for (let i = 0; i < toutesPersonnes.length; i++) {
-    const p = toutesPersonnes[i];
-    const id = String(p[0]);
-    const nom = String(p[1]||'').toLowerCase();
-    const prenom = String(p[2]||'').toLowerCase();
-
-    // Chaque champ rempli doit correspondre (ET logique)
-    let ok = true;
-    if (qId) {
-      const matchId = qId.length >= 3 ? id.startsWith(qId) : id === qId;
-      if (!matchId) ok = false;
-    }
-    if (qNom && ok) {
-      if (nom.indexOf(qNom) === -1) ok = false;
-    }
-    if (qPrenom && ok) {
-      if (prenom.indexOf(qPrenom) === -1) ok = false;
-    }
-    if (ok) resultats.push(p);
-  }
-  if (resultats.length === 0) { div.innerHTML = '<div class="vide">Aucun résultat</div>'; return; }
-  const affichage = resultats.slice(0, 500);
-  const nbTotal = resultats.length;
-  const compteur = '<div style="font-size:12px;color:#999;text-align:center;padding:4px 0 10px;">' + (nbTotal > 500 ? '500 premiers résultats sur ' + nbTotal : nbTotal + ' résultat' + (nbTotal>1?'s':'') + ' trouvé' + (nbTotal>1?'s':'')) + '</div>';
-  div.innerHTML = compteur + affichage.map(p => {
-    const statut = p[3];
-    const sexeIcon = p[4]==='M' ? '👨' : p[4]==='F' ? '👩' : '';
-    const age = p[5] ? p[5]+' ans' : '';
-    const adresse = [p[6], p[7]].filter(Boolean).join(' ');
-    const nomUsageAff = p[8] && p[8] !== p[1] ? ` · <span style="font-style:italic;opacity:.8">${p[8]}</span>` : '';
-    const detail = [sexeIcon + (age ? ' '+age : ''), adresse].filter(Boolean).join(' · ');
-    return `
-    <div class="resultat-item ${statut==='Visité'?'visite':'non-visite'}" onclick="selectionnerPersonne(${p[0]})">
-      <div class="ri-info">
-        <div class="ri-nom">${p[1]} ${p[2]}${nomUsageAff}</div>
-        <div class="ri-detail">${detail}</div>
-      </div>
-      <span class="ri-badge ${statut==='Visité'?'badge-visite':'badge-non'}">${statut==='Visité'?'✓ Visité':'Non visité'}</span>
-    </div>`;
-  }).join('');
-}
-
-function majCacheStatut(id, statut, candidat, notes, dateVisite, militant) {
-  for (let i=0; i<toutesPersonnes.length; i++) {
-    if (toutesPersonnes[i][0]==id) {
-      toutesPersonnes[i][3] = statut;
-      if (candidat  !== undefined) toutesPersonnes[i][10] = candidat;
-      if (notes     !== undefined) toutesPersonnes[i][12] = notes;
-      if (dateVisite!== undefined) toutesPersonnes[i][11] = dateVisite;
-      if (militant  !== undefined) toutesPersonnes[i][14] = militant;
-      break;
-    }
-  }
-  // Mettre à jour le cache localStorage aussi
-  try { localStorage.setItem('visites_personnes_cache_' + APP_VERSION, JSON.stringify(toutesPersonnes)); } catch(e) {}
-}
-
-async function selectionnerPersonne(id) {
-  currentPersonne = null;
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('page-saisie').classList.add('active');
-  document.querySelectorAll('.tab')[1].classList.add('active');
-
-  // ── Accès direct au cache local → INSTANTANÉ ──────────────────────
-  const local = toutesPersonnes.find(p => p[0] == id);
-  if (local) {
-    // Construire l'objet fiche depuis le cache
-    const p = {
-      id: local[0], nom: local[1], prenom: local[2],
-      statut: local[3], sexe: local[4], age: local[5],
-      nVoie: local[6], libelleVoie: local[7], nomUsage: local[8],
-      bureau: local[9]||'', candidatActuel: local[10]||'',
-      dateDerniereVisite: local[11]||'', notes: local[12]||'',
-      secteur: local[13]||'', militant: local[14]||''
-    };
-    currentPersonne = p;
-    afficherFiche(p);
-    // Rafraîchir les détails complets en arrière-plan (notes, candidat à jour)
-    rafraichirFicheBackground(id);
-    return;
-  }
-
-  // ── Fallback : fetch si pas en cache ──────────────────────────────
-  document.getElementById('saisieContenu').innerHTML = '<div class="loading"><div class="spinner"></div>Chargement...</div>';
-  try {
-    const resp = await fetch(SCRIPT_URL + '?action=getFiche&id=' + id);
-    const p = await resp.json();
-    currentPersonne = p; afficherFiche(p);
-  } catch(e) { document.getElementById('saisieContenu').innerHTML = '<div class="vide" style="color:red;">⚠️ Erreur</div>'; }
-}
-
-// Rafraîchit les détails d'une fiche en arrière-plan (notes, candidat, date)
-async function rafraichirFicheBackground(id) {
-  try {
-    const resp = await fetch(SCRIPT_URL + '?action=getFiche&id=' + id);
-    const p = await resp.json();
-    if (!currentPersonne || currentPersonne.id != id) return; // L'utilisateur a changé de page
-    // Mettre à jour seulement si différent
-    const changed = currentPersonne.statut !== p.statut ||
-                    currentPersonne.candidatActuel !== p.candidatActuel ||
-                    currentPersonne.notes !== p.notes;
-    currentPersonne = p;
-    // Mettre à jour le cache local aussi
-    for (let i=0; i<toutesPersonnes.length; i++) {
-      if (toutesPersonnes[i][0] == id) {
-        toutesPersonnes[i][3] = p.statut;
-        toutesPersonnes[i][10] = p.candidatActuel||'';
-        toutesPersonnes[i][11] = p.dateDerniereVisite||'';
-        toutesPersonnes[i][12] = p.notes||'';
-        break;
-      }
-    }
-    if (changed) afficherFiche(p); // Re-render seulement si données changées
-  } catch(e) {}
-}
-
-function afficherFiche(p) {
-  const sb = p.statut==='Visité'
-    ? '<span class="statut-badge statut-visite">✓ Visité</span>'
-    : '<span class="statut-badge statut-non">Non visité</span>';
-  const cOpts = CANDIDATS.map(c => `<option value="${c}" ${p.candidatActuel===c?'selected':''}>${c||'-- Choisir --'}</option>`).join('');
-  const adresse = [p.nVoie, p.libelleVoie].filter(Boolean).join(' ') || '—';
-  const sexeIcon = p.sexe==='M' ? '👨' : p.sexe==='F' ? '👩' : '';
-  document.getElementById('saisieContenu').innerHTML = `
-    <button class="btn-retour" onclick="retourRecherche()">← Retour</button>
-    <div class="fiche">
-      <div class="fiche-header">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-          <div class="nom">${p.nom}</div>
-          <div style="font-size:14px;color:white;font-weight:600;margin-top:2px;">ID — ${p.id}</div>
-        </div>
-        <div class="prenom">${p.prenom}</div>
-        ${p.nomUsage && p.nomUsage !== p.nom ? `<div class="nom-usage">Usage : ${p.nomUsage}</div>` : ''}
-        ${p.statut==='Visité' ? `<div class="badge-deja-visite">✅ Déjà visité${p.candidatActuel ? ' · '+p.candidatActuel : ''}</div>` : ''}
-      </div>
-      <div class="fiche-body">
-        ${p.sexe?`<div class="fiche-row"><span class="label">Sexe</span><span class="value">${sexeIcon} ${p.sexe==='M'?'Masculin':'Féminin'}</span></div>`:''}
-        ${p.age?`<div class="fiche-row"><span class="label">Âge</span><span class="value">${p.age} ans</span></div>`:''}
-        <div class="fiche-row"><span class="label">Adresse</span><span class="value">${adresse}</span></div>
-        <div class="fiche-row"><span class="label">Bureau 🏢</span><span class="value">${p.bureau||'—'}</span></div>
-        <div class="fiche-row"><span class="label">Statut</span><span class="value">${sb}</span></div>
-        ${p.dateDerniereVisite?`<div class="fiche-row"><span class="label">Dernière visite</span><span class="value">${p.dateDerniereVisite}</span></div>`:''}
-        ${p.candidatActuel?`<div class="fiche-row"><span class="label">Candidat</span><span class="value">${p.candidatActuel}</span></div>`:''}
-      </div>
-    </div>
-    <div class="form-section">
-      <h3>✏️ Enregistrer une visite</h3>
-      <div class="field"><label>Statut</label>
-        <select id="fStatut">
-          <option value="Visité" ${p.statut==='Visité'?'selected':''}>✅ Visité</option>
-          <option value="Non visité" ${p.statut!=='Visité'?'selected':''}>❌ Non visité</option>
-          <option value="Absent">🚪 Absent</option>
-          <option value="Refus">🚫 Refus</option>
-        </select>
-      </div>
-      <div class="field"><label>Candidat soutenu</label><select id="fCandidat">${cOpts}</select></div>
-      <div class="field">
-        <label>Notes <span style="font-size:11px;font-weight:400;color:#999;">— Ajouter le nom ou Prénom</span></label>
-        <textarea id="fNotes" placeholder="Remarques...">${p.notes||''}</textarea>
-      </div>
-      <div class="field">
-        <label>Observation</label>
-        <textarea id="fObservation" placeholder="Observation complémentaire..." style="min-height:70px;">${p.observation||''}</textarea>
-      </div>
-      <div id="btnZone">
-        <button class="btn-vert" onclick="enregistrerVisite()">✅ Enregistrer la visite</button>
-      </div>
-    </div>
-  </div>`;
-}
-
-function retourRecherche() {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('page-recherche').classList.add('active');
-  document.querySelectorAll('.tab')[0].classList.add('active');
-  // Rafraîchir les résultats de recherche
-  const qn = (document.getElementById('searchNom')||{value:''}).value.trim();
-  const qp = (document.getElementById('searchPrenom')||{value:''}).value.trim();
-  const qi = (document.getElementById('searchId')||{value:''}).value.trim();
-  if (qn || qp || qi) rechercher();
-}
-
-function showLoading(texte) {
-  document.getElementById('loadingText').textContent = texte;
-  document.getElementById('loadingOverlay').classList.add('visible');
-  const fill = document.getElementById('overlayBarFill');
-  fill.style.width = '0%';
-  fill.style.transition = 'none';
-  setTimeout(() => {
-    fill.style.transition = 'width 1.2s ease-out'; // Réduit de 2s à 1.2s
-    fill.style.width = '80%';
-  }, 30);
-}
-function hideLoading() {
-  const fill = document.getElementById('overlayBarFill');
-  fill.style.transition = 'width .3s ease';
-  fill.style.width = '100%';
-  setTimeout(() => {
-    document.getElementById('loadingOverlay').classList.remove('visible');
-    fill.style.width = '0%';
-  }, 350);
-}
-
-async function enregistrerVisite() {
-  if (!currentPersonne) return;
-  const statut = document.getElementById('fStatut').value;
-  const candidat = document.getElementById('fCandidat').value;
-  const notes = document.getElementById('fNotes').value;
-  const observation = document.getElementById('fObservation') ? document.getElementById('fObservation').value : '';
-
-  // 1. Mise à jour IMMÉDIATE du cache local → UI instantanée
-  currentPersonne.statut = statut;
-  currentPersonne.candidatActuel = candidat;
-  currentPersonne.notes = notes;
-  currentPersonne.observation = observation;
-  const idxP = toutesPersonnes.findIndex(p => String(p[0]) === String(currentPersonne.id));
-  if (idxP !== -1) {
-    toutesPersonnes[idxP][3] = statut;
-    toutesPersonnes[idxP][10] = candidat;
-    toutesPersonnes[idxP][12] = notes;
-  }
-  majCacheStatut(currentPersonne.id, statut, candidat, notes, new Date().toLocaleDateString('fr-FR'), currentMilitant);
-  afficherFiche(currentPersonne);
-  showToast('✅ Enregistré !', 'succes');
-
-  // 2. Envoi en arrière-plan — NON BLOQUANT — on n'attend pas la réponse
-  const paramsObj = new URLSearchParams({ action:'enregistrer', id: String(currentPersonne.id), statut, candidat, notes, observation,
-    militant: currentMilitant, nom: currentPersonne.nom+' '+currentPersonne.prenom,
-    secteur: currentPersonne.secteur||'' });
-  fetch(SCRIPT_URL, { method:'POST', body: paramsObj }).catch(() => {});
-}
-
-function reinitialiserVisite() {
-  if (!currentPersonne) return;
-  // Remplacer le bouton Modifier par Enregistrer directement
-  const btnZone = document.getElementById('btnZone');
-  if (btnZone) btnZone.innerHTML = `<button class="btn-vert" onclick="enregistrerVisite()">✅ Enregistrer la visite</button>`;
-}
-function fermerModal() {
-  document.getElementById('modalOverlay').classList.remove('ouvert');
-}
-async function confirmerReinit() {
-  fermerModal();
-  const idAReinit = currentPersonne.id;
-
-  // Mise à jour IMMÉDIATE locale → UI instantanée
-  currentPersonne.statut = 'Non visité';
-  currentPersonne.candidatActuel = '';
-  currentPersonne.notes = '';
-  majCacheStatut(idAReinit, 'Non visité', '', '', '');
-  afficherFiche(currentPersonne);
-  showToast('✅ Modifié !', 'succes');
-
-  // Envoi direct au serveur en arrière-plan (sans attendre)
-  fetch(SCRIPT_URL, {method:'POST', body: new URLSearchParams({action:'reinitialiser', id:idAReinit})})
-    .catch(() => {});
-}
-
-let statsLastLoad = 0;
-let chartCamembert = null;
-let chartBureau = null;
-
-function afficherStats(data) {
-  document.getElementById('cptTotal').textContent = data.total||'?';
-  document.getElementById('cptVisites').textContent = data.visites||'0';
-  document.getElementById('cptPct').textContent = (data.pct||'0')+'%';
-  document.getElementById('compteur').style.display = 'flex';
-  document.getElementById('statsContenu').innerHTML = '';
-  afficherGraphiques(data);
-}
-
-function afficherGraphiques(data) {
-  document.getElementById('statsGraphiques').style.display = 'block';
-
-  // ── Camembert ──────────────────────────────────────────────────
-  const visites = data.visites || 0;
-  const nonVisites = (data.total || 0) - visites;
-  const pctV = data.total > 0 ? Math.round(visites / data.total * 100) : 0;
-  if (chartCamembert) chartCamembert.destroy();
-  chartCamembert = new Chart(document.getElementById('chartCamembert'), {
-    type: 'doughnut',
-    data: {
-      labels: [
-        '✅ Visités : ' + visites + ' (' + pctV + '%)',
-        '❌ Non visités : ' + nonVisites + ' (' + (100-pctV) + '%)'
-      ],
-      datasets: [{
-        data: [visites, nonVisites],
-        backgroundColor: ['#27ae60', '#e74c3c'],
-        borderWidth: 3,
-        borderColor: '#fff'
-      }]
-    },
-    options: {
-      responsive: true,
-      cutout: '60%',
-      plugins: {
-        legend: {
-          position: 'bottom',
-          labels: { font: { size: 13, weight: '600' }, padding: 16, usePointStyle: true }
-        },
-        tooltip: {
-          callbacks: {
-            label: function(ctx) {
-              return ' ' + ctx.label;
-            }
-          }
-        }
-      }
-    }
-  });
-
-  // ── Barres par bureau ──────────────────────────────────────────
-  const statsBureau = {};
-  toutesPersonnes.forEach(p => {
-    const bureau = p[9] || 'Inconnu';
-    if (!statsBureau[bureau]) statsBureau[bureau] = { v: 0, total: 0 };
-    statsBureau[bureau].total++;
-    if (p[3] === 'Visité' || p[3] === 'Visite') statsBureau[bureau].v++;
-  });
-
-  const bureaux = Object.keys(statsBureau).filter(b => b !== 'Inconnu').sort((a,b) => statsBureau[b].total - statsBureau[a].total);
-  const dataVisites = bureaux.map(b => statsBureau[b].v);
-  const dataTotaux  = bureaux.map(b => statsBureau[b].total);
-  const labels = bureaux.map(b => {
-    const short = b.length > 22 ? b.substring(0,22)+'…' : b;
-    return short + '  (' + statsBureau[b].total + ')';
-  });
-
-  if (chartBureau) chartBureau.destroy();
-  chartBureau = new Chart(document.getElementById('chartBureau'), {
-    type: 'bar',
-    data: {
-      labels: labels,
-      datasets: [
-        {
-          label: 'Total inscrits',
-          data: dataTotaux,
-          backgroundColor: 'rgba(39,85,168,0.15)',
-          borderColor: '#2755a8',
-          borderWidth: 1,
-          borderRadius: 4
-        },
-        {
-          label: 'Visités',
-          data: dataVisites,
-          backgroundColor: '#27ae60',
-          borderRadius: 4
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      indexAxis: 'y',
-      plugins: {
-        legend: {
-          position: 'bottom',
-          labels: { font: { size: 12, weight: '600' }, padding: 14, usePointStyle: true }
-        },
-        tooltip: {
-          callbacks: {
-            afterBody: function(items) {
-              const b = bureaux[items[0].dataIndex];
-              const s = statsBureau[b];
-              const pct = Math.round(s.v / s.total * 100);
-              return 'Progression : ' + pct + '%';
-            }
-          }
-        },
-        datalabels: {
-          anchor: 'end',
-          align: 'end',
-          formatter: function(value, ctx) {
-            if (ctx.datasetIndex === 1 && value > 0) {
-              const b = bureaux[ctx.dataIndex];
-              const pct = Math.round(value / statsBureau[b].total * 100);
-              return value + ' (' + pct + '%)';
-            }
-            return '';
-          },
-          font: { size: 11, weight: '700' },
-          color: '#1a3a6b',
-          padding: { left: 4 }
-        }
-      },
-      scales: {
-        x: { grid: { color: '#f0f2f5' }, ticks: { font: { size: 11 } } },
-        y: { ticks: { font: { size: 11 } } }
-      },
-      layout: { padding: { right: 80 } }
-    },
-    plugins: [ChartDataLabels]
-  });
-}
-async function chargerStats() {
-  const CACHE_KEY = 'visites_stats_cache_'     + APP_VERSION;
-  // 1. Cache dispo → affichage INSTANTANÉ
-  const cache = localStorage.getItem(CACHE_KEY);
-  if (cache) {
-    try { afficherStats(JSON.parse(cache)); } catch(e) {}
-  }
-  // 2. TOUJOURS rafraîchir depuis serveur (throttle réduit à 10s)
-  const now = Date.now();
-  if (now - statsLastLoad < 10000) return;
-  statsLastLoad = now;
-  try {
-    const resp = await fetch(SCRIPT_URL + '?action=stats&t=' + now); // cache-buster
-    const data = await resp.json();
-    try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch(e) {}
-    afficherStats(data);
-  } catch(e) {
-    if (!cache) document.getElementById('statsContenu').innerHTML = '<div class="vide" style="color:red;">⚠️ Erreur</div>';
-  }
-}
-
-let adminLastLoad = 0;
-function buildAdminHtml(data) {
-  const compteurs = data.compteurs||{}, logs = data.logs||[];
-  const connectes = data.connectes||{};
-  let html = '<div class="section-title">👥 Activité par militant</div>';
-  listeMilitants.forEach(m => {
-    const nb = compteurs[m.nom]||0;
-    const actif = m.actif !== false;
-    const connecte = connectes[m.nom];
-    const emojiConnecte = connecte ? '🟢' : '⚪';
-    const statusLabel = connecte ? '<span class="mc-connecte on">En ligne</span>' : '';
-    const histo = logs.filter(l => l.militant === m.nom && l.action === 'Connexion').slice(0,5);
-    let histoHtml = '';
-    for (let h = 0; h < histo.length; h++) {
-      const next = histo[h+1];
-      const duree = next ? '' : (connectes[m.nom] ? '🟢 En cours' : '');
-      histoHtml += `<div class="mc-histo-item"><span>🔑 ${histo[h].date}</span><span class="mc-histo-duree">${duree}</span></div>`;
-    }
-    const mcId = 'histo_' + m.nom.replace(/ /g,'_');
-    html += `<div class="militant-card" id="mc-${m.nom.replace(/ /g,'_')}">
-      <div style="flex:1">
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-          <div class="mc-nom">${m.nom}</div>
-          ${m.role==='admin'?'<span class="role-badge">admin</span>':''} 
-          ${connecte ? '<span class="mc-connecte on">🟢 En ligne</span>' : '<span class="mc-connecte off">⚫ Hors ligne</span>'}
-        </div>
-        <div class="mc-detail">${nb} visite${nb>1?'s':''} enregistrée${nb>1?'s':''}</div>
-        <div style="font-size:11px;color:#888;margin-top:2px;">
-          Rôle : <span style="font-weight:600;color:${m.role==='admin'?'#856404':'#1a73e8'}">${m.role==='admin'?'👑 Admin':'⚔️ Militant'}</span>
-          &nbsp;·&nbsp;
-          Statut : <span style="font-weight:600;color:${actif?'#27ae60':'#e74c3c'}">${actif?'✅ Actif':'🔴 Désactivé'}</span>
-        </div>
-        <span class="mc-histo-btn" onclick="toggleHisto('${mcId}')">📋 Historique connexions ▼</span>
-        <div class="mc-historique" id="${mcId}">${histoHtml || '<div class="mc-histo-item"><span>Aucune connexion récente</span></div>'}</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:12px;">
-        <div class="mc-badge">${nb}</div>
-      </div>
-    </div>`;
-  });
-  html += '<div class="section-title" style="margin-top:16px;">📋 Dernières actions</div>';
-  if (!logs.length) { html += '<div class="vide">Aucune activité</div>'; }
-  else logs.slice(0,10).forEach((l, idx) => {
-    const alerte = l.alerte ? '<span style="color:red;font-weight:700;"> ⚠️ ALERTE</span>' : '';
-    const roleM = listeMilitants.find(x => x.nom === l.militant);
-    const roleBadge = roleM ? `<span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:8px;margin-left:6px;background:${roleM.role==='admin'?'#fff3cd':'#e8f0fe'};color:${roleM.role==='admin'?'#856404':'#1a73e8'}">${roleM.role}</span>` : '';
-    html += `<div class="log-item"><div class="log-icon" style="min-width:28px;text-align:center;font-size:13px;font-weight:700;color:#888;">${idx+1}</div><div class="log-info"><div class="log-action">${l.militant}${roleBadge}${alerte}</div><div class="log-detail">${l.action==='Connexion'?'🔑 Connexion':'✅ Visite — '+(l.nom||'ID '+l.id)}</div></div><div class="log-date">${l.date}</div></div>`;
-  });
-  return html;
-}
-async function forceChargerAdmin() {
-  adminLastLoad = 0;
-  localStorage.removeItem('visites_admin_cache_' + APP_VERSION);
-  await chargerAdmin();
-}
-
-async function chargerAdmin() {
-  if (currentRole !== 'admin') return;
-  const div = document.getElementById('adminContenu');
-  const CACHE_KEY = 'visites_admin_cache_'     + APP_VERSION;
-  // 1. Cache dispo → affichage INSTANTANÉ
-  const cache = localStorage.getItem(CACHE_KEY);
-  if (cache) {
-    try { div.innerHTML = JSON.parse(cache); } catch(e) {}
-  }
-  // 2. Refresh arrière-plan (throttle 60s)
-  const now = Date.now();
-  if (now - adminLastLoad < 60000 && cache) return;
-  adminLastLoad = now;
-  if (!cache) div.innerHTML = '<div class="loading"><div class="spinner"></div>Chargement...</div>';
-  try {
-    const resp = await fetch(SCRIPT_URL + '?action=getLogs');
-    const data = await resp.json();
-    const html = buildAdminHtml(data);
-    div.innerHTML = html;
-    try { localStorage.setItem(CACHE_KEY, JSON.stringify(html)); } catch(e) {}
-  } catch(e) {
-    if (!cache) div.innerHTML = '<div class="vide" style="color:red;">⚠️ Erreur</div>';
-  }
-}
-
-function toggleHisto(id) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.classList.toggle('open');
-  const btn = el.previousElementSibling;
-  if (btn) btn.textContent = el.classList.contains('open') ? '📋 Historique connexions ▲' : '📋 Historique connexions ▼';
-}
-
-async function toggleMilitant(nom, actif) {
-  try {
-    const resp = await fetch(SCRIPT_URL, {method:'POST', body: new URLSearchParams({action:'toggleMilitant', nom, actif: actif?'1':'0'})});
-    const data = await resp.json();
-    if (data.ok) {
-      showToast(actif ? '✅ Militant activé' : '🔴 Militant désactivé', 'succes');
-      // Mettre à jour listeMilitants local
-      const m = listeMilitants.find(x => x.nom===nom);
-      if (m) m.actif = actif;
-    } else { showToast('❌ Erreur','erreur'); }
-  } catch(e) { showToast('❌ Erreur connexion','erreur'); }
-}
-
-function showToast(msg, type) {
-  const ex = document.querySelector('.toast'); if (ex) ex.remove();
-  const t = document.createElement('div');
-  t.className = 'toast '+type; t.textContent = msg; document.body.appendChild(t);
-  if (type !== '') setTimeout(() => t.remove(), 2500);
-}
-
-// Préchauffage Apps Script dès le chargement (sans attendre)
-fetch(SCRIPT_URL + '?action=ping').catch(() => {});
-chargerMilitants();
-</script>
 
 <!-- OVERLAY CHARGEMENT -->
 <div class="loading-overlay" id="loadingOverlay">
   <div class="big-spinner"></div>
-  <div class="loading-text" id="loadingText">⏳ Enregistrement en cours...</div>
-  <div class="overlay-bar-wrap"><div class="overlay-bar-fill" id="overlayBarFill"></div></div>
+  <div class="loading-text" id="loadingText">⏳ Chargement...</div>
 </div>
 
 <!-- POPUP DÉCONNEXION -->
@@ -1458,22 +275,1024 @@ chargerMilitants();
     <h3>👋 Déconnexion</h3>
     <p>Voulez-vous vous déconnecter ?</p>
     <div class="modal-actions">
-      <button class="modal-btn-cancel" onclick="document.getElementById('modalDeconnexion').style.display='none'">Non</button>
+      <button class="modal-btn-cancel" onclick="fermerModal('modalDeconnexion')">Non</button>
       <button class="modal-btn-ok" onclick="confirmerDeconnexion()">Oui, quitter</button>
     </div>
   </div>
 </div>
 
-<!-- POPUP MODALE -->
-<div class="modal-overlay" id="modalOverlay">
+<!-- POPUP CONFLIT -->
+<div class="modal-overlay" id="modalConflit">
   <div class="modal-box">
-    <h3>✏️ Modifier l'enregistrement</h3>
-    <p>Voulez-vous modifier ou annuler la visite de cette personne ?</p>
+    <h3>⚠️ Conflit détecté</h3>
+    <p id="conflitMessage">Cette personne a été modifiée par un autre militant.</p>
     <div class="modal-actions">
-      <button class="modal-btn-cancel" onclick="fermerModal()">Annuler</button>
-      <button class="modal-btn-ok" onclick="confirmerReinit()">Oui, modifier</button>
+      <button class="modal-btn-cancel" onclick="fermerModal('modalConflit')">Annuler</button>
+      <button class="modal-btn-ok" style="background:#e67e22;" onclick="forcerEnregistrement()">Écraser quand même</button>
     </div>
   </div>
 </div>
+
+<script>
+// ============================================
+// CONFIG v62 — Sync automatique
+// ============================================
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
+const APP_VERSION = 'v63';
+const MAX_RESULTATS = 50;
+const SYNC_INTERVAL = 15000; // 15 secondes
+const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
+const CACHE_KEY_PERSONNES = 'visites_personnes_v3';
+const CACHE_KEY_MILITANTS = 'visites_militants_v3';
+
+// ============================================
+// ÉTAT GLOBAL
+// ============================================
+let currentPersonne = null;
+let currentPersonneServeur = null; // Pour détecter les conflits
+let currentMilitant = null;
+let currentRole = 'militant';
+let pinSaisi = '';
+let searchTimeout = null;
+let syncInterval = null;
+let listeMilitants = [];
+let toutesPersonnes = [];
+let statsCache = null;
+let adminCache = null;
+let chartCamembert = null;
+let chartBureau = null;
+let isSyncing = false;
+let lastSyncTime = 0;
+
+// ============================================
+// MILITANTS FALLBACK
+// ============================================
+const MILITANTS_FALLBACK = [
+  {nom:'Boyer Denis', pin:'1234', role:'admin', actif:true},
+  {nom:'Béatrice savigny', pin:'3456', role:'militant', actif:true},
+  {nom:'Emilie Candassamy', pin:'7726', role:'militant', actif:true},
+  {nom:'Wilfrid Rivière', pin:'1258', role:'militant', actif:true},
+  {nom:'Emmanuelle probs', pin:'1426', role:'militant', actif:true},
+  {nom:'Payet Johnny', pin:'1452', role:'superviseur', actif:true},
+  {nom:'brice gigant', pin:'2030', role:'militant', actif:true},
+  {nom:'Ludovic Métro', pin:'2112', role:'militant', actif:true},
+  {nom:'Julien Doro', pin:'2350', role:'militant', actif:true}
+];
+
+// ============================================
+// UTILITAIRES
+// ============================================
+const $ = id => document.getElementById(id);
+
+function fetchRapide(url, options, timeout = 15000) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), timeout);
+  return fetch(url, { ...options, signal: ctrl.signal }).finally(() => clearTimeout(t));
+}
+
+function showToast(msg, type = '') {
+  const old = document.querySelector('.toast');
+  if (old) old.remove();
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
+
+function ouvrirModal(id) { $(id).classList.add('ouvert'); }
+function fermerModal(id) { $(id).classList.remove('ouvert'); }
+
+function setSyncIndicator(syncing) {
+  const ind = $('syncIndicator');
+  if (ind) ind.classList.toggle('syncing', syncing);
+}
+
+function updateLastSync() {
+  const el = $('lastSync');
+  if (el) {
+    const now = new Date();
+    el.textContent = '🔄 ' + now.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+  }
+}
+
+// ============================================
+// NAVIGATION ONGLETS
+// ============================================
+function initTabs() {
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.onclick = () => {
+      const page = tab.dataset.page;
+      if (!page) return;
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      $('page-' + page).classList.add('active');
+      if (page === 'stats') chargerStats();
+      if (page === 'admin') chargerAdmin();
+    };
+  });
+}
+
+function showPage(page) {
+  const tab = document.querySelector(`.tab[data-page="${page}"]`);
+  if (tab) tab.click();
+}
+
+// ============================================
+// SYNC AUTOMATIQUE — Toutes les 30s
+// ============================================
+function demarrerSync() {
+  // Arrêter l'ancien si existe
+  if (syncInterval) clearInterval(syncInterval);
+  
+  // Sync immédiat puis toutes les 30s
+  syncInterval = setInterval(syncAuto, SYNC_INTERVAL);
+  console.log('🔄 Sync auto démarré (15s)');
+}
+
+function arreterSync() {
+  if (syncInterval) {
+    clearInterval(syncInterval);
+    syncInterval = null;
+  }
+  console.log('⏹️ Sync auto arrêté');
+}
+
+async function syncAuto() {
+  if (isSyncing) return;
+  isSyncing = true;
+  setSyncIndicator(true);
+
+  try {
+    // 1. Sync des personnes
+    const resp = await fetchRapide(SCRIPT_URL + '?action=getAllPersonnes', {}, 30000);
+    const data = await resp.json();
+    
+    if (data.personnes?.length) {
+      const anciensVisites = toutesPersonnes.filter(p => p[3] === 'Visité').length;
+      
+      toutesPersonnes = data.personnes;
+      try { localStorage.setItem(CACHE_KEY_PERSONNES, JSON.stringify(toutesPersonnes)); } catch(e) {}
+      
+      const nouveauxVisites = toutesPersonnes.filter(p => p[3] === 'Visité').length;
+      
+      if (nouveauxVisites !== anciensVisites) {
+        showToast(`🔄 Sync: ${nouveauxVisites} visités`, 'succes');
+      }
+      
+      const qNom = $('searchNom')?.value;
+      const qPrenom = $('searchPrenom')?.value;
+      const qId = $('searchId')?.value;
+      if (qNom || qPrenom || qId) rechercher();
+      
+      if (currentPersonne) {
+        verifierConflitFiche(currentPersonne.id);
+      }
+      
+      // Mettre à jour stats si onglet ouvert
+      if (statsCache) {
+        statsCache.visites = nouveauxVisites;
+        statsCache.pct = Math.round(nouveauxVisites / toutesPersonnes.length * 100);
+        majCompteurStats();
+      }
+      
+      lastSyncTime = Date.now();
+      updateLastSync();
+    }
+    
+    // 2. Sync des logs/admin (qui est en ligne)
+    if (currentRole === 'admin' || currentRole === 'superviseur') {
+      await syncAdmin();
+    }
+    
+  } catch(e) {
+    console.log('Sync échouée:', e.message);
+  }
+
+  isSyncing = false;
+  setSyncIndicator(false);
+}
+
+// Sync admin séparé (logs, connectés)
+async function syncAdmin() {
+  try {
+    const resp = await fetchRapide(SCRIPT_URL + '?action=getLogs', {}, 10000);
+    const data = await resp.json();
+    
+    // Mettre à jour le cache
+    adminCache = buildAdminHtml(data);
+    
+    // Si on est sur la page admin, rafraîchir l'affichage
+    const pageAdmin = $('page-admin');
+    if (pageAdmin?.classList.contains('active')) {
+      $('adminContenu').innerHTML = adminCache;
+    }
+  } catch(e) {
+    console.log('Sync admin échouée:', e.message);
+  }
+}
+
+// Mettre à jour les compteurs stats sans redessiner les graphiques
+function majCompteurStats() {
+  if (!statsCache) return;
+  $('cptTotal').textContent = toutesPersonnes.length;
+  $('cptVisites').textContent = statsCache.visites;
+  $('cptPct').textContent = statsCache.pct + '%';
+}
+
+// Sync manuel (bouton refresh)
+async function syncManuel() {
+  showToast('🔄 Synchronisation...', '');
+  await syncAuto();
+  showToast('✅ Synchronisé !', 'succes');
+}
+
+// ============================================
+// DÉTECTION DE CONFLIT
+// ============================================
+async function verifierConflitFiche(id) {
+  // Chercher dans le cache mis à jour
+  const serveur = toutesPersonnes.find(p => p[0] == id);
+  if (!serveur || !currentPersonne) return;
+
+  const statutServeur = serveur[3];
+  const militantServeur = serveur[14];
+
+  // Si quelqu'un d'autre a modifié
+  if (statutServeur === 'Visité' && 
+      militantServeur && 
+      militantServeur !== currentMilitant &&
+      currentPersonne.statut !== 'Visité') {
+    
+    // Alerte conflit
+    currentPersonneServeur = {
+      statut: statutServeur,
+      militant: militantServeur,
+      candidat: serveur[10]
+    };
+    
+    afficherAlerteConflit(militantServeur, serveur[10]);
+  }
+}
+
+function afficherAlerteConflit(militant, candidat) {
+  // Mettre à jour la fiche avec alerte
+  const alerteHtml = `
+    <div class="alerte-conflit">
+      <div class="titre">⚠️ Modifié par ${militant}</div>
+      <div class="detail">Cette personne vient d'être enregistrée${candidat ? ' · ' + candidat : ''}</div>
+    </div>`;
+  
+  const saisie = $('saisieContenu');
+  if (saisie && !saisie.innerHTML.includes('alerte-conflit')) {
+    const btnRetour = saisie.querySelector('.btn-retour');
+    if (btnRetour) {
+      btnRetour.insertAdjacentHTML('afterend', alerteHtml);
+    }
+  }
+  
+  showToast('⚠️ Modifié par ' + militant, 'warning');
+}
+
+// ============================================
+// MILITANTS
+// ============================================
+async function chargerMilitants() {
+  const sel = $('loginNom');
+  if (!sel) return;
+
+  try {
+    const cache = localStorage.getItem(CACHE_KEY_MILITANTS);
+    if (cache) listeMilitants = JSON.parse(cache);
+  } catch(e) {}
+  
+  if (!listeMilitants.length) listeMilitants = MILITANTS_FALLBACK;
+  remplirSelectMilitants();
+  
+  setTimeout(async () => {
+    try {
+      const resp = await fetchRapide(SCRIPT_URL + '?action=getMilitants', {}, 10000);
+      const data = await resp.json();
+      if (data.militants?.length) {
+        listeMilitants = data.militants;
+        localStorage.setItem(CACHE_KEY_MILITANTS, JSON.stringify(listeMilitants));
+        remplirSelectMilitants();
+      }
+    } catch(e) {}
+  }, 500);
+}
+
+function remplirSelectMilitants() {
+  const sel = $('loginNom');
+  const val = sel.value;
+  sel.innerHTML = '<option value="">-- Choisir --</option>';
+  listeMilitants.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m.nom;
+    opt.textContent = m.nom;
+    sel.appendChild(opt);
+  });
+  sel.value = val;
+  sel.disabled = false;
+}
+
+// ============================================
+// PIN
+// ============================================
+function ajouterPin(c) {
+  if (pinSaisi.length >= 4) return;
+  pinSaisi += c;
+  majDots();
+  if (pinSaisi.length === 4) setTimeout(seConnecter, 150);
+}
+
+function effacerPin() {
+  pinSaisi = pinSaisi.slice(0, -1);
+  majDots();
+}
+
+function resetPin() {
+  pinSaisi = '';
+  majDots();
+  $('loginErreur').textContent = '';
+}
+
+function majDots() {
+  for (let i = 0; i < 4; i++) {
+    $('dot' + i).classList.toggle('filled', i < pinSaisi.length);
+  }
+}
+
+// ============================================
+// CONNEXION
+// ============================================
+function seConnecter() {
+  const nom = $('loginNom').value;
+  const errDiv = $('loginErreur');
+  
+  if (!nom) { errDiv.textContent = '⚠️ Choisissez votre nom'; return; }
+  if (pinSaisi.length < 4) { errDiv.textContent = '⚠️ Entrez votre PIN'; return; }
+  
+  const militant = listeMilitants.find(m => m.nom === nom && String(m.pin) === pinSaisi);
+  if (!militant) {
+    errDiv.textContent = '❌ PIN incorrect';
+    pinSaisi = '';
+    majDots();
+    return;
+  }
+  
+  currentMilitant = militant.nom;
+  currentRole = militant.role || 'militant';
+  
+  const prenom = militant.nom.split(' ').pop();
+  $('btnUser').textContent = '👤 ' + prenom + (currentRole === 'admin' ? ' 👑' : '') + ' — Quitter';
+  
+  if (currentRole === 'superviseur' || currentRole === 'admin') {
+    ajouterOnglet('stats', '📊 Stats');
+  }
+  if (currentRole === 'admin') {
+    ajouterOnglet('admin', '👁️ Admin');
+  }
+  
+  $('ecranLogin').style.display = 'none';
+  $('appPrincipale').style.display = 'block';
+  
+  fetch(SCRIPT_URL, { method: 'POST', body: new URLSearchParams({ action: 'logConnexion', militant: currentMilitant }) }).catch(() => {});
+  
+  chargerToutesPersonnes();
+  demarrerSync(); // ← DÉMARRER SYNC AUTO
+}
+
+function ajouterOnglet(page, label) {
+  if (document.querySelector(`.tab[data-page="${page}"]`)) return;
+  const tab = document.createElement('div');
+  tab.className = 'tab';
+  tab.dataset.page = page;
+  tab.textContent = label;
+  tab.onclick = () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    $('page-' + page).classList.add('active');
+    if (page === 'stats') chargerStats();
+    if (page === 'admin') chargerAdmin();
+  };
+  $('tabsBar').appendChild(tab);
+}
+
+function seDeconnecter() {
+  ouvrirModal('modalDeconnexion');
+}
+
+function confirmerDeconnexion() {
+  fermerModal('modalDeconnexion');
+  arreterSync(); // ← ARRÊTER SYNC
+  
+  document.querySelectorAll('.tab[data-page="stats"], .tab[data-page="admin"]').forEach(t => t.remove());
+  
+  currentMilitant = null;
+  currentRole = 'militant';
+  currentPersonne = null;
+  currentPersonneServeur = null;
+  pinSaisi = '';
+  statsCache = null;
+  adminCache = null;
+  majDots();
+  
+  $('loginNom').value = '';
+  $('loginErreur').textContent = '';
+  $('ecranLogin').style.display = 'flex';
+  $('appPrincipale').style.display = 'none';
+  $('saisieContenu').innerHTML = '<div class="vide"><div style="font-size:40px;margin-bottom:10px;">🔍</div>Recherchez d\'abord une personne</div>';
+  
+  showPage('recherche');
+}
+
+// ============================================
+// CHARGEMENT PERSONNES
+// ============================================
+async function chargerToutesPersonnes() {
+  const div = $('resultatsRecherche');
+  const bar = $('progressBar');
+  const fill = $('progressFill');
+
+  try {
+    const cache = localStorage.getItem(CACHE_KEY_PERSONNES);
+    if (cache) {
+      toutesPersonnes = JSON.parse(cache);
+      activerRecherche();
+      div.innerHTML = '';
+      updateLastSync();
+      return;
+    }
+  } catch(e) { localStorage.removeItem(CACHE_KEY_PERSONNES); }
+
+  bar.style.display = 'block';
+  div.innerHTML = '<div class="loading"><div class="spinner"></div>⏳ Chargement...</div>';
+  
+  let pct = 0;
+  const timer = setInterval(() => { pct = Math.min(pct + 3, 90); fill.style.width = pct + '%'; }, 150);
+
+  try {
+    const resp = await fetchRapide(SCRIPT_URL + '?action=getAllPersonnes', {}, 90000);
+    const data = await resp.json();
+    toutesPersonnes = data.personnes || [];
+    
+    try { localStorage.setItem(CACHE_KEY_PERSONNES, JSON.stringify(toutesPersonnes)); } catch(e) {}
+    
+    clearInterval(timer);
+    fill.style.width = '100%';
+    setTimeout(() => { bar.style.display = 'none'; }, 300);
+    
+    activerRecherche();
+    updateLastSync();
+    div.innerHTML = `<div class="vide" style="color:var(--vert);">✅ ${toutesPersonnes.length} inscrits</div>`;
+    setTimeout(() => { if (div.innerHTML.includes('inscrits')) div.innerHTML = ''; }, 2000);
+    
+  } catch(e) {
+    clearInterval(timer);
+    bar.style.display = 'none';
+    activerRecherche();
+    div.innerHTML = '<div class="vide" style="color:orange;">⚠️ Erreur<br><button onclick="chargerToutesPersonnes()" style="margin-top:10px;padding:8px 16px;background:#2755a8;color:white;border:none;border-radius:8px;cursor:pointer;">🔄 Réessayer</button></div>';
+  }
+}
+
+function activerRecherche() {
+  ['searchNom', 'searchPrenom', 'searchId'].forEach(id => {
+    const el = $(id);
+    if (el) el.disabled = false;
+  });
+}
+
+// ============================================
+// RECHERCHE
+// ============================================
+function initRecherche() {
+  ['searchNom', 'searchPrenom', 'searchId'].forEach(id => {
+    const el = $(id);
+    if (el) el.oninput = () => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(rechercher, 100);
+    };
+  });
+  
+  $('btnReset').onclick = resetRecherche;
+}
+
+function resetRecherche() {
+  ['searchNom', 'searchPrenom', 'searchId'].forEach(id => {
+    const el = $(id);
+    if (el) el.value = '';
+  });
+  $('resultatsRecherche').innerHTML = '';
+}
+
+function rechercher() {
+  const qNom = ($('searchNom')?.value || '').trim().toLowerCase();
+  const qPrenom = ($('searchPrenom')?.value || '').trim().toLowerCase();
+  const qId = ($('searchId')?.value || '').trim();
+  const div = $('resultatsRecherche');
+
+  if (!qNom && !qPrenom && !qId) {
+    div.innerHTML = '';
+    return;
+  }
+
+  const resultats = [];
+  const len = toutesPersonnes.length;
+  
+  for (let i = 0; i < len && resultats.length < MAX_RESULTATS; i++) {
+    const p = toutesPersonnes[i];
+    const id = String(p[0]);
+    const nom = (p[1] || '').toLowerCase();
+    const prenom = (p[2] || '').toLowerCase();
+
+    let ok = true;
+    if (qId && !id.startsWith(qId)) ok = false;
+    if (qNom && ok && nom.indexOf(qNom) === -1) ok = false;
+    if (qPrenom && ok && prenom.indexOf(qPrenom) === -1) ok = false;
+    
+    if (ok) resultats.push(p);
+  }
+
+  if (!resultats.length) {
+    div.innerHTML = '<div class="vide">Aucun résultat</div>';
+    return;
+  }
+
+  const html = [`<div style="font-size:12px;color:#999;text-align:center;padding:4px 0 8px;">${resultats.length >= MAX_RESULTATS ? MAX_RESULTATS + ' premiers' : resultats.length + ' résultat' + (resultats.length > 1 ? 's' : '')}</div>`];
+
+  for (const p of resultats) {
+    const statut = p[3];
+    const isVisite = statut === 'Visité';
+    const sexeIcon = p[4] === 'M' ? '👨' : p[4] === 'F' ? '👩' : '';
+    const age = p[5] ? p[5] + ' ans' : '';
+    const adresse = [p[6], p[7]].filter(Boolean).join(' ');
+    const militant = p[14];
+    const militantInfo = isVisite && militant ? ` · <span style="color:#27ae60;font-size:10px;">par ${militant.split(' ').pop()}</span>` : '';
+    
+    html.push(`<div class="resultat-item ${isVisite ? 'visite' : 'non-visite'}" onclick="selectionnerPersonne(${p[0]})">
+      <div class="ri-info">
+        <div class="ri-nom">${p[1]} ${p[2]}</div>
+        <div class="ri-detail">${[sexeIcon + (age ? ' ' + age : ''), adresse].filter(Boolean).join(' · ')}${militantInfo}</div>
+      </div>
+      <span class="ri-badge ${isVisite ? 'badge-visite' : 'badge-non'}">${isVisite ? '✓' : '—'}</span>
+    </div>`);
+  }
+
+  div.innerHTML = html.join('');
+}
+
+// ============================================
+// FICHE PERSONNE
+// ============================================
+function selectionnerPersonne(id) {
+  showPage('saisie');
+  currentPersonneServeur = null;
+
+  const local = toutesPersonnes.find(p => p[0] == id);
+  if (local) {
+    currentPersonne = {
+      id: local[0], nom: local[1], prenom: local[2],
+      statut: local[3], sexe: local[4], age: local[5],
+      nVoie: local[6], libelleVoie: local[7], nomUsage: local[8],
+      bureau: local[9] || '', candidatActuel: local[10] || '',
+      dateDerniereVisite: local[11] || '', notes: local[12] || '',
+      secteur: local[13] || '', militant: local[14] || '',
+      observation: local[15] || ''
+    };
+    afficherFiche(currentPersonne);
+    
+    // Vérifier version serveur
+    verifierFicheServeur(id);
+    return;
+  }
+
+  $('saisieContenu').innerHTML = '<div class="loading"><div class="spinner"></div>Chargement...</div>';
+  fetch(SCRIPT_URL + '?action=getFiche&id=' + id)
+    .then(r => r.json())
+    .then(p => { currentPersonne = p; afficherFiche(p); })
+    .catch(() => { $('saisieContenu').innerHTML = '<div class="vide" style="color:red;">⚠️ Erreur</div>'; });
+}
+
+async function verifierFicheServeur(id) {
+  try {
+    const resp = await fetch(SCRIPT_URL + '?action=getFiche&id=' + id);
+    const p = await resp.json();
+    
+    if (!currentPersonne || currentPersonne.id != id) return;
+    
+    // Vérifier si quelqu'un d'autre a enregistré
+    if (p.statut === 'Visité' && p.militant && p.militant !== currentMilitant) {
+      if (currentPersonne.statut !== 'Visité' || currentPersonne.militant !== p.militant) {
+        currentPersonneServeur = p;
+        afficherAlerteConflit(p.militant, p.candidatActuel);
+        
+        // Mettre à jour l'affichage
+        currentPersonne = p;
+        afficherFiche(p);
+      }
+    }
+    
+    // Mettre à jour cache
+    const idx = toutesPersonnes.findIndex(x => x[0] == id);
+    if (idx !== -1) {
+      toutesPersonnes[idx][3] = p.statut;
+      toutesPersonnes[idx][10] = p.candidatActuel || '';
+      toutesPersonnes[idx][14] = p.militant || '';
+    }
+  } catch(e) {}
+}
+
+function afficherFiche(p) {
+  const isVisite = p.statut === 'Visité';
+  const adresse = [p.nVoie, p.libelleVoie].filter(Boolean).join(' ') || '—';
+  const sexeIcon = p.sexe === 'M' ? '👨' : p.sexe === 'F' ? '👩' : '';
+  const cOpts = CANDIDATS.map(c => `<option value="${c}" ${p.candidatActuel === c ? 'selected' : ''}>${c || '-- Choisir --'}</option>`).join('');
+  
+  const conflitInfo = isVisite && p.militant && p.militant !== currentMilitant
+    ? `<div class="alerte-conflit"><div class="titre">⚠️ Déjà visité par ${p.militant}</div><div class="detail">${p.dateDerniereVisite || ''}${p.candidatActuel ? ' · ' + p.candidatActuel : ''}</div></div>`
+    : '';
+
+  $('saisieContenu').innerHTML = `
+    <button class="btn-retour" onclick="showPage('recherche')">← Retour</button>
+    ${conflitInfo}
+    <div class="fiche">
+      <div class="fiche-header">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <div class="nom">${p.nom}</div>
+          <div style="font-size:14px;color:white;font-weight:600;">ID — ${p.id}</div>
+        </div>
+        <div class="prenom">${p.prenom}</div>
+        ${p.nomUsage && p.nomUsage !== p.nom ? `<div class="nom-usage">Usage : ${p.nomUsage}</div>` : ''}
+        ${isVisite ? `<div class="badge-deja-visite">✅ Visité${p.militant ? ' par ' + p.militant.split(' ').pop() : ''}${p.candidatActuel ? ' · ' + p.candidatActuel : ''}</div>` : ''}
+      </div>
+      <div class="fiche-body">
+        ${p.sexe ? `<div class="fiche-row"><span class="label">Sexe</span><span class="value">${sexeIcon} ${p.sexe === 'M' ? 'Masculin' : 'Féminin'}</span></div>` : ''}
+        ${p.age ? `<div class="fiche-row"><span class="label">Âge</span><span class="value">${p.age} ans</span></div>` : ''}
+        <div class="fiche-row"><span class="label">Adresse</span><span class="value">${adresse}</span></div>
+        <div class="fiche-row"><span class="label">Bureau 🏢</span><span class="value">${p.bureau || '—'}</span></div>
+        <div class="fiche-row"><span class="label">Statut</span><span class="value"><span class="statut-badge ${isVisite ? 'statut-visite' : 'statut-non'}">${isVisite ? '✓ Visité' : 'Non visité'}</span></span></div>
+        ${p.dateDerniereVisite ? `<div class="fiche-row"><span class="label">Dernière visite</span><span class="value">${p.dateDerniereVisite}</span></div>` : ''}
+      </div>
+    </div>
+    <div class="form-section">
+      <h3>✏️ Enregistrer une visite</h3>
+      <div class="field">
+        <label>Statut</label>
+        <select id="fStatut">
+          <option value="Visité" ${isVisite ? 'selected' : ''}>✅ Visité</option>
+          <option value="Non visité" ${!isVisite ? 'selected' : ''}>❌ Non visité</option>
+          <option value="Absent">🚪 Absent</option>
+          <option value="Refus">🚫 Refus</option>
+        </select>
+      </div>
+      <div class="field"><label>Candidat soutenu</label><select id="fCandidat">${cOpts}</select></div>
+      <div class="field"><label>Notes</label><textarea id="fNotes" placeholder="Remarques...">${p.notes || ''}</textarea></div>
+      <div class="field"><label>Observation</label><textarea id="fObservation" placeholder="Observation...">${p.observation || ''}</textarea></div>
+      <button class="btn-vert" onclick="enregistrerVisite()">✅ Enregistrer</button>
+      <button class="btn-orange" onclick="syncManuel()" style="margin-top:8px;">🔄 Rafraîchir depuis serveur</button>
+    </div>`;
+}
+
+// ============================================
+// ENREGISTRER VISITE
+// ============================================
+function enregistrerVisite() {
+  if (!currentPersonne) return;
+
+  // Vérifier conflit
+  if (currentPersonneServeur && 
+      currentPersonneServeur.militant !== currentMilitant &&
+      currentPersonneServeur.statut === 'Visité') {
+    $('conflitMessage').textContent = `${currentPersonneServeur.militant} a déjà enregistré cette personne. Voulez-vous écraser ?`;
+    ouvrirModal('modalConflit');
+    return;
+  }
+
+  executerEnregistrement();
+}
+
+function forcerEnregistrement() {
+  fermerModal('modalConflit');
+  executerEnregistrement();
+}
+
+function executerEnregistrement() {
+  const statut = $('fStatut').value;
+  const candidat = $('fCandidat').value;
+  const notes = $('fNotes').value;
+  const observation = $('fObservation')?.value || '';
+
+  // Mise à jour locale
+  currentPersonne.statut = statut;
+  currentPersonne.candidatActuel = candidat;
+  currentPersonne.notes = notes;
+  currentPersonne.observation = observation;
+  currentPersonne.militant = currentMilitant;
+  currentPersonneServeur = null;
+
+  const idx = toutesPersonnes.findIndex(p => String(p[0]) === String(currentPersonne.id));
+  if (idx !== -1) {
+    toutesPersonnes[idx][3] = statut;
+    toutesPersonnes[idx][10] = candidat;
+    toutesPersonnes[idx][12] = notes;
+    toutesPersonnes[idx][14] = currentMilitant;
+  }
+  
+  try { localStorage.setItem(CACHE_KEY_PERSONNES, JSON.stringify(toutesPersonnes)); } catch(e) {}
+
+  afficherFiche(currentPersonne);
+  showToast('✅ Enregistré !', 'succes');
+
+  // Envoi serveur
+  const params = new URLSearchParams({
+    action: 'enregistrer',
+    id: String(currentPersonne.id),
+    statut, candidat, notes, observation,
+    militant: currentMilitant,
+    nom: currentPersonne.nom + ' ' + currentPersonne.prenom,
+    secteur: currentPersonne.secteur || ''
+  });
+  
+  fetch(SCRIPT_URL, { method: 'POST', body: params }).catch(() => {});
+}
+
+// ============================================
+// STATS
+// ============================================
+async function chargerStats() {
+  if (statsCache) {
+    afficherStats(statsCache);
+    return;
+  }
+
+  $('statsContenu').innerHTML = '<div class="loading"><div class="spinner"></div>Chargement...</div>';
+
+  try {
+    const resp = await fetchRapide(SCRIPT_URL + '?action=stats', {}, 15000);
+    statsCache = await resp.json();
+    afficherStats(statsCache);
+  } catch(e) {
+    $('statsContenu').innerHTML = '<div class="vide" style="color:red;">⚠️ Erreur</div>';
+  }
+}
+
+function afficherStats(data) {
+  $('cptTotal').textContent = data.total || '?';
+  $('cptVisites').textContent = data.visites || '0';
+  $('cptPct').textContent = (data.pct || '0') + '%';
+  $('compteur').style.display = 'flex';
+  $('statsContenu').innerHTML = '';
+  $('statsGraphiques').style.display = 'block';
+
+  const visites = data.visites || 0;
+  const nonVisites = (data.total || 0) - visites;
+  const pctV = data.total > 0 ? Math.round(visites / data.total * 100) : 0;
+
+  if (chartCamembert) chartCamembert.destroy();
+  chartCamembert = new Chart($('chartCamembert'), {
+    type: 'doughnut',
+    data: {
+      labels: ['✅ Visités: ' + visites + ' (' + pctV + '%)', '❌ Non visités: ' + nonVisites],
+      datasets: [{ data: [visites, nonVisites], backgroundColor: ['#27ae60', '#e74c3c'], borderWidth: 3, borderColor: '#fff' }]
+    },
+    options: { responsive: true, cutout: '60%', plugins: { legend: { position: 'bottom', labels: { font: { size: 12 } } } } }
+  });
+
+  const statsBureau = {};
+  toutesPersonnes.forEach(p => {
+    const bureau = p[9] || 'Inconnu';
+    if (!statsBureau[bureau]) statsBureau[bureau] = { v: 0, total: 0 };
+    statsBureau[bureau].total++;
+    if (p[3] === 'Visité') statsBureau[bureau].v++;
+  });
+
+  const bureaux = Object.keys(statsBureau).filter(b => b !== 'Inconnu').sort((a, b) => statsBureau[b].total - statsBureau[a].total);
+
+  if (chartBureau) chartBureau.destroy();
+  chartBureau = new Chart($('chartBureau'), {
+    type: 'bar',
+    data: {
+      labels: bureaux.map(b => b.length > 20 ? b.substring(0, 20) + '…' : b),
+      datasets: [
+        { label: 'Total', data: bureaux.map(b => statsBureau[b].total), backgroundColor: 'rgba(39,85,168,0.15)', borderColor: '#2755a8', borderWidth: 1 },
+        { label: 'Visités', data: bureaux.map(b => statsBureau[b].v), backgroundColor: '#27ae60' }
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { position: 'bottom' } } }
+  });
+}
+
+// ============================================
+// ADMIN
+// ============================================
+async function chargerAdmin() {
+  if (currentRole !== 'admin') return;
+  if (adminCache) {
+    $('adminContenu').innerHTML = adminCache;
+    return;
+  }
+
+  $('adminContenu').innerHTML = '<div class="loading"><div class="spinner"></div>Chargement...</div>';
+
+  try {
+    const resp = await fetchRapide(SCRIPT_URL + '?action=getLogs', {}, 15000);
+    const data = await resp.json();
+    adminCache = buildAdminHtml(data);
+    $('adminContenu').innerHTML = adminCache;
+  } catch(e) {
+    $('adminContenu').innerHTML = '<div class="vide" style="color:red;">⚠️ Erreur</div>';
+  }
+}
+
+function forceChargerAdmin() {
+  adminCache = null;
+  chargerAdmin();
+}
+
+function buildAdminHtml(data) {
+  const compteurs = data.compteurs || {};
+  const logs = data.logs || [];
+  const connectes = data.connectes || {};
+  
+  // Compter les militants en ligne
+  const nbEnLigne = Object.keys(connectes).length;
+  
+  let html = `<div style="background:linear-gradient(135deg,#1a3a6b,#2755a8);border-radius:12px;padding:14px;margin-bottom:12px;color:white;display:flex;justify-content:space-around;text-align:center;">
+    <div><div style="font-family:'Bebas Neue';font-size:28px;">${nbEnLigne}</div><div style="font-size:11px;opacity:.7;">EN LIGNE</div></div>
+    <div><div style="font-family:'Bebas Neue';font-size:28px;">${listeMilitants.length}</div><div style="font-size:11px;opacity:.7;">MILITANTS</div></div>
+    <div><div style="font-family:'Bebas Neue';font-size:28px;">${toutesPersonnes.filter(p => p[3] === 'Visité').length}</div><div style="font-size:11px;opacity:.7;">VISITES</div></div>
+  </div>`;
+  
+  html += '<div class="section-title">👥 Activité par militant</div>';
+  
+  // Trier: en ligne d'abord, puis par nombre de visites
+  const militantsTries = [...listeMilitants].sort((a, b) => {
+    const aEnLigne = connectes[a.nom] ? 1 : 0;
+    const bEnLigne = connectes[b.nom] ? 1 : 0;
+    if (aEnLigne !== bEnLigne) return bEnLigne - aEnLigne;
+    return (compteurs[b.nom] || 0) - (compteurs[a.nom] || 0);
+  });
+  
+  militantsTries.forEach(m => {
+    const nb = compteurs[m.nom] || 0;
+    const connecte = connectes[m.nom];
+    const badgeRole = m.role === 'admin' ? '<span class="role-badge">admin</span>' : m.role === 'superviseur' ? '<span class="role-badge" style="background:#d4edda;color:#155724;">superviseur</span>' : '';
+    
+    html += `<div class="militant-card" style="${connecte ? 'border-left:4px solid #27ae60;' : ''}">
+      <div style="flex:1">
+        <div class="mc-nom">${m.nom}${badgeRole}${connecte ? '<span style="margin-left:8px;background:#27ae60;color:white;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;">🟢 EN LIGNE</span>' : ''}</div>
+        <div class="mc-detail">${nb} visite${nb > 1 ? 's' : ''} enregistrée${nb > 1 ? 's' : ''}</div>
+      </div>
+      <div class="mc-badge">${nb}</div>
+    </div>`;
+  });
+
+  html += '<div class="section-title" style="margin-top:16px;">📋 Dernières actions (temps réel)</div>';
+  if (!logs.length) html += '<div class="vide">Aucune activité</div>';
+  else logs.slice(0, 15).forEach(l => {
+    const isConnexion = l.action === 'Connexion';
+    html += `<div class="log-item" style="${isConnexion ? 'background:#f0fff4;' : ''}">
+      <div class="log-icon">${isConnexion ? '🔑' : '✅'}</div>
+      <div class="log-info">
+        <div class="log-action">${l.militant}</div>
+        <div class="log-detail">${isConnexion ? 'Connexion' : (l.nom || 'ID ' + l.id)}</div>
+      </div>
+      <div class="log-date">${l.date}</div>
+    </div>`;
+  });
+
+  return html;
+}
+
+// ============================================
+// GESTION
+// ============================================
+function ouvrirGestion() {
+  ouvrirModal('modalGestion');
+  afficherMenuGestion();
+}
+
+function fermerGestion() {
+  fermerModal('modalGestion');
+}
+
+function afficherMenuGestion() {
+  $('gestionTitre').textContent = '⚙️ Gestion';
+  $('gestionBtnRetour').style.display = 'none';
+  $('gestionContenu').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <button onclick="ouvrirSectionGestion('historique')" style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:14px;width:100%;">
+        <span style="font-size:28px;">📋</span>
+        <div><div style="font-weight:700;font-size:14px;color:#1a3a6b;">Historique</div><div style="font-size:12px;color:#888;">Voir les modifications</div></div>
+      </button>
+      <button onclick="ouvrirSectionGestion('militants')" style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:14px;width:100%;">
+        <span style="font-size:28px;">👥</span>
+        <div><div style="font-weight:700;font-size:14px;color:#1a3a6b;">Militants</div><div style="font-size:12px;color:#888;">Activer / désactiver</div></div>
+      </button>
+      <button onclick="ouvrirSectionGestion('export')" style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:14px;width:100%;">
+        <span style="font-size:28px;">📊</span>
+        <div><div style="font-weight:700;font-size:14px;color:#1a3a6b;">Export / Stats</div><div style="font-size:12px;color:#888;">Statistiques avancées</div></div>
+      </button>
+    </div>`;
+}
+
+function retourMenuGestion() {
+  afficherMenuGestion();
+}
+
+function ouvrirSectionGestion(section) {
+  $('gestionBtnRetour').style.display = 'inline-block';
+  if (section === 'historique') {
+    $('gestionTitre').textContent = '📋 Historique';
+    chargerHistorique();
+  } else if (section === 'militants') {
+    $('gestionTitre').textContent = '👥 Militants';
+    afficherGestionMilitants();
+  } else if (section === 'export') {
+    $('gestionTitre').textContent = '📊 Export';
+    afficherExport();
+  }
+}
+
+async function chargerHistorique() {
+  const div = $('gestionContenu');
+  div.innerHTML = '<div class="loading"><div class="spinner"></div>Chargement...</div>';
+  
+  try {
+    const resp = await fetch(SCRIPT_URL + '?action=getHistorique');
+    const data = await resp.json();
+    const histo = data.historique || [];
+    
+    if (!histo.length) {
+      div.innerHTML = '<div class="vide">Aucune modification</div>';
+      return;
+    }
+
+    div.innerHTML = histo.slice(0, 20).map(h => `
+      <div style="background:#f9f9f9;border-radius:8px;padding:10px;margin-bottom:8px;border-left:3px solid #e67e22;">
+        <div style="font-size:13px;font-weight:600;">👤 ${h.nomPersonne}</div>
+        <div style="font-size:11px;color:#888;">${h.date} · ${h.militantAnc} → ${h.militantNouv}</div>
+      </div>`).join('');
+  } catch(e) {
+    div.innerHTML = '<div class="vide" style="color:red;">⚠️ Erreur</div>';
+  }
+}
+
+function afficherGestionMilitants() {
+  const div = $('gestionContenu');
+  div.innerHTML = listeMilitants.map(m => `
+    <div style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-weight:700;font-size:14px;">${m.nom}</div>
+        <div style="font-size:12px;color:${m.actif !== false ? '#27ae60' : '#e74c3c'};">${m.actif !== false ? '✅ Actif' : '🔴 Désactivé'}</div>
+      </div>
+      ${m.role !== 'admin' ? `<label class="toggle"><input type="checkbox" ${m.actif !== false ? 'checked' : ''} onchange="toggleMilitant('${m.nom}', this.checked)"><span class="toggle-slider"></span></label>` : ''}
+    </div>`).join('');
+}
+
+async function toggleMilitant(nom, actif) {
+  try {
+    await fetch(SCRIPT_URL, { method: 'POST', body: new URLSearchParams({ action: 'toggleMilitant', nom, actif: actif ? '1' : '0' }) });
+    const m = listeMilitants.find(x => x.nom === nom);
+    if (m) m.actif = actif;
+    showToast(actif ? '✅ Activé' : '🔴 Désactivé', 'succes');
+  } catch(e) {
+    showToast('❌ Erreur', 'erreur');
+  }
+}
+
+function afficherExport() {
+  const div = $('gestionContenu');
+  
+  const stats = {};
+  toutesPersonnes.forEach(p => {
+    const m = p[14] || '—';
+    if (!stats[m]) stats[m] = 0;
+    if (p[3] === 'Visité') stats[m]++;
+  });
+
+  const sorted = Object.entries(stats).filter(([k]) => k !== '—').sort((a, b) => b[1] - a[1]);
+  
+  div.innerHTML = '<div style="font-weight:700;margin-bottom:10px;">👥 Visites par militant</div>' +
+    sorted.map(([nom, nb]) => `
+      <div style="background:white;border:1px solid #e0e4ea;border-radius:10px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;">
+        <span style="font-weight:600;">${nom}</span>
+        <span style="font-family:'Bebas Neue';font-size:20px;color:#1a3a6b;">${nb}</span>
+      </div>`).join('');
+}
+
+// ============================================
+// INIT
+// ============================================
+document.addEventListener('DOMContentLoaded', () => {
+  initTabs();
+  initRecherche();
+  chargerMilitants();
+  fetch(SCRIPT_URL + '?action=ping').catch(() => {});
+});
+</script>
 </body>
 </html>
