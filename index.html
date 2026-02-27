@@ -137,7 +137,7 @@
 <!-- LOGIN -->
 <div id="ecranLogin">
   <div class="login-logo">🗳️ Visites Électorales</div>
-  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v69</span></div>
+  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v70</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -175,7 +175,7 @@
   <div class="header">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v69</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v70</span></p>
     </div>
     <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
   </div>
@@ -309,7 +309,7 @@
 // CONFIG v65 — Sync auto + Réinitialisation
 // ============================================
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
-const APP_VERSION = 'v69';
+const APP_VERSION = 'v70';
 const MAX_RESULTATS = 50;
 const SYNC_INTERVAL = 15000;
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
@@ -1250,8 +1250,8 @@ let currentObsId = null;
 function chargerObservations() {
   const div = $('obsContenu');
   
-  // Filtrer les personnes avec observation
-  const avecObs = toutesPersonnes.filter(p => p[15] && p[15].trim() !== '');
+  // Filtrer les personnes avec observation (convertir en string pour gérer les nombres)
+  const avecObs = toutesPersonnes.filter(p => p[15] && String(p[15]).trim() !== '');
   
   if (!avecObs.length) {
     div.innerHTML = '<div class="vide"><div style="font-size:40px;margin-bottom:10px;">📝</div>Aucune observation enregistrée</div>';
@@ -1280,12 +1280,12 @@ function chargerObservations() {
     const isVisite = statut === 'Visité';
     const militant = p[14] || '';
     const dateVisite = p[11] || '';
-    const observation = p[15] || '';
+    const observation = String(p[15] || '');
     const obsPreview = observation.length > 50 ? observation.substring(0, 50) + '...' : observation;
     
     html += `<div class="militant-card" style="cursor:pointer;border-left:4px solid #8e44ad;" onclick="afficherObservation(${id})">
       <div style="flex:1;">
-        <div class="mc-nom">${nom} ${prenom}</div>
+        <div class="mc-nom">${nom} ${prenom} <span style="color:#888;font-size:11px;">#${id}</span></div>
         <div class="mc-detail" style="color:#8e44ad;font-style:italic;">"${obsPreview}"</div>
         <div class="mc-detail">${isVisite ? '✅ ' : ''}${militant ? 'par ' + militant.split(' ').pop() : ''} ${dateVisite ? '· ' + dateVisite : ''}</div>
       </div>
@@ -1303,7 +1303,7 @@ function afficherObservation(id) {
   
   const nom = p[1];
   const prenom = p[2];
-  const observation = p[15] || '';
+  const observation = String(p[15] || '');
   const militant = p[14] || '';
   const dateVisite = p[11] || '';
   const candidat = p[10] || '';
