@@ -137,7 +137,7 @@
 <!-- LOGIN -->
 <div id="ecranLogin">
   <div class="login-logo">🗳️ Visites Électorales</div>
-  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v97</span></div>
+  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v99</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -175,7 +175,7 @@
   <div class="header">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v97</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v99</span></p>
     </div>
     <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
   </div>
@@ -377,7 +377,7 @@
 // CONFIG v65 — Sync auto + Réinitialisation
 // ============================================
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
-const APP_VERSION = 'v97';
+const APP_VERSION = 'v99';
 const MAX_RESULTATS = 50;
 const SYNC_INTERVAL = 15000;
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
@@ -1116,7 +1116,7 @@ function afficherFiche(p) {
         <h3 style="font-size:13px;font-weight:700;color:var(--bleu);text-transform:uppercase;letter-spacing:.5px;margin:0;padding:0;border:none;">✏️ Enregistrer une visite</h3>
         <div style="display:flex;gap:8px;">
           <button onclick="syncManuel()" style="background:#95a5a6;color:white;border:none;border-radius:8px;width:36px;height:36px;font-size:18px;cursor:pointer;" title="Rafraîchir">🔄</button>
-          ${isVisite && (currentRole === 'admin' || currentRole === 'superviseur') ? `<button onclick="demanderReinitialisation()" style="background:#c0392b;color:white;border:none;border-radius:8px;width:36px;height:36px;font-size:18px;cursor:pointer;" title="Réinitialiser">🗑️</button>` : ''}
+          ${(currentRole === 'admin' || currentRole === 'superviseur') ? `<button onclick="demanderReinitialisation()" style="background:#c0392b;color:white;border:none;border-radius:8px;width:36px;height:36px;font-size:18px;cursor:pointer;" title="Réinitialiser">🗑️</button>` : ''}
         </div>
       </div>
       <div class="field">
@@ -1131,7 +1131,7 @@ function afficherFiche(p) {
       <div class="field"><label>Candidat soutenu</label><select id="fCandidat">${cOpts}</select></div>
       <div class="field"><label>Notes</label><textarea id="fNotes" placeholder="Remarques...">${p.notes || ''}</textarea></div>
       ${(currentRole === 'admin' || currentRole === 'superviseur') ? `<div class="field"><label>Observation</label><textarea id="fObservation" placeholder="Observation...">${p.observation || ''}</textarea></div>` : ''}
-      <button class="btn-vert" onclick="enregistrerVisite()">✅ Enregistrer</button>
+      ${(p.statut === 'Non visité' || currentRole === 'admin' || currentRole === 'superviseur' || currentRole === 'responsable bureaux') ? `<button class="btn-vert" onclick="enregistrerVisite()">✅ Enregistrer</button>` : '<div style="background:#f8d7da;color:#721c24;padding:12px;border-radius:8px;text-align:center;margin-top:10px;font-size:13px;">🔒 Modification réservée aux responsables</div>'}
     </div>`;
 }
 
