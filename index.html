@@ -137,7 +137,7 @@
 <!-- LOGIN -->
 <div id="ecranLogin">
   <div class="login-logo">🗳️ Visites Électorales</div>
-  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v86</span></div>
+  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v91</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -175,7 +175,7 @@
   <div class="header">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v86</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v91</span></p>
     </div>
     <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
   </div>
@@ -237,11 +237,54 @@
   </div>
 
   <div class="page" id="page-admin">
-    <div style="display:flex;gap:10px;margin-bottom:12px;">
+    <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
       <button class="btn-refresh" onclick="forceChargerAdmin()">🔄 Actualiser</button>
       <button class="btn-refresh" style="background:#e67e22;" onclick="ouvrirGestion()">⚙️ Gestion</button>
     </div>
     <div id="adminContenu"></div>
+  </div>
+
+  <!-- POPUP AJOUTER MILITANT -->
+  <div id="modalAjoutMilitant" class="modal-overlay">
+    <div class="modal-box" style="max-width:360px;">
+      <h3>➕ Ajouter un militant</h3>
+      <div class="field" style="margin-bottom:12px;">
+        <label>Nom complet</label>
+        <input type="text" id="nouveauNom" placeholder="Ex: Dupont Marie">
+      </div>
+      <div class="field" style="margin-bottom:12px;">
+        <label>PIN (4 chiffres)</label>
+        <input type="text" id="nouveauPin" placeholder="1234" maxlength="4" pattern="[0-9]{4}" style="font-family:monospace;font-size:18px;letter-spacing:4px;text-align:center;">
+      </div>
+      <div class="field" style="margin-bottom:16px;">
+        <label>Rôle</label>
+        <select id="nouveauRole">
+          <option value="militant">militant</option>
+          <option value="manager">manager</option>
+          <option value="responsable bureaux">responsable bureaux</option>
+          <option value="superviseur">superviseur</option>
+          <option value="admin">admin</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn-cancel" onclick="fermerModal('modalAjoutMilitant')">Annuler</button>
+        <button class="modal-btn-ok" style="background:#27ae60;" onclick="confirmerAjoutMilitant()">✅ Ajouter</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- POPUP SUPPRIMER MILITANT -->
+  <div id="modalSupprimerMilitant" class="modal-overlay">
+    <div class="modal-box" style="max-width:340px;">
+      <h3 style="color:#c0392b;">🗑️ Supprimer le militant ?</h3>
+      <p style="margin:16px 0;text-align:center;font-size:15px;">
+        Voulez-vous vraiment supprimer<br><strong id="confirmSuppNom"></strong> ?
+      </p>
+      <div class="modal-actions">
+        <button class="modal-btn-cancel" onclick="fermerModal('modalSupprimerMilitant')">Annuler</button>
+        <button class="modal-btn-ok" style="background:#c0392b;" onclick="executerSuppressionMilitant()">🗑️ Supprimer</button>
+      </div>
+    </div>
   </div>
 
   <!-- POPUP GESTION -->
@@ -251,6 +294,7 @@
         <div style="display:flex;align-items:center;gap:10px;">
           <button id="gestionBtnRetour" onclick="retourMenuGestion()" style="display:none;background:none;border:none;font-size:18px;cursor:pointer;color:#2755a8;padding:0;">←</button>
           <h3 id="gestionTitre" style="font-size:16px;font-weight:700;color:#1a3a6b;">⚙️ Gestion</h3>
+          <button id="gestionBtnAjouter" onclick="ouvrirAjoutMilitant()" style="display:none;background:#27ae60;color:white;border:none;border-radius:6px;padding:4px 10px;font-size:13px;cursor:pointer;font-weight:600;">➕ Ajouter</button>
         </div>
         <button onclick="fermerGestion()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#888;line-height:1;">✕</button>
       </div>
@@ -333,7 +377,7 @@
 // CONFIG v65 — Sync auto + Réinitialisation
 // ============================================
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
-const APP_VERSION = 'v86';
+const APP_VERSION = 'v91';
 const MAX_RESULTATS = 50;
 const SYNC_INTERVAL = 15000;
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
@@ -443,10 +487,19 @@ const MILITANTS_FALLBACK = [
 // ============================================
 const $ = id => document.getElementById(id);
 
-function fetchRapide(url, options, timeout = 15000) {
-  const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), timeout);
-  return fetch(url, { ...options, signal: ctrl.signal }).finally(() => clearTimeout(t));
+function fetchRapide(url, options = {}, timeout = 15000) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('Timeout')), timeout);
+    fetch(url, options)
+      .then(resp => {
+        clearTimeout(timer);
+        resolve(resp);
+      })
+      .catch(err => {
+        clearTimeout(timer);
+        reject(err);
+      });
+  });
 }
 
 function showToast(msg, type = '') {
@@ -645,25 +698,24 @@ async function chargerMilitants() {
   const sel = $('loginNom');
   if (!sel) return;
 
-  try {
-    const cache = localStorage.getItem(CACHE_KEY_MILITANTS);
-    if (cache) listeMilitants = JSON.parse(cache);
-  } catch(e) {}
+  // Toujours vider le cache pour avoir les rôles à jour
+  try { localStorage.removeItem(CACHE_KEY_MILITANTS); } catch(e) {}
   
-  if (!listeMilitants.length) listeMilitants = MILITANTS_FALLBACK;
+  listeMilitants = MILITANTS_FALLBACK;
   remplirSelectMilitants();
   
-  setTimeout(async () => {
-    try {
-      const resp = await fetchRapide(SCRIPT_URL + '?action=getMilitants', {}, 10000);
-      const data = await resp.json();
-      if (data.militants?.length) {
-        listeMilitants = data.militants;
-        localStorage.setItem(CACHE_KEY_MILITANTS, JSON.stringify(listeMilitants));
-        remplirSelectMilitants();
-      }
-    } catch(e) {}
-  }, 500);
+  // Charger depuis le serveur
+  try {
+    const resp = await fetchRapide(SCRIPT_URL + '?action=getMilitants', {}, 15000);
+    const data = await resp.json();
+    if (data.militants?.length) {
+      listeMilitants = data.militants;
+      localStorage.setItem(CACHE_KEY_MILITANTS, JSON.stringify(listeMilitants));
+      remplirSelectMilitants();
+    }
+  } catch(e) {
+    console.log('Erreur chargement militants:', e);
+  }
 }
 
 function remplirSelectMilitants() {
@@ -1635,6 +1687,70 @@ function ouvrirFicheDepuisObs() {
 // ============================================
 // GESTION
 // ============================================
+// ============================================
+// AJOUTER UN MILITANT
+// ============================================
+function ouvrirAjoutMilitant() {
+  $('nouveauNom').value = '';
+  $('nouveauPin').value = '';
+  $('nouveauRole').value = 'militant';
+  ouvrirModal('modalAjoutMilitant');
+}
+
+async function confirmerAjoutMilitant() {
+  const nom = $('nouveauNom').value.trim();
+  const pin = $('nouveauPin').value.trim();
+  const role = $('nouveauRole').value;
+  
+  // Validation
+  if (!nom) {
+    showToast('❌ Entrez un nom', 'erreur');
+    return;
+  }
+  if (!/^\d{4}$/.test(pin)) {
+    showToast('❌ PIN doit être 4 chiffres', 'erreur');
+    return;
+  }
+  
+  // Vérifier si le nom existe déjà
+  if (listeMilitants.some(m => m.nom.toLowerCase() === nom.toLowerCase())) {
+    showToast('❌ Ce nom existe déjà', 'erreur');
+    return;
+  }
+  
+  fermerModal('modalAjoutMilitant');
+  showToast('⏳ Ajout en cours...', '');
+  
+  try {
+    const resp = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: new URLSearchParams({
+        action: 'ajouterMilitant',
+        nom: nom,
+        pin: pin,
+        role: role
+      })
+    });
+    
+    const data = await resp.json();
+    
+    if (data.ok) {
+      // Ajouter localement
+      listeMilitants.push({ nom, pin, role, actif: true });
+      localStorage.setItem(CACHE_KEY_MILITANTS, JSON.stringify(listeMilitants));
+      
+      showToast('✅ Militant ajouté !', 'succes');
+      
+      // Rafraîchir la liste dans la popup
+      afficherGestionMilitants();
+    } else {
+      showToast('❌ ' + (data.msg || 'Erreur'), 'erreur');
+    }
+  } catch(e) {
+    showToast('❌ Erreur: ' + e.message, 'erreur');
+  }
+}
+
 function ouvrirGestion() {
   ouvrirModal('modalGestion');
   afficherMenuGestion();
@@ -1647,6 +1763,7 @@ function fermerGestion() {
 function afficherMenuGestion() {
   $('gestionTitre').textContent = '⚙️ Gestion';
   $('gestionBtnRetour').style.display = 'none';
+  $('gestionBtnAjouter').style.display = 'none';
   $('gestionContenu').innerHTML = `
     <div style="display:flex;flex-direction:column;gap:10px;">
       <button onclick="ouvrirSectionGestion('historique')" style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:14px;width:100%;">
@@ -1670,11 +1787,13 @@ function retourMenuGestion() {
 
 function ouvrirSectionGestion(section) {
   $('gestionBtnRetour').style.display = 'inline-block';
+  $('gestionBtnAjouter').style.display = 'none';
   if (section === 'historique') {
     $('gestionTitre').textContent = '📋 Historique';
     chargerHistorique();
   } else if (section === 'militants') {
     $('gestionTitre').textContent = '👥 Militants';
+    $('gestionBtnAjouter').style.display = 'inline-block';
     afficherGestionMilitants();
   } else if (section === 'export') {
     $('gestionTitre').textContent = '📊 Export';
@@ -1720,7 +1839,10 @@ function afficherGestionMilitants() {
           <div style="font-weight:700;font-size:14px;">${m.nom}</div>
           <div style="font-size:12px;color:${m.actif !== false ? '#27ae60' : '#e74c3c'};">${m.actif !== false ? '✅ Actif' : '🔴 Désactivé'}</div>
         </div>
-        ${!isAdmin ? `<label class="toggle"><input type="checkbox" ${m.actif !== false ? 'checked' : ''} onchange="toggleMilitant('${m.nom}', this.checked)"><span class="toggle-slider"></span></label>` : ''}
+        <div style="display:flex;align-items:center;gap:8px;">
+          ${!isAdmin ? `<button onclick="confirmerSupprimerMilitant('${m.nom}')" style="background:#c0392b;color:white;border:none;border-radius:6px;width:32px;height:32px;font-size:14px;cursor:pointer;" title="Supprimer">🗑️</button>` : ''}
+          ${!isAdmin ? `<label class="toggle"><input type="checkbox" ${m.actif !== false ? 'checked' : ''} onchange="toggleMilitant('${m.nom}', this.checked)"><span class="toggle-slider"></span></label>` : ''}
+        </div>
       </div>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
         <label style="font-size:12px;color:#666;white-space:nowrap;">Rôle :</label>
@@ -1756,6 +1878,51 @@ async function modifierPin(nom) {
   } catch(e) {
     showToast('❌ Erreur', 'erreur');
   }
+}
+
+// ============================================
+// SUPPRIMER UN MILITANT
+// ============================================
+let militantASupprimer = null;
+
+function confirmerSupprimerMilitant(nom) {
+  militantASupprimer = nom;
+  $('confirmSuppNom').textContent = nom;
+  ouvrirModal('modalSupprimerMilitant');
+}
+
+async function executerSuppressionMilitant() {
+  if (!militantASupprimer) return;
+  
+  fermerModal('modalSupprimerMilitant');
+  showToast('⏳ Suppression...', '');
+  
+  try {
+    const resp = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: new URLSearchParams({
+        action: 'supprimerMilitant',
+        nom: militantASupprimer
+      })
+    });
+    
+    const data = await resp.json();
+    
+    if (data.ok) {
+      // Supprimer localement
+      listeMilitants = listeMilitants.filter(m => m.nom !== militantASupprimer);
+      localStorage.setItem(CACHE_KEY_MILITANTS, JSON.stringify(listeMilitants));
+      
+      showToast('✅ Militant supprimé !', 'succes');
+      afficherGestionMilitants();
+    } else {
+      showToast('❌ ' + (data.msg || 'Erreur'), 'erreur');
+    }
+  } catch(e) {
+    showToast('❌ Erreur: ' + e.message, 'erreur');
+  }
+  
+  militantASupprimer = null;
 }
 
 function reinitialiserPin(nom) {
