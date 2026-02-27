@@ -151,7 +151,7 @@
 <!-- LOGIN -->
 <div id="ecranLogin">
   <div class="login-logo">🗳️ Visites Électorales</div>
-  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v63</span></div>
+  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v64</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -189,7 +189,7 @@
   <div class="header">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v63</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v64</span></p>
     </div>
     <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
   </div>
@@ -298,7 +298,7 @@
 // CONFIG v62 — Sync automatique
 // ============================================
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
-const APP_VERSION = 'v63';
+const APP_VERSION = 'v64';
 const MAX_RESULTATS = 50;
 const SYNC_INTERVAL = 15000; // 15 secondes
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
@@ -1114,16 +1114,22 @@ function forceChargerAdmin() {
 
 function buildAdminHtml(data) {
   const compteurs = data.compteurs || {};
+  const suppressions = data.suppressions || {};
   const logs = data.logs || [];
   const connectes = data.connectes || {};
   
   // Compter les militants en ligne
   const nbEnLigne = Object.keys(connectes).length;
   
+  // Total visites et suppressions
+  const totalVisites = Object.values(compteurs).reduce((a, b) => a + b, 0);
+  const totalSuppressions = Object.values(suppressions).reduce((a, b) => a + b, 0);
+  
   let html = `<div style="background:linear-gradient(135deg,#1a3a6b,#2755a8);border-radius:12px;padding:14px;margin-bottom:12px;color:white;display:flex;justify-content:space-around;text-align:center;">
     <div><div style="font-family:'Bebas Neue';font-size:28px;">${nbEnLigne}</div><div style="font-size:11px;opacity:.7;">EN LIGNE</div></div>
     <div><div style="font-family:'Bebas Neue';font-size:28px;">${listeMilitants.length}</div><div style="font-size:11px;opacity:.7;">MILITANTS</div></div>
-    <div><div style="font-family:'Bebas Neue';font-size:28px;">${toutesPersonnes.filter(p => p[3] === 'Visité').length}</div><div style="font-size:11px;opacity:.7;">VISITES</div></div>
+    <div><div style="font-family:'Bebas Neue';font-size:28px;">${totalVisites}</div><div style="font-size:11px;opacity:.7;">VISITES</div></div>
+    <div><div style="font-family:'Bebas Neue';font-size:28px;color:#ff6b6b;">${totalSuppressions}</div><div style="font-size:11px;opacity:.7;">SUPP.</div></div>
   </div>`;
   
   html += '<div class="section-title">👥 Activité par militant</div>';
@@ -1138,13 +1144,15 @@ function buildAdminHtml(data) {
   
   militantsTries.forEach(m => {
     const nb = compteurs[m.nom] || 0;
+    const nbSupp = suppressions[m.nom] || 0;
     const connecte = connectes[m.nom];
     const badgeRole = m.role === 'admin' ? '<span class="role-badge">admin</span>' : m.role === 'superviseur' ? '<span class="role-badge" style="background:#d4edda;color:#155724;">superviseur</span>' : '';
+    const suppText = nbSupp > 0 ? ` <span style="color:#e74c3c;font-size:11px;">(-${nbSupp} supp.)</span>` : '';
     
     html += `<div class="militant-card" style="${connecte ? 'border-left:4px solid #27ae60;' : ''}">
       <div style="flex:1">
         <div class="mc-nom">${m.nom}${badgeRole}${connecte ? '<span style="margin-left:8px;background:#27ae60;color:white;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;">🟢 EN LIGNE</span>' : ''}</div>
-        <div class="mc-detail">${nb} visite${nb > 1 ? 's' : ''} enregistrée${nb > 1 ? 's' : ''}</div>
+        <div class="mc-detail">${nb} visite${nb > 1 ? 's' : ''} enregistrée${nb > 1 ? 's' : ''}${suppText}</div>
       </div>
       <div class="mc-badge">${nb}</div>
     </div>`;
@@ -1152,13 +1160,18 @@ function buildAdminHtml(data) {
 
   html += '<div class="section-title" style="margin-top:16px;">📋 Dernières actions (temps réel)</div>';
   if (!logs.length) html += '<div class="vide">Aucune activité</div>';
-  else logs.slice(0, 15).forEach(l => {
+  else logs.slice(0, 30).forEach((l, i) => {
     const isConnexion = l.action === 'Connexion';
-    html += `<div class="log-item" style="${isConnexion ? 'background:#f0fff4;' : ''}">
-      <div class="log-icon">${isConnexion ? '🔑' : '✅'}</div>
+    const isSuppression = l.action === 'Suppression';
+    const bgColor = isConnexion ? 'background:#f0fff4;' : (isSuppression ? 'background:#fff0f0;' : '');
+    const icon = isConnexion ? '🔑' : (isSuppression ? '🗑️' : '✅');
+    const detail = isConnexion ? 'Connexion' : (isSuppression ? 'Suppression ID ' + l.id : (l.nom || 'ID ' + l.id));
+    
+    html += `<div class="log-item" style="${bgColor}">
+      <div class="log-icon">${icon}</div>
       <div class="log-info">
         <div class="log-action">${l.militant}</div>
-        <div class="log-detail">${isConnexion ? 'Connexion' : (l.nom || 'ID ' + l.id)}</div>
+        <div class="log-detail">${detail}</div>
       </div>
       <div class="log-date">${l.date}</div>
     </div>`;
