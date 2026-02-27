@@ -137,7 +137,7 @@
 <!-- LOGIN -->
 <div id="ecranLogin">
   <div class="login-logo">🗳️ Visites Électorales</div>
-  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v93</span></div>
+  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v97</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -175,7 +175,7 @@
   <div class="header">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v93</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v97</span></p>
     </div>
     <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
   </div>
@@ -206,7 +206,7 @@
 
   <div class="page" id="page-stats">
     <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
-      <button onclick="statsCache=null;chargerStats();" style="background:#2755a8;color:white;border:none;border-radius:8px;width:40px;height:40px;font-size:20px;cursor:pointer;" title="Rafraîchir">🔄</button>
+      <button onclick="statsCache=null;localStorage.removeItem(CACHE_KEY_STATS);rafraichirStatsServeur();" style="background:#2755a8;color:white;border:none;border-radius:8px;width:40px;height:40px;font-size:20px;cursor:pointer;" title="Rafraîchir">🔄</button>
     </div>
     <div class="compteur" id="compteur" style="display:none;">
       <div class="cpt-item"><div class="cpt-num" id="cptTotal">-</div><div class="cpt-label">INSCRITS</div></div>
@@ -231,7 +231,7 @@
 
   <div class="page" id="page-observations">
     <div style="display:flex;gap:10px;margin-bottom:12px;">
-      <button class="btn-refresh" onclick="actualiserObservations()">🔄 Actualiser</button>
+      <button class="btn-refresh" onclick="localStorage.removeItem(CACHE_KEY_OBS);actualiserObservations();">🔄 Actualiser</button>
     </div>
     <div id="obsContenu"></div>
   </div>
@@ -377,12 +377,14 @@
 // CONFIG v65 — Sync auto + Réinitialisation
 // ============================================
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
-const APP_VERSION = 'v93';
+const APP_VERSION = 'v97';
 const MAX_RESULTATS = 50;
 const SYNC_INTERVAL = 15000;
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
 const CACHE_KEY_PERSONNES = 'visites_personnes_v3';
 const CACHE_KEY_MILITANTS = 'visites_militants_v3';
+const CACHE_KEY_STATS = 'visites_stats_v1';
+const CACHE_KEY_OBS = 'visites_obs_v1';
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000; // Vérifier toutes les 60 secondes
 
@@ -801,6 +803,14 @@ function seConnecter() {
   chargerToutesPersonnes();
   demarrerSync();
   demarrerVerificationMaj();
+  
+  // Précharger Stats et Obs en arrière-plan pour les rôles concernés
+  if (currentRole === 'manager' || currentRole === 'responsable bureaux' || currentRole === 'superviseur' || currentRole === 'admin') {
+    setTimeout(() => prechargerStats(), 2000);
+  }
+  if (currentRole === 'superviseur' || currentRole === 'admin') {
+    setTimeout(() => prechargerObs(), 3000);
+  }
 }
 
 function ajouterOnglet(page, label) {
@@ -1115,7 +1125,7 @@ function afficherFiche(p) {
           <option value="Visité" ${isVisite ? 'selected' : ''}>✅ Visité</option>
           <option value="Non visité" ${!isVisite ? 'selected' : ''}>❌ Non visité</option>
           <option value="Absent">🚪 Absent</option>
-          <option value="Refus">🚫 Refus</option>
+          <option value="Opposition">🚫 Opposition</option>
         </select>
       </div>
       <div class="field"><label>Candidat soutenu</label><select id="fCandidat">${cOpts}</select></div>
@@ -1294,22 +1304,36 @@ async function confirmerReinitialisation() {
 // STATS
 // ============================================
 async function chargerStats() {
+  // 1. Afficher depuis cache mémoire ou localStorage immédiatement
   if (statsCache) {
     afficherStats(statsCache);
     return;
   }
+  
+  try {
+    const cached = localStorage.getItem(CACHE_KEY_STATS);
+    if (cached) {
+      statsCache = JSON.parse(cached);
+      afficherStats(statsCache);
+      return; // PAS de rafraîchissement automatique
+    }
+  } catch(e) {}
 
-  $('statsContenu').innerHTML = '<div class="loading"><div class="spinner"></div>Chargement des statistiques...</div>';
+  // 2. Sinon charger depuis serveur
+  $('statsContenu').innerHTML = '<div class="loading"><div class="spinner"></div>Chargement...</div>';
+  await rafraichirStatsServeur();
+}
 
+async function rafraichirStatsServeur() {
+  $('statsContenu').innerHTML = '<div class="loading"><div class="spinner"></div>Chargement...</div>';
   try {
     const resp = await fetchRapide(SCRIPT_URL + '?action=stats', {}, 30000);
     const data = await resp.json();
     
-    if (data.error) {
-      throw new Error(data.error);
-    }
+    if (data.error) throw new Error(data.error);
     
     statsCache = data;
+    localStorage.setItem(CACHE_KEY_STATS, JSON.stringify(data));
     afficherStats(statsCache);
   } catch(e) {
     console.error('Erreur stats:', e);
@@ -1317,9 +1341,35 @@ async function chargerStats() {
       <div style="font-size:30px;margin-bottom:10px;">⚠️</div>
       Erreur: ${e.message || 'Timeout'}
       <br><br>
-      <button class="btn-refresh" onclick="statsCache=null;chargerStats();">🔄 Réessayer</button>
+      <button class="btn-refresh" onclick="statsCache=null;localStorage.removeItem(CACHE_KEY_STATS);rafraichirStatsServeur();">🔄 Réessayer</button>
     </div>`;
   }
+}
+
+// Préchargement silencieux en arrière-plan
+async function prechargerStats() {
+  if (localStorage.getItem(CACHE_KEY_STATS)) return; // Déjà en cache
+  try {
+    const resp = await fetchRapide(SCRIPT_URL + '?action=stats', {}, 30000);
+    const data = await resp.json();
+    if (!data.error && data.total) {
+      statsCache = data;
+      localStorage.setItem(CACHE_KEY_STATS, JSON.stringify(data));
+      console.log('✅ Stats préchargées');
+    }
+  } catch(e) { console.log('Préchargement stats échoué'); }
+}
+
+async function prechargerObs() {
+  if (localStorage.getItem(CACHE_KEY_OBS)) return; // Déjà en cache
+  try {
+    const resp = await fetchRapide(SCRIPT_URL + '?action=getObservations', {}, 30000);
+    const data = await resp.json();
+    if (!data.error && data.observations) {
+      localStorage.setItem(CACHE_KEY_OBS, JSON.stringify(data.observations));
+      console.log('✅ Observations préchargées');
+    }
+  } catch(e) { console.log('Préchargement obs échoué'); }
 }
 
 function afficherStats(data) {
@@ -1480,6 +1530,9 @@ async function actualiserObservations() {
       return;
     }
     
+    // Sauvegarder dans localStorage
+    try { localStorage.setItem(CACHE_KEY_OBS, JSON.stringify(data.observations)); } catch(e) {}
+    
     if (data.observations.length > 0) {
       afficherObservationsRapide(data.observations);
       showToast(`✅ ${data.observations.length} observation${data.observations.length > 1 ? 's' : ''}`, 'succes');
@@ -1611,46 +1664,37 @@ function afficherObservationRapide(id, nomEnc, prenomEnc, obsEnc, militant, date
 // Fonction supprimée - fusionnée dans actualiserObservations
 
 function chargerObservations() {
-  // Si on a des données en cache, les afficher d'abord puis actualiser
+  const div = $('obsContenu');
+  
+  // 1. Essayer le cache localStorage des observations (INSTANTANÉ)
+  try {
+    const cached = localStorage.getItem(CACHE_KEY_OBS);
+    if (cached) {
+      const observations = JSON.parse(cached);
+      if (observations.length > 0) {
+        afficherObservationsRapide(observations);
+        return; // PAS de rafraîchissement automatique
+      }
+    }
+  } catch(e) {}
+  
+  // 2. Sinon essayer depuis toutesPersonnes en cache
   const avecObs = toutesPersonnes.filter(p => p[15] && String(p[15]).trim() !== '');
   
   if (avecObs.length) {
-    // Afficher depuis le cache
-    const div = $('obsContenu');
-    let html = `<div style="background:linear-gradient(135deg,#8e44ad,#9b59b6);border-radius:12px;padding:14px;margin-bottom:12px;color:white;text-align:center;">
-      <div style="font-family:'Bebas Neue';font-size:32px;">${avecObs.length}</div>
-      <div style="font-size:12px;opacity:.8;">OBSERVATIONS</div>
-    </div>`;
-    
-    html += '<div class="section-title">📝 Personnes avec observations</div>';
-    
-    avecObs.forEach(p => {
-      const id = p[0];
-      const nom = p[1];
-      const prenom = p[2];
-      const statut = p[3];
-      const isVisite = statut === 'Visité';
-      const militant = p[14] || '';
-      const dateVisite = p[11] || '';
-      const candidat = p[10] || '';
-      const observation = String(p[15] || '');
-      const obsPreview = observation.length > 50 ? observation.substring(0, 50) + '...' : observation;
-      
-      html += `<div class="militant-card" style="cursor:pointer;border-left:4px solid #8e44ad;" onclick="afficherObservation(${id})">
-        <div style="flex:1;">
-          <div class="mc-nom">${nom} ${prenom} <span style="color:#888;font-size:11px;">#${id}</span></div>
-          <div class="mc-detail" style="color:#8e44ad;font-style:italic;">"${obsPreview}"</div>
-          <div class="mc-detail">${isVisite ? '✅ ' : ''}${militant ? 'par ' + militant.split(' ').pop() : ''} ${dateVisite ? '· ' + dateVisite : ''}</div>
-        </div>
-        <div style="font-size:24px;">👁️</div>
-      </div>`;
-    });
-    
-    div.innerHTML = html;
-  } else {
-    // Pas de cache, charger depuis serveur
-    actualiserObservations();
+    afficherObservationsDepuisCache(avecObs);
+    // Sauvegarder dans cache obs
+    const obsData = avecObs.map(p => ({
+      id: p[0], nom: p[1], prenom: p[2], statut: p[3],
+      dateVisite: p[11] || '', candidat: p[10] || '',
+      militant: p[14] || '', observation: String(p[15] || '')
+    }));
+    try { localStorage.setItem(CACHE_KEY_OBS, JSON.stringify(obsData)); } catch(e) {}
+    return;
   }
+  
+  // 3. Sinon charger depuis serveur
+  actualiserObservations();
 }
 
 function afficherObservation(id) {
