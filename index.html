@@ -137,7 +137,7 @@
 <!-- LOGIN -->
 <div id="ecranLogin">
   <div class="login-logo">🗳️ Visites Électorales</div>
-  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v65</span></div>
+  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v66</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -175,7 +175,7 @@
   <div class="header">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v65</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v66</span></p>
     </div>
     <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
   </div>
@@ -224,6 +224,13 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <div class="page" id="page-observations">
+    <div style="display:flex;gap:10px;margin-bottom:12px;">
+      <button class="btn-refresh" onclick="chargerObservations()">🔄 Actualiser</button>
+    </div>
+    <div id="obsContenu"></div>
   </div>
 
   <div class="page" id="page-admin">
@@ -285,12 +292,24 @@
   </div>
 </div>
 
+<!-- POPUP OBSERVATION -->
+<div class="modal-overlay" id="modalObservation">
+  <div class="modal-box" style="max-width:400px;">
+    <h3 id="obsModalTitre">📝 Observation</h3>
+    <div id="obsModalContenu" style="background:#f8f9fa;border-radius:8px;padding:14px;margin-bottom:16px;font-size:14px;line-height:1.6;max-height:300px;overflow-y:auto;"></div>
+    <div class="modal-actions">
+      <button class="modal-btn-cancel" style="flex:1;" onclick="fermerModal('modalObservation')">Fermer</button>
+      <button class="modal-btn-ok" style="flex:1;background:#2755a8;" onclick="ouvrirFicheDepuisObs()">Voir fiche</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ============================================
 // CONFIG v65 — Sync auto + Réinitialisation
 // ============================================
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
-const APP_VERSION = 'v65';
+const APP_VERSION = 'v66';
 const MAX_RESULTATS = 50;
 const SYNC_INTERVAL = 15000;
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
@@ -626,6 +645,7 @@ function seConnecter() {
   
   if (currentRole === 'superviseur' || currentRole === 'admin') {
     ajouterOnglet('stats', '📊 Stats');
+    ajouterOnglet('observations', '📝 Obs');
   }
   if (currentRole === 'admin') {
     ajouterOnglet('admin', '👁️ Admin');
@@ -653,6 +673,7 @@ function ajouterOnglet(page, label) {
     $('page-' + page).classList.add('active');
     if (page === 'stats') chargerStats();
     if (page === 'admin') chargerAdmin();
+    if (page === 'observations') chargerObservations();
   };
   $('tabsBar').appendChild(tab);
 }
@@ -1193,6 +1214,91 @@ function buildAdminHtml(data) {
   });
 
   return html;
+}
+
+// ============================================
+// OBSERVATIONS
+// ============================================
+let currentObsId = null;
+
+function chargerObservations() {
+  const div = $('obsContenu');
+  
+  // Filtrer les personnes avec observation
+  const avecObs = toutesPersonnes.filter(p => p[15] && p[15].trim() !== '');
+  
+  if (!avecObs.length) {
+    div.innerHTML = '<div class="vide"><div style="font-size:40px;margin-bottom:10px;">📝</div>Aucune observation enregistrée</div>';
+    return;
+  }
+  
+  // Trier par date de visite (plus récent en premier)
+  avecObs.sort((a, b) => {
+    const dateA = a[11] || '';
+    const dateB = b[11] || '';
+    return dateB.localeCompare(dateA);
+  });
+  
+  let html = `<div style="background:linear-gradient(135deg,#8e44ad,#9b59b6);border-radius:12px;padding:14px;margin-bottom:12px;color:white;text-align:center;">
+    <div style="font-family:'Bebas Neue';font-size:32px;">${avecObs.length}</div>
+    <div style="font-size:12px;opacity:.8;">OBSERVATIONS</div>
+  </div>`;
+  
+  html += '<div class="section-title">📝 Personnes avec observations</div>';
+  
+  avecObs.forEach(p => {
+    const id = p[0];
+    const nom = p[1];
+    const prenom = p[2];
+    const statut = p[3];
+    const isVisite = statut === 'Visité';
+    const militant = p[14] || '';
+    const dateVisite = p[11] || '';
+    const observation = p[15] || '';
+    const obsPreview = observation.length > 50 ? observation.substring(0, 50) + '...' : observation;
+    
+    html += `<div class="militant-card" style="cursor:pointer;border-left:4px solid #8e44ad;" onclick="afficherObservation(${id})">
+      <div style="flex:1;">
+        <div class="mc-nom">${nom} ${prenom}</div>
+        <div class="mc-detail" style="color:#8e44ad;font-style:italic;">"${obsPreview}"</div>
+        <div class="mc-detail">${isVisite ? '✅ ' : ''}${militant ? 'par ' + militant.split(' ').pop() : ''} ${dateVisite ? '· ' + dateVisite : ''}</div>
+      </div>
+      <div style="font-size:24px;">👁️</div>
+    </div>`;
+  });
+  
+  div.innerHTML = html;
+}
+
+function afficherObservation(id) {
+  currentObsId = id;
+  const p = toutesPersonnes.find(x => x[0] == id);
+  if (!p) return;
+  
+  const nom = p[1];
+  const prenom = p[2];
+  const observation = p[15] || '';
+  const militant = p[14] || '';
+  const dateVisite = p[11] || '';
+  const candidat = p[10] || '';
+  
+  $('obsModalTitre').textContent = `📝 ${nom} ${prenom}`;
+  $('obsModalContenu').innerHTML = `
+    <div style="margin-bottom:12px;">${observation}</div>
+    <div style="font-size:12px;color:#888;border-top:1px solid #ddd;padding-top:10px;">
+      ${militant ? '👤 ' + militant : ''}
+      ${dateVisite ? ' · 📅 ' + dateVisite : ''}
+      ${candidat ? ' · 🗳️ ' + candidat : ''}
+    </div>`;
+  
+  ouvrirModal('modalObservation');
+}
+
+function ouvrirFicheDepuisObs() {
+  fermerModal('modalObservation');
+  if (currentObsId) {
+    selectionnerPersonne(currentObsId);
+  }
 }
 
 // ============================================
