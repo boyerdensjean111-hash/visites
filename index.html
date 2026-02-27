@@ -137,7 +137,7 @@
 <!-- LOGIN -->
 <div id="ecranLogin">
   <div class="login-logo">🗳️ Visites Électorales</div>
-  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v77</span></div>
+  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v78</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -175,7 +175,7 @@
   <div class="header">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v77</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v78</span></p>
     </div>
     <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
   </div>
@@ -309,7 +309,7 @@
 // CONFIG v65 — Sync auto + Réinitialisation
 // ============================================
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
-const APP_VERSION = 'v77';
+const APP_VERSION = 'v78';
 const MAX_RESULTATS = 50;
 const SYNC_INTERVAL = 15000;
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
@@ -781,8 +781,8 @@ function initRecherche() {
 
 function retourRecherche() {
   showPage('recherche');
-  // Rafraîchir les résultats de recherche
-  rechercher();
+  // Forcer le rafraîchissement des résultats
+  setTimeout(() => rechercher(), 50);
 }
 
 function resetRecherche() {
@@ -1067,34 +1067,41 @@ async function confirmerReinitialisation() {
       body: new URLSearchParams({ 
         action: 'reinitialiser', 
         id: String(currentPersonne.id),
-        militant: currentMilitant  // ← IMPORTANT pour le log
+        militant: currentMilitant
       }) 
     });
     
-    // Mise à jour locale
+    // Mise à jour locale de currentPersonne
     currentPersonne.statut = 'Non visité';
     currentPersonne.candidatActuel = '';
     currentPersonne.notes = '';
-    currentPersonne.observation = '';  // ← AJOUT
+    currentPersonne.observation = '';
     currentPersonne.militant = '';
     currentPersonne.dateDerniereVisite = '';
     
-    const idx = toutesPersonnes.findIndex(p => p[0] == currentPersonne.id);
-    if (idx !== -1) {
-      toutesPersonnes[idx][3] = 'Non visité';
-      toutesPersonnes[idx][10] = '';
-      toutesPersonnes[idx][11] = '';  // ← AJOUT: date visite
-      toutesPersonnes[idx][12] = '';
-      toutesPersonnes[idx][14] = '';
-      toutesPersonnes[idx][15] = '';  // ← AJOUT: observation
+    // Mise à jour robuste de toutesPersonnes
+    const id = currentPersonne.id;
+    for (let i = 0; i < toutesPersonnes.length; i++) {
+      if (String(toutesPersonnes[i][0]) === String(id)) {
+        toutesPersonnes[i][3] = 'Non visité';
+        toutesPersonnes[i][10] = '';
+        toutesPersonnes[i][11] = '';
+        toutesPersonnes[i][12] = '';
+        toutesPersonnes[i][14] = '';
+        toutesPersonnes[i][15] = '';
+        console.log('✅ Personne mise à jour:', id, toutesPersonnes[i]);
+        break;
+      }
     }
     
+    // Sauvegarder le cache
     try { localStorage.setItem(CACHE_KEY_PERSONNES, JSON.stringify(toutesPersonnes)); } catch(e) {}
     
     afficherFiche(currentPersonne);
     showToast('🗑️ Visite réinitialisée', 'succes');
     
   } catch(e) {
+    console.error('Erreur réinitialisation:', e);
     showToast('❌ Erreur', 'erreur');
   }
 }
