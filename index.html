@@ -137,7 +137,7 @@
 <!-- LOGIN -->
 <div id="ecranLogin">
   <div class="login-logo">🗳️ Visites Électorales</div>
-  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v79</span></div>
+  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v80</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -175,7 +175,7 @@
   <div class="header">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v79</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v80</span></p>
     </div>
     <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
   </div>
@@ -320,7 +320,7 @@
 // CONFIG v65 — Sync auto + Réinitialisation
 // ============================================
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
-const APP_VERSION = 'v79';
+const APP_VERSION = 'v80';
 const MAX_RESULTATS = 50;
 const SYNC_INTERVAL = 15000;
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
@@ -1327,19 +1327,93 @@ async function actualiserObservations() {
   div.innerHTML = '<div class="loading"><div class="spinner"></div>Chargement...</div>';
   
   try {
-    // Appel rapide : seulement les observations
+    // Essayer d'abord l'appel rapide
     const resp = await fetchRapide(SCRIPT_URL + '?action=getObservations', {}, 30000);
     const data = await resp.json();
     
-    if (data.observations) {
+    // Si erreur ou pas de données, fallback sur getAllPersonnes
+    if (data.error || !data.observations) {
+      console.log('Fallback sur getAllPersonnes');
+      await actualiserObservationsFallback();
+      return;
+    }
+    
+    if (data.observations.length > 0) {
       afficherObservationsRapide(data.observations);
       showToast(`✅ ${data.observations.length} observation${data.observations.length > 1 ? 's' : ''}`, 'succes');
     } else {
       div.innerHTML = '<div class="vide"><div style="font-size:40px;margin-bottom:10px;">📝</div>Aucune observation</div>';
     }
   } catch(e) {
+    console.log('Erreur, fallback:', e);
+    await actualiserObservationsFallback();
+  }
+}
+
+async function actualiserObservationsFallback() {
+  const div = $('obsContenu');
+  div.innerHTML = '<div class="loading"><div class="spinner"></div>Chargement complet...</div>';
+  
+  try {
+    // Vider et recharger tout
+    localStorage.removeItem(CACHE_KEY_PERSONNES);
+    const resp = await fetchRapide(SCRIPT_URL + '?action=getAllPersonnes', {}, 60000);
+    const data = await resp.json();
+    
+    if (data.personnes?.length) {
+      toutesPersonnes = data.personnes;
+      try { localStorage.setItem(CACHE_KEY_PERSONNES, JSON.stringify(toutesPersonnes)); } catch(e) {}
+      
+      // Filtrer les observations
+      const avecObs = toutesPersonnes.filter(p => p[15] && String(p[15]).trim() !== '');
+      
+      if (avecObs.length > 0) {
+        afficherObservationsDepuisCache(avecObs);
+        showToast(`✅ ${avecObs.length} observation${avecObs.length > 1 ? 's' : ''}`, 'succes');
+      } else {
+        div.innerHTML = '<div class="vide"><div style="font-size:40px;margin-bottom:10px;">📝</div>Aucune observation</div>';
+      }
+    } else {
+      div.innerHTML = '<div class="vide" style="color:orange;">⚠️ Aucune donnée reçue</div>';
+    }
+  } catch(e) {
     div.innerHTML = '<div class="vide" style="color:red;">❌ Erreur: ' + e.message + '</div>';
   }
+}
+
+function afficherObservationsDepuisCache(avecObs) {
+  const div = $('obsContenu');
+  
+  let html = `<div style="background:linear-gradient(135deg,#8e44ad,#9b59b6);border-radius:12px;padding:14px;margin-bottom:12px;color:white;text-align:center;">
+    <div style="font-family:'Bebas Neue';font-size:32px;">${avecObs.length}</div>
+    <div style="font-size:12px;opacity:.8;">OBSERVATIONS</div>
+  </div>`;
+  
+  html += '<div class="section-title">📝 Personnes avec observations</div>';
+  
+  avecObs.forEach(p => {
+    const id = p[0];
+    const nom = p[1];
+    const prenom = p[2];
+    const statut = p[3];
+    const isVisite = statut === 'Visité';
+    const militant = p[14] || '';
+    const dateVisite = p[11] || '';
+    const candidat = p[10] || '';
+    const observation = String(p[15] || '');
+    const obsPreview = observation.length > 50 ? observation.substring(0, 50) + '...' : observation;
+    
+    html += `<div class="militant-card" style="cursor:pointer;border-left:4px solid #8e44ad;" onclick="afficherObservation(${id})">
+      <div style="flex:1;">
+        <div class="mc-nom">${nom} ${prenom} <span style="color:#888;font-size:11px;">#${id}</span></div>
+        <div class="mc-detail" style="color:#8e44ad;font-style:italic;">"${obsPreview}"</div>
+        <div class="mc-detail">${isVisite ? '✅ ' : ''}${militant ? 'par ' + militant.split(' ').pop() : ''} ${dateVisite ? '· ' + dateVisite : ''}</div>
+      </div>
+      <div style="font-size:24px;">👁️</div>
+    </div>`;
+  });
+  
+  div.innerHTML = html;
 }
 
 function afficherObservationsRapide(observations) {
