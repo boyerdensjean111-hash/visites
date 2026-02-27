@@ -137,7 +137,7 @@
 <!-- LOGIN -->
 <div id="ecranLogin">
   <div class="login-logo">🗳️ Visites Électorales</div>
-  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v80</span></div>
+  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v81</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -175,7 +175,7 @@
   <div class="header">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v80</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v81</span></p>
     </div>
     <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
   </div>
@@ -320,7 +320,7 @@
 // CONFIG v65 — Sync auto + Réinitialisation
 // ============================================
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
-const APP_VERSION = 'v80';
+const APP_VERSION = 'v81';
 const MAX_RESULTATS = 50;
 const SYNC_INTERVAL = 15000;
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
@@ -1169,14 +1169,26 @@ async function chargerStats() {
     return;
   }
 
-  $('statsContenu').innerHTML = '<div class="loading"><div class="spinner"></div>Chargement...</div>';
+  $('statsContenu').innerHTML = '<div class="loading"><div class="spinner"></div>Chargement des statistiques...</div>';
 
   try {
-    const resp = await fetchRapide(SCRIPT_URL + '?action=stats', {}, 15000);
-    statsCache = await resp.json();
+    const resp = await fetchRapide(SCRIPT_URL + '?action=stats', {}, 30000);
+    const data = await resp.json();
+    
+    if (data.error) {
+      throw new Error(data.error);
+    }
+    
+    statsCache = data;
     afficherStats(statsCache);
   } catch(e) {
-    $('statsContenu').innerHTML = '<div class="vide" style="color:red;">⚠️ Erreur</div>';
+    console.error('Erreur stats:', e);
+    $('statsContenu').innerHTML = `<div class="vide" style="color:red;">
+      <div style="font-size:30px;margin-bottom:10px;">⚠️</div>
+      Erreur: ${e.message || 'Timeout'}
+      <br><br>
+      <button class="btn-refresh" onclick="statsCache=null;chargerStats();">🔄 Réessayer</button>
+    </div>`;
   }
 }
 
