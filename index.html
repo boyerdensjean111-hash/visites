@@ -137,7 +137,7 @@
 <!-- LOGIN -->
 <div id="ecranLogin">
   <div class="login-logo">🗳️ Visites Électorales</div>
-  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v75</span></div>
+  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v76</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -175,7 +175,7 @@
   <div class="header">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v75</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v76</span></p>
     </div>
     <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
   </div>
@@ -309,7 +309,7 @@
 // CONFIG v65 — Sync auto + Réinitialisation
 // ============================================
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
-const APP_VERSION = 'v75';
+const APP_VERSION = 'v76';
 const MAX_RESULTATS = 50;
 const SYNC_INTERVAL = 15000;
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
@@ -1257,84 +1257,117 @@ let currentObsId = null;
 
 async function actualiserObservations() {
   const div = $('obsContenu');
-  div.innerHTML = '<div class="loading"><div class="spinner"></div>Rechargement depuis le serveur...</div>';
-  
-  // Vider le cache local
-  try { 
-    localStorage.removeItem(CACHE_KEY_PERSONNES); 
-  } catch(e) {}
-  
-  toutesPersonnes = [];
+  div.innerHTML = '<div class="loading"><div class="spinner"></div>Chargement...</div>';
   
   try {
-    const resp = await fetchRapide(SCRIPT_URL + '?action=getAllPersonnes', {}, 60000);
+    // Appel rapide : seulement les observations
+    const resp = await fetchRapide(SCRIPT_URL + '?action=getObservations', {}, 30000);
     const data = await resp.json();
     
-    if (data.personnes?.length) {
-      toutesPersonnes = data.personnes;
-      try { localStorage.setItem(CACHE_KEY_PERSONNES, JSON.stringify(toutesPersonnes)); } catch(e) {}
-      
-      const nbObs = toutesPersonnes.filter(p => p[15] && String(p[15]).trim() !== '').length;
-      showToast(`✅ ${nbObs} observation${nbObs > 1 ? 's' : ''} trouvée${nbObs > 1 ? 's' : ''}`, 'succes');
+    if (data.observations) {
+      afficherObservationsRapide(data.observations);
+      showToast(`✅ ${data.observations.length} observation${data.observations.length > 1 ? 's' : ''}`, 'succes');
     } else {
-      showToast('⚠️ Aucune donnée reçue', 'warning');
+      div.innerHTML = '<div class="vide"><div style="font-size:40px;margin-bottom:10px;">📝</div>Aucune observation</div>';
     }
   } catch(e) {
-    showToast('❌ Erreur: ' + e.message, 'erreur');
+    div.innerHTML = '<div class="vide" style="color:red;">❌ Erreur: ' + e.message + '</div>';
   }
-  
-  chargerObservations();
 }
 
-// Fonction supprimée - fusionnée dans actualiserObservations
-
-function chargerObservations() {
+function afficherObservationsRapide(observations) {
   const div = $('obsContenu');
   
-  // Filtrer les personnes avec observation (convertir en string pour gérer les nombres)
-  const avecObs = toutesPersonnes.filter(p => p[15] && String(p[15]).trim() !== '');
-  
-  if (!avecObs.length) {
+  if (!observations.length) {
     div.innerHTML = '<div class="vide"><div style="font-size:40px;margin-bottom:10px;">📝</div>Aucune observation enregistrée</div>';
     return;
   }
   
-  // Trier par date de visite (plus récent en premier)
-  avecObs.sort((a, b) => {
-    const dateA = a[11] || '';
-    const dateB = b[11] || '';
-    return dateB.localeCompare(dateA);
-  });
-  
   let html = `<div style="background:linear-gradient(135deg,#8e44ad,#9b59b6);border-radius:12px;padding:14px;margin-bottom:12px;color:white;text-align:center;">
-    <div style="font-family:'Bebas Neue';font-size:32px;">${avecObs.length}</div>
+    <div style="font-family:'Bebas Neue';font-size:32px;">${observations.length}</div>
     <div style="font-size:12px;opacity:.8;">OBSERVATIONS</div>
   </div>`;
   
   html += '<div class="section-title">📝 Personnes avec observations</div>';
   
-  avecObs.forEach(p => {
-    const id = p[0];
-    const nom = p[1];
-    const prenom = p[2];
-    const statut = p[3];
-    const isVisite = statut === 'Visité';
-    const militant = p[14] || '';
-    const dateVisite = p[11] || '';
-    const observation = String(p[15] || '');
-    const obsPreview = observation.length > 50 ? observation.substring(0, 50) + '...' : observation;
+  observations.forEach(o => {
+    const isVisite = o.statut === 'Visité';
+    const obsPreview = o.observation.length > 50 ? o.observation.substring(0, 50) + '...' : o.observation;
     
-    html += `<div class="militant-card" style="cursor:pointer;border-left:4px solid #8e44ad;" onclick="afficherObservation(${id})">
+    html += `<div class="militant-card" style="cursor:pointer;border-left:4px solid #8e44ad;" onclick="afficherObservationRapide(${o.id}, '${encodeURIComponent(o.nom)}', '${encodeURIComponent(o.prenom)}', '${encodeURIComponent(o.observation)}', '${o.militant || ''}', '${o.dateVisite || ''}', '${o.candidat || ''}')">
       <div style="flex:1;">
-        <div class="mc-nom">${nom} ${prenom} <span style="color:#888;font-size:11px;">#${id}</span></div>
+        <div class="mc-nom">${o.nom} ${o.prenom} <span style="color:#888;font-size:11px;">#${o.id}</span></div>
         <div class="mc-detail" style="color:#8e44ad;font-style:italic;">"${obsPreview}"</div>
-        <div class="mc-detail">${isVisite ? '✅ ' : ''}${militant ? 'par ' + militant.split(' ').pop() : ''} ${dateVisite ? '· ' + dateVisite : ''}</div>
+        <div class="mc-detail">${isVisite ? '✅ ' : ''}${o.militant ? 'par ' + o.militant.split(' ').pop() : ''} ${o.dateVisite ? '· ' + o.dateVisite : ''}</div>
       </div>
       <div style="font-size:24px;">👁️</div>
     </div>`;
   });
   
   div.innerHTML = html;
+}
+
+function afficherObservationRapide(id, nomEnc, prenomEnc, obsEnc, militant, dateVisite, candidat) {
+  currentObsId = id;
+  const nom = decodeURIComponent(nomEnc);
+  const prenom = decodeURIComponent(prenomEnc);
+  const observation = decodeURIComponent(obsEnc);
+  
+  $('obsModalTitre').textContent = `📝 ${nom} ${prenom}`;
+  $('obsModalContenu').innerHTML = `
+    <div style="margin-bottom:12px;">${observation}</div>
+    <div style="font-size:12px;color:#888;border-top:1px solid #ddd;padding-top:10px;">
+      ${militant ? '👤 ' + militant : ''}
+      ${dateVisite ? ' · 📅 ' + dateVisite : ''}
+      ${candidat ? ' · 🗳️ ' + candidat : ''}
+    </div>`;
+  
+  ouvrirModal('modalObservation');
+}
+
+// Fonction supprimée - fusionnée dans actualiserObservations
+
+function chargerObservations() {
+  // Si on a des données en cache, les afficher d'abord puis actualiser
+  const avecObs = toutesPersonnes.filter(p => p[15] && String(p[15]).trim() !== '');
+  
+  if (avecObs.length) {
+    // Afficher depuis le cache
+    const div = $('obsContenu');
+    let html = `<div style="background:linear-gradient(135deg,#8e44ad,#9b59b6);border-radius:12px;padding:14px;margin-bottom:12px;color:white;text-align:center;">
+      <div style="font-family:'Bebas Neue';font-size:32px;">${avecObs.length}</div>
+      <div style="font-size:12px;opacity:.8;">OBSERVATIONS</div>
+    </div>`;
+    
+    html += '<div class="section-title">📝 Personnes avec observations</div>';
+    
+    avecObs.forEach(p => {
+      const id = p[0];
+      const nom = p[1];
+      const prenom = p[2];
+      const statut = p[3];
+      const isVisite = statut === 'Visité';
+      const militant = p[14] || '';
+      const dateVisite = p[11] || '';
+      const candidat = p[10] || '';
+      const observation = String(p[15] || '');
+      const obsPreview = observation.length > 50 ? observation.substring(0, 50) + '...' : observation;
+      
+      html += `<div class="militant-card" style="cursor:pointer;border-left:4px solid #8e44ad;" onclick="afficherObservation(${id})">
+        <div style="flex:1;">
+          <div class="mc-nom">${nom} ${prenom} <span style="color:#888;font-size:11px;">#${id}</span></div>
+          <div class="mc-detail" style="color:#8e44ad;font-style:italic;">"${obsPreview}"</div>
+          <div class="mc-detail">${isVisite ? '✅ ' : ''}${militant ? 'par ' + militant.split(' ').pop() : ''} ${dateVisite ? '· ' + dateVisite : ''}</div>
+        </div>
+        <div style="font-size:24px;">👁️</div>
+      </div>`;
+    });
+    
+    div.innerHTML = html;
+  } else {
+    // Pas de cache, charger depuis serveur
+    actualiserObservations();
+  }
 }
 
 function afficherObservation(id) {
