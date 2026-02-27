@@ -137,7 +137,7 @@
 <!-- LOGIN -->
 <div id="ecranLogin">
   <div class="login-logo">🗳️ Visites Électorales</div>
-  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v68</span></div>
+  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v69</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -175,7 +175,7 @@
   <div class="header">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v68</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v69</span></p>
     </div>
     <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
   </div>
@@ -309,7 +309,7 @@
 // CONFIG v65 — Sync auto + Réinitialisation
 // ============================================
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
-const APP_VERSION = 'v68';
+const APP_VERSION = 'v69';
 const MAX_RESULTATS = 50;
 const SYNC_INTERVAL = 15000;
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
@@ -798,6 +798,15 @@ function rechercher() {
     return;
   }
 
+  // Si recherche par ID exact
+  if (qId && !qNom && !qPrenom) {
+    const exact = toutesPersonnes.find(p => String(p[0]) === qId);
+    if (exact) {
+      afficherResultats([exact]);
+      return;
+    }
+  }
+
   const resultats = [];
   const len = toutesPersonnes.length;
   
@@ -808,13 +817,28 @@ function rechercher() {
     const prenom = (p[2] || '').toLowerCase();
 
     let ok = true;
-    if (qId && !id.startsWith(qId)) ok = false;
+    if (qId && id !== qId && !id.startsWith(qId)) ok = false;
     if (qNom && ok && nom.indexOf(qNom) === -1) ok = false;
     if (qPrenom && ok && prenom.indexOf(qPrenom) === -1) ok = false;
     
     if (ok) resultats.push(p);
   }
 
+  // Trier : ID exact en premier
+  if (qId) {
+    resultats.sort((a, b) => {
+      const aExact = String(a[0]) === qId ? 0 : 1;
+      const bExact = String(b[0]) === qId ? 0 : 1;
+      return aExact - bExact;
+    });
+  }
+
+  afficherResultats(resultats);
+}
+
+function afficherResultats(resultats) {
+  const div = $('resultatsRecherche');
+  
   if (!resultats.length) {
     div.innerHTML = '<div class="vide">Aucun résultat</div>';
     return;
@@ -833,7 +857,7 @@ function rechercher() {
     
     html.push(`<div class="resultat-item ${isVisite ? 'visite' : 'non-visite'}" onclick="selectionnerPersonne(${p[0]})">
       <div class="ri-info">
-        <div class="ri-nom">${p[1]} ${p[2]}</div>
+        <div class="ri-nom">${p[1]} ${p[2]} <span style="color:#888;font-size:12px;font-weight:400;">#${p[0]}</span></div>
         <div class="ri-detail">${[sexeIcon + (age ? ' ' + age : ''), adresse].filter(Boolean).join(' · ')}${militantInfo}</div>
       </div>
       <span class="ri-badge ${isVisite ? 'badge-visite' : 'badge-non'}">${isVisite ? '✓' : '—'}</span>
