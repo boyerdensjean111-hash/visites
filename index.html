@@ -137,7 +137,7 @@
 <!-- LOGIN -->
 <div id="ecranLogin">
   <div class="login-logo">🗳️ Visites Électorales</div>
-  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v92</span></div>
+  <div class="login-sub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v93</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -175,7 +175,7 @@
   <div class="header">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v92</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v93</span></p>
     </div>
     <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
   </div>
@@ -377,7 +377,7 @@
 // CONFIG v65 — Sync auto + Réinitialisation
 // ============================================
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
-const APP_VERSION = 'v92';
+const APP_VERSION = 'v93';
 const MAX_RESULTATS = 50;
 const SYNC_INTERVAL = 15000;
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
@@ -1738,7 +1738,17 @@ async function confirmerAjoutMilitant() {
       })
     });
     
-    const data = await resp.json();
+    const text = await resp.text();
+    console.log('Réponse serveur:', text);
+    
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch(e) {
+      showToast('❌ Réponse invalide du serveur', 'erreur');
+      console.error('Réponse:', text);
+      return;
+    }
     
     if (data.ok) {
       // Ajouter localement
@@ -1750,10 +1760,12 @@ async function confirmerAjoutMilitant() {
       // Rafraîchir la liste dans la popup
       afficherGestionMilitants();
     } else {
-      showToast('❌ ' + (data.msg || 'Erreur'), 'erreur');
+      showToast('❌ ' + (data.msg || data.error || 'Erreur inconnue'), 'erreur');
+      console.error('Erreur serveur:', data);
     }
   } catch(e) {
     showToast('❌ Erreur: ' + e.message, 'erreur');
+    console.error('Exception:', e);
   }
 }
 
