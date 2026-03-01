@@ -148,7 +148,7 @@
   .splash-legal h3 { color:white; font-size:14px; margin:0 0 12px 0; text-align:center; }
   .splash-legal-content { color:rgba(255,255,255,0.85); font-size:11px; line-height:1.6; white-space:pre-line; }
   .splash-loader { margin-top:20px; width:100px; height:4px; background:rgba(255,255,255,0.2); border-radius:2px; overflow:hidden; }
-  .splash-loader-bar { height:100%; width:0%; background:white; border-radius:2px; animation:splashLoad 3s linear forwards; }
+  .splash-loader-bar { height:100%; width:0%; background:white; border-radius:2px; animation:splashLoad 5s linear forwards; }
   @keyframes splashLoad { 0%{width:0%} 100%{width:100%} }
   
   /* BOUTON LEGAL */
@@ -166,7 +166,24 @@
   <div class="splash-subtitle">Application Campagne Interne</div>
   <div class="splash-legal">
     <h3>📜 Mentions Légales</h3>
-    <div id="splashMentionsContenu" class="splash-legal-content">Chargement...</div>
+    <div id="splashMentionsContenu" class="splash-legal-content">Éditeur : Boyer Denis Jean Stéphane
+4 rue des Franciceas, La Plaine-des-Palmistes, 97431 Réunion
+
+Contact : boyerdenis1@gmail.com / 0693 61 46 51
+
+Objectif : Outil interne équipe campagne municipales 2026
+
+Données : Liste électorale officielle mairie + notes terrain
+
+Usage : Tri/suivi interne uniquement - Pas de communication publique
+
+Responsable RGPD : Boyer Denis Jean Stéphane
+
+Durée : Suppression totale post-scrutin
+
+Droits : Contactez-moi pour accès/rectification/opposition
+
+CNIL : www.cnil.fr pour plainte</div>
   </div>
   <div class="splash-loader"><div class="splash-loader-bar"></div></div>
 </div>
@@ -174,7 +191,7 @@
 <!-- LOGIN -->
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v118</span></div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v120</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -215,9 +232,24 @@
       <h3 style="font-size:16px;font-weight:700;color:#1a3a6b;margin:0;">📜 Mentions Légales</h3>
       <button onclick="fermerModal('modalLegal')" style="background:none;border:none;font-size:22px;cursor:pointer;color:#888;">✕</button>
     </div>
-    <div id="modalMentionsContenu" style="overflow-y:auto;padding:20px;font-size:13px;line-height:1.7;color:#333;white-space:pre-line;">
-      Chargement...
-    </div>
+    <div id="modalMentionsContenu" style="overflow-y:auto;padding:20px;font-size:13px;line-height:1.7;color:#333;white-space:pre-line;">Éditeur : Boyer Denis Jean Stéphane
+4 rue des Franciceas, La Plaine-des-Palmistes, 97431 Réunion
+
+Contact : boyerdenis1@gmail.com / 0693 61 46 51
+
+Objectif : Outil interne équipe campagne municipales 2026
+
+Données : Liste électorale officielle mairie + notes terrain
+
+Usage : Tri/suivi interne uniquement - Pas de communication publique
+
+Responsable RGPD : Boyer Denis Jean Stéphane
+
+Durée : Suppression totale post-scrutin
+
+Droits : Contactez-moi pour accès/rectification/opposition
+
+CNIL : www.cnil.fr pour plainte</div>
   </div>
 </div>
 
@@ -226,7 +258,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v118</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v120</span></p>
     </div>
     <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
   </div>
@@ -509,7 +541,7 @@
 // CONFIG v65 — Sync auto + Réinitialisation
 // ============================================
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
-const APP_VERSION = 'v118';
+const APP_VERSION = 'v120';
 const MAX_RESULTATS = 50;
 const SYNC_INTERVAL = 15000;
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
@@ -850,6 +882,31 @@ async function chargerMilitants() {
     }
   } catch(e) {
     console.log('Erreur chargement militants:', e);
+  }
+}
+
+// Précharger les données des personnes pendant le splash
+async function prechargerDonnees() {
+  try {
+    // Vérifier si cache récent (moins de 5 min)
+    const cacheTime = localStorage.getItem(CACHE_KEY + '_time');
+    if (cacheTime && (Date.now() - parseInt(cacheTime)) < 300000) {
+      console.log('Cache récent, pas de préchargement');
+      return;
+    }
+    
+    // Précharger les données
+    const resp = await fetch(SCRIPT_URL + '?action=getAllPersonnes');
+    const data = await resp.json();
+    if (data.personnes?.length) {
+      localStorage.setItem(CACHE_KEY, JSON.stringify(data.personnes));
+      localStorage.setItem(CACHE_KEY + '_time', Date.now().toString());
+      toutesPersonnes = data.personnes;
+      personnesFiltrees = [...toutesPersonnes];
+      console.log('✅ Données préchargées:', data.personnes.length);
+    }
+  } catch(e) {
+    console.log('Préchargement en arrière-plan...');
   }
 }
 
@@ -3205,24 +3262,6 @@ async function creerTeleoperateur(avecEnvoi) {
 // ============================================
 // MENTIONS LÉGALES
 // ============================================
-let mentionsLegalesTexte = '';
-
-async function chargerMentionsLegales() {
-  try {
-    const resp = await fetch(SCRIPT_URL + '?action=getMentionsLegales');
-    const data = await resp.json();
-    if (data.mentions) {
-      mentionsLegalesTexte = data.mentions;
-      const splashEl = document.getElementById('splashMentionsContenu');
-      const modalEl = document.getElementById('modalMentionsContenu');
-      if (splashEl) splashEl.textContent = mentionsLegalesTexte;
-      if (modalEl) modalEl.textContent = mentionsLegalesTexte;
-    }
-  } catch(e) {
-    console.log('Erreur chargement mentions:', e);
-  }
-}
-
 // ============================================
 // VÉRIFICATION POST-SCRUTIN
 // ============================================
@@ -3330,13 +3369,14 @@ function afficherMentionsLegales() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Charger les mentions légales
-  chargerMentionsLegales();
+  // CHARGER LES DONNÉES IMMÉDIATEMENT (pendant le splash)
+  chargerMilitants();
+  prechargerDonnees();
   
   // Vérifier si post-scrutin (après 22/03/2026)
   verifierPostScrutin();
   
-  // Splash screen pendant 3 secondes
+  // Splash screen pendant 5 secondes
   setTimeout(() => {
     const splash = document.getElementById('ecranSplash');
     if (splash) {
@@ -3347,7 +3387,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('ecranLogin').style.display = 'flex';
       }, 500);
     }
-  }, 3000);
+  }, 5000);
   
   // Vérifier si token dans l'URL
   const urlParams = new URLSearchParams(window.location.search);
@@ -3358,7 +3398,6 @@ document.addEventListener('DOMContentLoaded', () => {
   
   initTabs();
   initRecherche();
-  chargerMilitants();
   fetch(SCRIPT_URL + '?action=ping').catch(() => {});
 });
 
@@ -3390,7 +3429,7 @@ async function verifierToken(token) {
       // Changer le titre et la couleur
       $('loginLogo').textContent = '📞 Téléopérateur';
       $('loginLogo').style.color = '#1a3a6b';
-      $('loginSub').innerHTML = 'Campagne d\'appels · <span style="opacity:.5;font-size:11px;">v118</span>';
+      $('loginSub').innerHTML = 'Campagne d\'appels · <span style="opacity:.5;font-size:11px;">v120</span>';
       $('loginSub').style.color = '#666';
       $('ecranLogin').style.background = '#f0f2f5';
       
