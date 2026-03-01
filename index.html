@@ -138,15 +138,43 @@
   .toggle-slider:before { content:''; position:absolute; height:18px; width:18px; left:3px; bottom:3px; background:white; border-radius:50%; transition:.3s; }
   .toggle input:checked + .toggle-slider { background:var(--vert); }
   .toggle input:checked + .toggle-slider:before { transform:translateX(20px); }
+  
+  /* SPLASH SCREEN */
+  #ecranSplash { position:fixed; top:0; left:0; right:0; bottom:0; background:linear-gradient(135deg, #1a3a6b 0%, #2755a8 100%); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:9999; padding:30px; }
+  .splash-logo { font-size:60px; margin-bottom:20px; }
+  .splash-title { font-family:'Bebas Neue',sans-serif; font-size:28px; color:white; letter-spacing:2px; margin-bottom:10px; }
+  .splash-subtitle { color:rgba(255,255,255,0.7); font-size:14px; margin-bottom:30px; }
+  .splash-legal { background:rgba(255,255,255,0.1); border-radius:12px; padding:20px; max-width:400px; width:100%; max-height:50vh; overflow-y:auto; }
+  .splash-legal h3 { color:white; font-size:14px; margin:0 0 12px 0; text-align:center; }
+  .splash-legal-content { color:rgba(255,255,255,0.85); font-size:11px; line-height:1.6; white-space:pre-line; }
+  .splash-loader { margin-top:20px; width:100px; height:4px; background:rgba(255,255,255,0.2); border-radius:2px; overflow:hidden; }
+  .splash-loader-bar { height:100%; width:0%; background:white; border-radius:2px; animation:splashLoad 3s linear forwards; }
+  @keyframes splashLoad { 0%{width:0%} 100%{width:100%} }
+  
+  /* BOUTON LEGAL */
+  .btn-legal { position:absolute; bottom:20px; right:20px; background:rgba(255,255,255,0.15); color:rgba(255,255,255,0.7); border:none; padding:8px 14px; border-radius:20px; font-size:11px; cursor:pointer; }
+  .btn-legal:hover { background:rgba(255,255,255,0.25); color:white; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 </head>
 <body>
 
+<!-- SPLASH SCREEN -->
+<div id="ecranSplash">
+  <div class="splash-logo">🗳️</div>
+  <div class="splash-title">VISITES ÉLECTORALES</div>
+  <div class="splash-subtitle">Application Campagne Interne</div>
+  <div class="splash-legal">
+    <h3>📜 Mentions Légales</h3>
+    <div id="splashMentionsContenu" class="splash-legal-content">Chargement...</div>
+  </div>
+  <div class="splash-loader"><div class="splash-loader-bar"></div></div>
+</div>
+
 <!-- LOGIN -->
-<div id="ecranLogin">
+<div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v115</span></div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v118</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -177,6 +205,20 @@
     <button class="btn-connexion" onclick="seConnecter()">Se connecter</button>
     <div class="login-erreur" id="loginErreur"></div>
   </div>
+  <button class="btn-legal" onclick="afficherMentionsLegales()">📜 Mentions légales</button>
+</div>
+
+<!-- MODAL MENTIONS LÉGALES -->
+<div id="modalLegal" class="modal-overlay" style="z-index:600;">
+  <div style="background:white;border-radius:16px;max-width:450px;width:95%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 10px 40px rgba(0,0,0,0.3);">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid #f0f2f5;">
+      <h3 style="font-size:16px;font-weight:700;color:#1a3a6b;margin:0;">📜 Mentions Légales</h3>
+      <button onclick="fermerModal('modalLegal')" style="background:none;border:none;font-size:22px;cursor:pointer;color:#888;">✕</button>
+    </div>
+    <div id="modalMentionsContenu" style="overflow-y:auto;padding:20px;font-size:13px;line-height:1.7;color:#333;white-space:pre-line;">
+      Chargement...
+    </div>
+  </div>
 </div>
 
 <!-- APP -->
@@ -184,7 +226,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v115</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v118</span></p>
     </div>
     <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
   </div>
@@ -467,7 +509,7 @@
 // CONFIG v65 — Sync auto + Réinitialisation
 // ============================================
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
-const APP_VERSION = 'v115';
+const APP_VERSION = 'v118';
 const MAX_RESULTATS = 50;
 const SYNC_INTERVAL = 15000;
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
@@ -3160,7 +3202,153 @@ async function creerTeleoperateur(avecEnvoi) {
 // ============================================
 // INIT
 // ============================================
+// ============================================
+// MENTIONS LÉGALES
+// ============================================
+let mentionsLegalesTexte = '';
+
+async function chargerMentionsLegales() {
+  try {
+    const resp = await fetch(SCRIPT_URL + '?action=getMentionsLegales');
+    const data = await resp.json();
+    if (data.mentions) {
+      mentionsLegalesTexte = data.mentions;
+      const splashEl = document.getElementById('splashMentionsContenu');
+      const modalEl = document.getElementById('modalMentionsContenu');
+      if (splashEl) splashEl.textContent = mentionsLegalesTexte;
+      if (modalEl) modalEl.textContent = mentionsLegalesTexte;
+    }
+  } catch(e) {
+    console.log('Erreur chargement mentions:', e);
+  }
+}
+
+// ============================================
+// VÉRIFICATION POST-SCRUTIN
+// ============================================
+const DATE_SCRUTIN = new Date('2026-03-22T23:59:59'); // 2e tour : 22/03/2026
+
+function verifierPostScrutin() {
+  const maintenant = new Date();
+  if (maintenant > DATE_SCRUTIN) {
+    // Post-scrutin : afficher l'alerte
+    setTimeout(() => {
+      afficherAlerteSupression();
+    }, 3500); // Après le splash
+  }
+}
+
+function afficherAlerteSupression() {
+  const modal = document.createElement('div');
+  modal.id = 'modalSuppression';
+  modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:10000;padding:20px;';
+  
+  const joursDepuis = Math.floor((new Date() - DATE_SCRUTIN) / (1000 * 60 * 60 * 24));
+  
+  modal.innerHTML = `
+    <div style="background:white;border-radius:16px;max-width:400px;width:100%;padding:30px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.3);">
+      <div style="font-size:60px;margin-bottom:16px;">⚠️</div>
+      <h2 style="color:#c0392b;font-size:20px;margin:0 0 12px 0;">SCRUTIN TERMINÉ</h2>
+      <p style="color:#666;font-size:14px;line-height:1.6;margin:0 0 20px 0;">
+        Le scrutin est terminé depuis <strong>${joursDepuis} jour(s)</strong>.<br><br>
+        <strong>Conformément au RGPD</strong>, les données doivent être supprimées.
+      </p>
+      <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:12px;margin-bottom:20px;text-align:left;font-size:12px;color:#856404;">
+        <strong>📋 Procédure :</strong><br>
+        1. Screenshot du Sheet (preuve)<br>
+        2. Google Sheet → Corbeille<br>
+        3. Drive → Vider la corbeille
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button onclick="document.getElementById('modalSuppression').remove()" style="flex:1;padding:12px;background:#95a5a6;color:white;border:none;border-radius:8px;font-size:14px;cursor:pointer;">Plus tard</button>
+        <button onclick="ouvrirGuideSupression()" style="flex:1;padding:12px;background:#c0392b;color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">🗑️ Voir le guide</button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+}
+
+function ouvrirGuideSupression() {
+  document.getElementById('modalSuppression').remove();
+  
+  const guide = document.createElement('div');
+  guide.id = 'modalGuideSuppression';
+  guide.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:10000;padding:20px;overflow-y:auto;';
+  
+  guide.innerHTML = `
+    <div style="background:white;border-radius:16px;max-width:450px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.3);">
+      <div style="background:#c0392b;color:white;padding:20px;border-radius:16px 16px 0 0;text-align:center;">
+        <div style="font-size:40px;margin-bottom:8px;">🗑️</div>
+        <h2 style="margin:0;font-size:18px;">Guide de Suppression</h2>
+      </div>
+      <div style="padding:20px;">
+        <div style="background:#e8f4fd;border-radius:8px;padding:14px;margin-bottom:16px;">
+          <strong style="color:#1a3a6b;">📸 Étape 1 : Sauvegarde preuve</strong>
+          <p style="margin:8px 0 0 0;font-size:13px;color:#333;">
+            • Screenshot du Sheet complet<br>
+            • Nommer : "Preuve_${new Date().toLocaleDateString('fr-FR').replace(/\//g, '-')}.jpg"
+          </p>
+        </div>
+        
+        <div style="background:#fff3cd;border-radius:8px;padding:14px;margin-bottom:16px;">
+          <strong style="color:#856404;">🗂️ Étape 2 : Supprimer le contenu</strong>
+          <p style="margin:8px 0 0 0;font-size:13px;color:#333;">
+            • Ouvrir Google Sheet<br>
+            • Ctrl+A (tout sélectionner)<br>
+            • Touche SUPPR (effacer)
+          </p>
+        </div>
+        
+        <div style="background:#f8d7da;border-radius:8px;padding:14px;margin-bottom:16px;">
+          <strong style="color:#721c24;">🔥 Étape 3 : Destruction définitive</strong>
+          <p style="margin:8px 0 0 0;font-size:13px;color:#333;">
+            • Fichier → "Déplacer vers la corbeille"<br>
+            • Google Drive → Corbeille<br>
+            • "Vider la corbeille"
+          </p>
+        </div>
+        
+        <div style="background:#d4edda;border-radius:8px;padding:14px;margin-bottom:20px;">
+          <strong style="color:#155724;">✅ Vérification</strong>
+          <p style="margin:8px 0 0 0;font-size:13px;color:#333;">
+            • Drive → Recherche "campagne" → RIEN<br>
+            • Garder : Screenshot + Note date suppression
+          </p>
+        </div>
+        
+        <button onclick="document.getElementById('modalGuideSuppression').remove()" style="width:100%;padding:14px;background:#27ae60;color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;">✅ J'ai compris</button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(guide);
+}
+
+function afficherMentionsLegales() {
+  ouvrirModal('modalLegal');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  // Charger les mentions légales
+  chargerMentionsLegales();
+  
+  // Vérifier si post-scrutin (après 22/03/2026)
+  verifierPostScrutin();
+  
+  // Splash screen pendant 3 secondes
+  setTimeout(() => {
+    const splash = document.getElementById('ecranSplash');
+    if (splash) {
+      splash.style.transition = 'opacity 0.5s';
+      splash.style.opacity = '0';
+      setTimeout(() => {
+        splash.style.display = 'none';
+        document.getElementById('ecranLogin').style.display = 'flex';
+      }, 500);
+    }
+  }, 3000);
+  
   // Vérifier si token dans l'URL
   const urlParams = new URLSearchParams(window.location.search);
   const token = urlParams.get('token');
@@ -3202,7 +3390,7 @@ async function verifierToken(token) {
       // Changer le titre et la couleur
       $('loginLogo').textContent = '📞 Téléopérateur';
       $('loginLogo').style.color = '#1a3a6b';
-      $('loginSub').innerHTML = 'Campagne d\'appels · <span style="opacity:.5;font-size:11px;">v115</span>';
+      $('loginSub').innerHTML = 'Campagne d\'appels · <span style="opacity:.5;font-size:11px;">v118</span>';
       $('loginSub').style.color = '#666';
       $('ecranLogin').style.background = '#f0f2f5';
       
