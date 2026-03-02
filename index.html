@@ -2350,6 +2350,58 @@ function ouvrirEvenement() {
   showToast('📅 Module événement', '');
 }
 
+function fermerOuRetourEvenement() {
+  fermerModal('modalEvenement');
+}
+
+function retourMenuEvenement() {
+  $('eventBtnRetour').style.display = 'none';
+  $('eventTitre').textContent = '📅 Événement';
+  $('eventContenu').innerHTML = '<div class="vide">Chargement...</div>';
+}
+
+// ============================================
+// TÉLÉOPÉRATEUR - APPELS
+// ============================================
+let currentAppelTel = null;
+let currentAppelNom = null;
+let currentMailAddr = null;
+let currentMailNom = null;
+let currentRappelId = null;
+let currentRappelNom = null;
+
+function executerAppel() {
+  fermerModal('modalConfirmAppel');
+  if (currentAppelTel) {
+    window.location.href = 'tel:' + currentAppelTel;
+    showToast('📞 Appel lancé', 'succes');
+  }
+}
+
+function executerMail() {
+  fermerModal('modalConfirmMail');
+  if (currentMailAddr) {
+    window.location.href = 'mailto:' + currentMailAddr;
+    showToast('📧 Mail ouvert', 'succes');
+  }
+}
+
+function executerRappeler() {
+  const dateRappel = $('rappelDate').value;
+  const dispo = $('rappelDispo').value;
+  
+  if (!dateRappel) {
+    showToast('❌ Choisissez une date', 'erreur');
+    return;
+  }
+  
+  fermerModal('modalRappeler');
+  showToast('✅ Rappel programmé pour ' + dateRappel + ' (' + dispo + ')', 'succes');
+  
+  // TODO: Enregistrer le rappel sur le serveur
+  // fetch(SCRIPT_URL, { method: 'POST', body: new URLSearchParams({ action: 'programmerRappel', id: currentRappelId, date: dateRappel, dispo: dispo }) });
+}
+
 // ============================================
 // SPLASH & INIT
 // ============================================
