@@ -175,7 +175,7 @@
 <!-- LOGIN -->
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v132</span></div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v133</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -238,7 +238,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v132</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v133</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;" title="Mentions légales">📜</button>
@@ -307,9 +307,9 @@
 
   <div class="page" id="page-admin">
     <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
-      <button class="btn-refresh" onclick="forceChargerAdmin()">🔄 Actualiser</button>
-      <button class="btn-refresh" style="background:#e67e22;" onclick="ouvrirGestion()">⚙️ Gestion</button>
-      <button class="btn-refresh" style="background:#8e44ad;" onclick="ouvrirEvenement()">📅 Événement</button>
+      <button id="btnAdminMilitants" class="btn-refresh" style="background:#1a3a6b;" onclick="afficherAdminMilitants()">👥 Militants</button>
+      <button id="btnAdminLogs" class="btn-refresh" onclick="afficherAdminLogs()">📋 Logs</button>
+      <button class="btn-refresh" style="background:#8e44ad;" onclick="ouvrirEvenement()">📅 Téléopérateurs</button>
     </div>
     <div id="adminContenu"></div>
   </div>
@@ -522,10 +522,10 @@
 
 <script>
 // ============================================
-// CONFIG v132 — Mentions Légales dynamiques
+// CONFIG v133 — Mentions Légales dynamiques
 // ============================================
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
-const APP_VERSION = 'v132';
+const APP_VERSION = 'v133';
 const MAX_RESULTATS = 50;
 const SYNC_INTERVAL = 15000;
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
@@ -1743,26 +1743,85 @@ function afficherStats(data) {
 // ============================================
 async function chargerAdmin() {
   if (currentRole !== 'admin') return;
+  // Afficher militants par défaut
+  afficherAdminMilitants();
+}
+
+function forceChargerAdmin() {
+  adminCache = null;
+  afficherAdminMilitants();
+}
+
+// Afficher onglet Militants (par défaut)
+function afficherAdminMilitants() {
+  // Activer bouton
+  $('btnAdminMilitants').style.background = '#1a3a6b';
+  $('btnAdminLogs').style.background = '#3498db';
+  
+  const div = $('adminContenu');
+  const roles = ['militant', 'manager', 'responsable bureaux', 'superviseur', 'admin'];
+  
+  let html = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+    <div style="font-size:14px;font-weight:600;color:#1a3a6b;">👥 ${listeMilitants.length} militant(s)</div>
+    <button onclick="ouvrirModal('modalAjoutMilitant')" style="background:#27ae60;color:white;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;">➕ Ajouter</button>
+  </div>`;
+  
+  html += listeMilitants.map(m => {
+    const roleOptions = roles.map(r => `<option value="${r}" ${m.role === r ? 'selected' : ''}>${r}</option>`).join('');
+    const isAdmin = m.role === 'admin';
+    
+    return `<div style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:14px;margin-bottom:10px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div>
+          <div style="font-weight:700;font-size:14px;">${m.nom}</div>
+          <div style="font-size:12px;color:${m.actif !== false ? '#27ae60' : '#e74c3c'};">${m.actif !== false ? '✅ Actif' : '🔴 Désactivé'}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          ${!isAdmin ? `<button onclick="confirmerSupprimerMilitant('${m.nom}')" style="background:#c0392b;color:white;border:none;border-radius:6px;width:32px;height:32px;font-size:14px;cursor:pointer;" title="Supprimer">🗑️</button>` : ''}
+          ${!isAdmin ? `<label class="toggle"><input type="checkbox" ${m.actif !== false ? 'checked' : ''} onchange="toggleMilitant('${m.nom}', this.checked)"><span class="toggle-slider"></span></label>` : ''}
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <label style="font-size:12px;color:#666;white-space:nowrap;">Rôle :</label>
+        <select onchange="changerRole('${m.nom}', this.value)" style="flex:1;padding:8px 10px;border:1.5px solid #e0e4ea;border-radius:8px;font-size:13px;background:white;" ${isAdmin ? 'disabled' : ''}>
+          ${roleOptions}
+        </select>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;background:#f8f9fa;padding:10px;border-radius:8px;">
+        <label style="font-size:12px;color:#666;white-space:nowrap;">🔑 PIN :</label>
+        <input type="text" id="pin_${m.nom.replace(/\s/g, '_')}" value="${m.pin}" style="flex:1;padding:8px 10px;border:1.5px solid #e0e4ea;border-radius:8px;font-size:14px;font-family:monospace;font-weight:700;text-align:center;letter-spacing:4px;" maxlength="4" pattern="[0-9]*" inputmode="numeric">
+        <button onclick="modifierPin('${m.nom}')" style="background:#2755a8;color:white;border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">💾</button>
+        <button onclick="reinitialiserPin('${m.nom}')" style="background:#e67e22;color:white;border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">🔄</button>
+      </div>
+    </div>`;
+  }).join('');
+  
+  div.innerHTML = html;
+}
+
+// Afficher onglet Logs
+async function afficherAdminLogs() {
+  // Activer bouton
+  $('btnAdminMilitants').style.background = '#3498db';
+  $('btnAdminLogs').style.background = '#1a3a6b';
+  
+  const div = $('adminContenu');
+  
   if (adminCache) {
-    $('adminContenu').innerHTML = adminCache;
+    div.innerHTML = adminCache;
     return;
   }
 
-  $('adminContenu').innerHTML = '<div class="loading"><div class="spinner"></div>Chargement...</div>';
+  div.innerHTML = '<div class="loading"><div class="spinner"></div>Chargement...</div>';
 
   try {
     const resp = await fetchRapide(SCRIPT_URL + '?action=getLogs', {}, 15000);
     const data = await resp.json();
     adminCache = buildAdminHtml(data);
-    $('adminContenu').innerHTML = adminCache;
+    div.innerHTML = adminCache;
   } catch(e) {
-    $('adminContenu').innerHTML = '<div class="vide" style="color:red;">⚠️ Erreur</div>';
+    div.innerHTML = '<div class="vide" style="color:red;">⚠️ Erreur</div>';
   }
-}
-
-function forceChargerAdmin() {
-  adminCache = null;
-  chargerAdmin();
 }
 
 function buildAdminHtml(data) {
@@ -2668,7 +2727,7 @@ function retourMenuEvenement() {
 }
 
 function afficherMenuEvenement() {
-  $('eventTitre').textContent = '📅 Événement';
+  $('eventTitre').textContent = '📞 Téléopérateurs';
   $('eventBtnRetour').style.display = 'none';
   
   $('eventContenu').innerHTML = `
@@ -3383,7 +3442,7 @@ async function verifierToken(token) {
       // Changer le titre et la couleur
       $('loginLogo').textContent = '📞 Téléopérateur';
       $('loginLogo').style.color = '#1a3a6b';
-      $('loginSub').innerHTML = 'Campagne d\'appels · <span style="opacity:.5;font-size:11px;">v132</span>';
+      $('loginSub').innerHTML = 'Campagne d\'appels · <span style="opacity:.5;font-size:11px;">v133</span>';
       $('loginSub').style.color = '#666';
       $('ecranLogin').style.background = '#f0f2f5';
       
