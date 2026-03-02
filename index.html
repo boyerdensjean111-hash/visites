@@ -166,24 +166,7 @@
   <div class="splash-subtitle">Application Campagne Interne</div>
   <div class="splash-legal">
     <h3>📜 Mentions Légales</h3>
-    <div id="splashMentionsContenu" class="splash-legal-content">Éditeur : Boyer Denis Jean Stéphane
-4 rue des Franciceas, La Plaine-des-Palmistes, 97431 Réunion
-
-Contact : <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="d5b7baacb0a7b1b0bbbca6e495b2b8b4bcb9fbb6bab8">[email&#160;protected]</a> / 0693 61 46 51
-
-Objectif : Outil interne équipe campagne municipales 2026
-
-Données : Liste électorale officielle mairie + notes terrain
-
-Usage : Tri/suivi interne uniquement - Pas de communication publique
-
-Responsable RGPD : Boyer Denis Jean Stéphane
-
-Durée : Suppression totale post-scrutin
-
-Droits : Contactez-moi pour accès/rectification/opposition
-
-CNIL : www.cnil.fr pour plainte</div>
+    <div id="splashMentionsContenu" class="splash-legal-content">Chargement...</div>
   </div>
   <div class="splash-loader"><div class="splash-loader-bar"></div></div>
   <button onclick="passerSplash()" style="margin-top:20px;background:rgba(255,255,255,0.2);border:none;padding:10px 24px;border-radius:20px;color:white;font-size:13px;cursor:pointer;transition:background 0.2s;">Passer ➔</button>
@@ -192,7 +175,7 @@ CNIL : www.cnil.fr pour plainte</div>
 <!-- LOGIN -->
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v126</span></div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v127</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -227,11 +210,14 @@ CNIL : www.cnil.fr pour plainte</div>
 </div>
 
 <!-- MODAL MENTIONS LÉGALES -->
-<div id="modalLegal" class="modal-overlay" style="z-index:600;">
+<div id="modalLegal" class="modal-overlay" style="z-index:600;display:none;">
   <div style="background:white;border-radius:16px;max-width:500px;width:95%;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 10px 40px rgba(0,0,0,0.3);">
     <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid #f0f2f5;">
       <h3 style="font-size:16px;font-weight:700;color:#1a3a6b;margin:0;">📜 Informations Légales</h3>
-      <button onclick="fermerModal('modalLegal')" style="background:none;border:none;font-size:22px;cursor:pointer;color:#888;">✕</button>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button onclick="rafraichirMentions()" style="background:#2755a8;border:none;width:32px;height:32px;border-radius:8px;color:white;font-size:16px;cursor:pointer;" title="Rafraîchir">🔁</button>
+        <button onclick="fermerModal('modalLegal')" style="background:none;border:none;font-size:22px;cursor:pointer;color:#888;">✕</button>
+      </div>
     </div>
     <!-- Onglets -->
     <div style="display:flex;border-bottom:2px solid #f0f2f5;">
@@ -240,130 +226,11 @@ CNIL : www.cnil.fr pour plainte</div>
       <button id="tabSuppression" onclick="changerOngletLegal('suppression')" style="flex:1;padding:10px;background:none;border:none;font-size:11px;font-weight:600;color:#888;cursor:pointer;border-bottom:3px solid transparent;">🗑️ Suppression</button>
     </div>
     <!-- Page 1 : Mentions -->
-    <div id="pageMentions" style="overflow-y:auto;padding:20px;font-size:13px;line-height:1.7;color:#333;white-space:pre-line;">Éditeur : Boyer Denis Jean Stéphane
-4 rue des Franciceas, La Plaine-des-Palmistes, 97431 Réunion
-
-Contact : boyerdenis1@gmail.com / 0693 61 46 51
-
-Objectif : Outil interne équipe campagne municipales 2026
-
-Données : Liste électorale officielle mairie + notes terrain
-
-Usage : Tri/suivi interne uniquement - Pas de communication publique
-
-Responsable RGPD : Boyer Denis Jean Stéphane
-
-Durée : Suppression totale post-scrutin
-
-Droits : Contactez-moi pour accès/rectification/opposition
-
-CNIL : www.cnil.fr pour plainte</div>
+    <div id="pageMentions" style="overflow-y:auto;padding:20px;font-size:13px;line-height:1.7;color:#333;white-space:pre-line;">Chargement...</div>
     <!-- Page 2 : Conformité -->
-    <div id="pageConformite" style="display:none;overflow-y:auto;padding:20px;font-size:12px;line-height:1.6;color:#333;">
-      <div style="text-align:center;background:linear-gradient(135deg,#1a3a6b,#2755a8);color:white;padding:14px;border-radius:10px;margin-bottom:16px;">
-        <div style="font-weight:700;font-size:14px;">🗳️ APPLICATION CAMPAGNE INTERNE</div>
-        <div style="font-size:12px;opacity:0.9;">MUNICIPALES 2026</div>
-        <div style="font-size:11px;margin-top:6px;">Jean Boyer - La Plaine-des-Palmistes, Réunion</div>
-        <div style="font-size:10px;opacity:0.7;margin-top:4px;">Mise à jour : 01/03/2026</div>
-      </div>
-      <div style="background:#e8f5e9;border-radius:8px;padding:12px;margin-bottom:12px;">
-        <div style="font-weight:700;color:#2e7d32;margin-bottom:8px;">✓ CODE ÉLECTORAL (Articles inchangés 2025-2026)</div>
-        <div style="font-size:11px;color:#333;">
-          ✅ Art. L.28 & R.16 : Liste électorale → Usage campagne UNIQUEMENT<br>
-          ✅ Art. L.49 : Pas de propagande publique (usage interne OK)<br>
-          ✅ Art. L.52-1 : Pas de publicité payante via app
-        </div>
-      </div>
-      <div style="background:#e3f2fd;border-radius:8px;padding:12px;margin-bottom:12px;">
-        <div style="font-weight:700;color:#1565c0;margin-bottom:8px;">✓ RGPD + RÈGLEMENT UE 2024/900 (Applicable oct.2025)</div>
-        <div style="font-size:11px;color:#333;">
-          ✅ Art. 6.1.f : Intérêt légitime communication politique<br>
-          ✅ Art. 9 : Pas de données sensibles (opinions non traitées)<br>
-          ✅ Conservation : Suppression post-proclamation résultats<br>
-          ✅ CNIL Guide "Communication politique" janv.2026
-        </div>
-      </div>
-      <div style="background:#fff3e0;border-radius:8px;padding:12px;margin-bottom:12px;">
-        <div style="font-weight:700;color:#e65100;margin-bottom:8px;">✓ TEXTES 2025 CONFIRMÉS 2026</div>
-        <div style="font-size:11px;color:#333;">
-          ✅ Délibération CNIL 2012-020 (toujours en vigueur)<br>
-          ✅ Circulaire Élections municipales 2026 (février 2026)<br>
-          ✅ Plan d'action CNIL municipales 2026 (29/01/2026)
-        </div>
-      </div>
-      <div style="background:#f3e5f5;border-radius:8px;padding:12px;margin-bottom:12px;">
-        <div style="font-weight:700;color:#7b1fa2;margin-bottom:8px;">✓ PREUVES CONFORMITÉ</div>
-        <div style="font-size:11px;color:#333;">
-          ☑️ Suppression automatique programmée : 30/03/2026 18h<br>
-          ☑️ Accès restreint : Login équipe obligatoire<br>
-          ☑️ Sources : Liste officielle mairie + résultats 2021 manuels<br>
-          ☑️ Comité soutien : Consentement direct (contacts fournis)
-        </div>
-      </div>
-      <div style="text-align:center;background:#e8f5e9;border:2px solid #4caf50;border-radius:10px;padding:12px;margin-top:16px;">
-        <div style="font-weight:700;color:#2e7d32;font-size:13px;">✅ APPLICATION 100% CONFORME</div>
-        <div style="font-size:11px;color:#2e7d32;">LÉGISLATION FRANÇAISE 2026</div>
-        <div style="font-size:10px;color:#666;margin-top:8px;">CONTACT RGPD : boyerdenis1@gmail.com<br>CNIL : www.cnil.fr/plaintes</div>
-      </div>
-    </div>
+    <div id="pageConformite" style="display:none;overflow-y:auto;padding:20px;font-size:12px;line-height:1.6;color:#333;">Chargement...</div>
     <!-- Page 3 : Suppression -->
-    <div id="pageSuppression" style="display:none;overflow-y:auto;padding:20px;font-size:12px;line-height:1.5;color:#333;">
-      <div style="text-align:center;background:linear-gradient(135deg,#c0392b,#e74c3c);color:white;padding:14px;border-radius:10px;margin-bottom:16px;">
-        <div style="font-size:28px;margin-bottom:6px;">🗑️</div>
-        <div style="font-weight:700;font-size:14px;">SUPPRESSION TOTALE OBLIGATOIRE</div>
-        <div style="font-size:16px;font-weight:700;margin-top:8px;background:rgba(0,0,0,0.2);padding:8px;border-radius:6px;">📅 30/03/2026 à 18h00</div>
-        <div style="font-size:10px;opacity:0.9;margin-top:6px;">Proclamation des résultats</div>
-      </div>
-      <div style="background:#ffebee;border-left:4px solid #c0392b;border-radius:8px;padding:12px;margin-bottom:12px;">
-        <div style="font-weight:700;color:#c0392b;margin-bottom:8px;">1️⃣ GOOGLE SHEET - SUPPRIMER</div>
-        <div style="font-size:11px;color:#333;">
-          <span style="color:#c0392b;font-weight:600;">❌ TOUTES colonnes liées élections :</span><br>
-          <span style="margin-left:8px;">• Nom, prénom, date naissance, adresse</span><br>
-          <span style="margin-left:8px;">• Âge calculé, bureau de vote</span><br>
-          <span style="margin-left:8px;">• Résultats 2021 (taux %)</span><br>
-          <span style="margin-left:8px;">• Statuts "À contacter", "réserve voix"</span><br>
-          <span style="color:#27ae60;font-weight:600;margin-top:6px;display:block;">✅ CONSERVER (nouveau Sheet) :</span>
-          <span style="margin-left:8px;">• Nom + tél/mail comité soutien</span>
-        </div>
-      </div>
-      <div style="background:#fff3e0;border-left:4px solid #e67e22;border-radius:8px;padding:12px;margin-bottom:12px;">
-        <div style="font-weight:700;color:#e67e22;margin-bottom:8px;">2️⃣ APP MOBILE - WIPE</div>
-        <div style="font-size:11px;color:#333;">
-          <span style="color:#c0392b;font-weight:600;">❌ Base locale :</span><br>
-          <span style="margin-left:8px;">• Liste électorale complète</span><br>
-          <span style="margin-left:8px;">• Filtres quartiers/bureaux vote</span><br>
-          <span style="margin-left:8px;">• Notes électorales</span><br>
-          <span style="color:#27ae60;font-weight:600;margin-top:6px;display:block;">✅ Garder : Interface vide</span>
-        </div>
-      </div>
-      <div style="background:#e3f2fd;border-left:4px solid #2196f3;border-radius:8px;padding:12px;margin-bottom:12px;">
-        <div style="font-weight:700;color:#1565c0;margin-bottom:8px;">3️⃣ SERVEUR / GITHUB - PURGE</div>
-        <div style="font-size:11px;color:#333;">
-          <span style="color:#c0392b;font-weight:600;">❌ Logs campagnes, backups</span><br>
-          <span style="color:#27ae60;font-weight:600;">✅ Archive preuves suppression</span>
-        </div>
-      </div>
-      <div style="background:#e8f5e9;border:2px solid #4caf50;border-radius:10px;padding:12px;margin-bottom:12px;">
-        <div style="font-weight:700;color:#2e7d32;margin-bottom:8px;text-align:center;">⚡ PROCÉDURE WIPE EN 3 CLICS</div>
-        <div style="font-size:10px;color:#333;font-family:monospace;background:#f5f5f5;padding:8px;border-radius:6px;">
-          1. SHEET : Ctrl+A → SUPPR → Corbeille → Vider<br>
-          2. APP : Bouton "RESET CAMPAGNE"<br>
-          3. GITHUB : Supprimer le repository
-        </div>
-      </div>
-      <div style="background:#fff8e1;border:2px solid #ffc107;border-radius:10px;padding:12px;">
-        <div style="font-weight:700;color:#f57f17;margin-bottom:8px;">📋 PREUVES À CONSERVER</div>
-        <div style="font-size:10px;color:#333;font-family:monospace;background:#fffde7;padding:8px;border-radius:6px;">
-          "WIPE effectué 30/03/2026 18h32<br>
-          - Sheet supprimé (screenshot)<br>
-          - App reset (screenshot)<br>
-          - GitHub purgé (log)"
-        </div>
-        <div style="text-align:center;margin-top:8px;font-size:10px;color:#2e7d32;font-weight:700;">
-          CNIL contrôle = preuves + app propre = ✅ OK
-        </div>
-      </div>
-    </div>
+    <div id="pageSuppression" style="display:none;overflow-y:auto;padding:20px;font-size:12px;line-height:1.5;color:#333;">Chargement...</div>
   </div>
 </div>
 <!-- APP -->
@@ -371,10 +238,10 @@ CNIL : www.cnil.fr pour plainte</div>
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v126</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v127</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
-      <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;" title="Mentions légales">📜 Mentions Légales</button>
+      <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;" title="Mentions légales">📜</button>
       <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
     </div>
   </div>
@@ -458,7 +325,7 @@ CNIL : www.cnil.fr pour plainte</div>
   </div>
 
   <!-- POPUP AJOUTER MILITANT -->
-  <div id="modalAjoutMilitant" class="modal-overlay" style="z-index:600;">
+  <div id="modalAjoutMilitant" class="modal-overlay" style="z-index:600;display:none;">
     <div class="modal-box" style="max-width:360px;">
       <h3>➕ Ajouter un militant</h3>
       <div class="field" style="margin-bottom:12px;">
@@ -487,7 +354,7 @@ CNIL : www.cnil.fr pour plainte</div>
   </div>
 
   <!-- POPUP SUPPRIMER MILITANT -->
-  <div id="modalSupprimerMilitant" class="modal-overlay" style="z-index:600;">
+  <div id="modalSupprimerMilitant" class="modal-overlay" style="z-index:600;display:none;">
     <div class="modal-box" style="max-width:340px;">
       <h3 style="color:#c0392b;">🗑️ Supprimer le militant ?</h3>
       <p style="margin:16px 0;text-align:center;font-size:15px;">
@@ -517,7 +384,7 @@ CNIL : www.cnil.fr pour plainte</div>
 </div>
 
 <!-- POPUP CONFIRMATION APPEL -->
-<div id="modalConfirmAppel" class="modal-overlay" style="z-index:600;">
+<div id="modalConfirmAppel" class="modal-overlay" style="z-index:600;display:none;">
   <div class="modal-box" style="max-width:340px;">
     <h3 style="color:#27ae60;">📞 Appeler ?</h3>
     <p style="margin:16px 0;text-align:center;font-size:15px;">
@@ -531,7 +398,7 @@ CNIL : www.cnil.fr pour plainte</div>
 </div>
 
 <!-- POPUP CONFIRMATION MAIL -->
-<div id="modalConfirmMail" class="modal-overlay" style="z-index:600;">
+<div id="modalConfirmMail" class="modal-overlay" style="z-index:600;display:none;">
   <div class="modal-box" style="max-width:340px;">
     <h3 style="color:#3498db;">📧 Envoyer un mail ?</h3>
     <p style="margin:16px 0;text-align:center;font-size:15px;">
@@ -545,7 +412,7 @@ CNIL : www.cnil.fr pour plainte</div>
 </div>
 
 <!-- POPUP À RAPPELER -->
-<div id="modalRappeler" class="modal-overlay" style="z-index:600;">
+<div id="modalRappeler" class="modal-overlay" style="z-index:600;display:none;">
   <div class="modal-box" style="max-width:360px;">
     <h3 style="color:#e67e22;">🔄 Programmer un rappel</h3>
     <p style="margin:12px 0;text-align:center;font-size:14px;">
@@ -571,7 +438,7 @@ CNIL : www.cnil.fr pour plainte</div>
 </div>
 
 <!-- POPUP ÉVÉNEMENT (ADMIN) -->
-<div id="modalEvenement" class="modal-overlay" style="z-index:500;">
+<div id="modalEvenement" class="modal-overlay" style="z-index:500;display:none;">
   <div style="background:white;border-radius:16px;max-width:550px;width:95%;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 10px 40px rgba(0,0,0,0.3);">
     <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px 12px;border-bottom:1px solid #f0f2f5;flex-shrink:0;">
       <div style="display:flex;align-items:center;gap:10px;">
@@ -653,12 +520,12 @@ CNIL : www.cnil.fr pour plainte</div>
   </div>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 // ============================================
-// CONFIG v65 — Sync auto + Réinitialisation
+// CONFIG v127 — Mentions Légales dynamiques
 // ============================================
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
-const APP_VERSION = 'v126';
+const APP_VERSION = 'v127';
 const MAX_RESULTATS = 50;
 const SYNC_INTERVAL = 15000;
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
@@ -666,8 +533,117 @@ const CACHE_KEY_PERSONNES = 'visites_personnes_v3';
 const CACHE_KEY_MILITANTS = 'visites_militants_v3';
 const CACHE_KEY_STATS = 'visites_stats_v1';
 const CACHE_KEY_OBS = 'visites_obs_v1';
+const CACHE_KEY_MENTIONS = 'visites_mentions_v1';
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
-const VERSION_CHECK_INTERVAL = 60000; // Vérifier toutes les 60 secondes
+const VERSION_CHECK_INTERVAL = 60000;
+
+// ============================================
+// MENTIONS LÉGALES — Chargement dynamique
+// ============================================
+let mentionsData = null;
+
+async function chargerMentionsLegales(forceRefresh = false) {
+  // 1. Essayer le cache localStorage
+  if (!forceRefresh) {
+    try {
+      const cached = localStorage.getItem(CACHE_KEY_MENTIONS);
+      if (cached) {
+        mentionsData = JSON.parse(cached);
+        afficherMentionsDansUI();
+        console.log('✅ Mentions chargées depuis cache');
+        return;
+      }
+    } catch(e) { localStorage.removeItem(CACHE_KEY_MENTIONS); }
+  }
+  
+  // 2. Charger depuis le serveur
+  try {
+    console.log('🔄 Chargement mentions depuis serveur...');
+    const resp = await fetch(SCRIPT_URL + '?action=getMentionsLegales', { cache: 'no-store' });
+    const data = await resp.json();
+    
+    if (data.error) {
+      console.error('Erreur serveur:', data.error);
+      afficherMentionsFallback();
+      return;
+    }
+    
+    mentionsData = {
+      mentions: data.mentions || '',
+      dateSuppression: data.dateSuppression || '',
+      conformite: data.conformite || '',
+      suppression: data.suppression || ''
+    };
+    
+    // Sauvegarder en cache
+    try { localStorage.setItem(CACHE_KEY_MENTIONS, JSON.stringify(mentionsData)); } catch(e) {}
+    
+    afficherMentionsDansUI();
+    console.log('✅ Mentions chargées depuis serveur');
+    
+  } catch(e) {
+    console.error('Erreur chargement mentions:', e);
+    afficherMentionsFallback();
+  }
+}
+
+function afficherMentionsDansUI() {
+  if (!mentionsData) return;
+  
+  // Splash screen
+  const splashEl = $('splashMentionsContenu');
+  if (splashEl) {
+    splashEl.textContent = mentionsData.mentions || 'Mentions légales non disponibles';
+  }
+  
+  // Modal - Page Mentions
+  const pageMentions = $('pageMentions');
+  if (pageMentions) {
+    pageMentions.textContent = mentionsData.mentions || 'Mentions légales non disponibles';
+  }
+  
+  // Modal - Page Conformité
+  const pageConformite = $('pageConformite');
+  if (pageConformite) {
+    // Formater avec du HTML basique
+    let html = (mentionsData.conformite || 'Informations de conformité non disponibles')
+      .replace(/✓/g, '<div style="font-weight:700;color:#27ae60;margin-top:12px;">✓')
+      .replace(/✅/g, '</div><div style="margin-left:8px;">✅')
+      .replace(/☑️/g, '</div><div style="margin-left:8px;">☑️');
+    pageConformite.innerHTML = `<div style="white-space:pre-line;">${mentionsData.conformite || 'Non disponible'}</div>`;
+  }
+  
+  // Modal - Page Suppression  
+  const pageSuppression = $('pageSuppression');
+  if (pageSuppression) {
+    pageSuppression.innerHTML = `
+      <div style="background:#c0392b;color:white;padding:14px;border-radius:10px;text-align:center;margin-bottom:16px;">
+        <div style="font-size:24px;margin-bottom:6px;">🗑️</div>
+        <div style="font-weight:700;">SUPPRESSION OBLIGATOIRE</div>
+        <div style="font-size:18px;font-weight:700;margin-top:8px;">📅 ${mentionsData.dateSuppression || 'Date non définie'}</div>
+      </div>
+      <div style="white-space:pre-line;font-size:12px;line-height:1.6;">${mentionsData.suppression || 'Guide de suppression non disponible'}</div>
+    `;
+  }
+}
+
+function afficherMentionsFallback() {
+  const fallback = 'Impossible de charger les mentions légales.\nVérifiez votre connexion internet.';
+  
+  const splashEl = $('splashMentionsContenu');
+  if (splashEl) splashEl.textContent = fallback;
+  
+  const pageMentions = $('pageMentions');
+  if (pageMentions) pageMentions.textContent = fallback;
+}
+
+function rafraichirMentions() {
+  showToast('🔄 Rafraîchissement...');
+  localStorage.removeItem(CACHE_KEY_MENTIONS);
+  chargerMentionsLegales(true).then(() => {
+    showToast('✅ Mentions mises à jour !', 'succes');
+  });
+}
 
 // ============================================
 // VÉRIFICATION MISE À JOUR
@@ -679,14 +655,12 @@ async function verifierMiseAJour() {
   if (updateDismissed) return;
   
   try {
-    // Ajouter un timestamp pour éviter le cache
     const resp = await fetch(VERSION_CHECK_URL + '?t=' + Date.now(), { 
       cache: 'no-store',
       headers: { 'Cache-Control': 'no-cache' }
     });
     const html = await resp.text();
     
-    // Chercher APP_VERSION dans le HTML
     const match = html.match(/APP_VERSION\s*=\s*['"]([^'"]+)['"]/);
     if (match && match[1]) {
       const versionServeur = match[1];
@@ -712,21 +686,19 @@ function afficherPopupMaj(nouvelleVersion) {
 function fermerPopupMaj() {
   $('popupMiseAJour').style.display = 'none';
   updateDismissed = true;
-  // Revérifier dans 5 minutes au cas où
   setTimeout(() => { updateDismissed = false; }, 300000);
 }
 
 function rafraichirPage() {
-  // Vider le cache et recharger
   try {
     localStorage.removeItem(CACHE_KEY_PERSONNES);
     localStorage.removeItem(CACHE_KEY_MILITANTS);
+    localStorage.removeItem(CACHE_KEY_MENTIONS);
   } catch(e) {}
   location.reload(true);
 }
 
 function demarrerVerificationMaj() {
-  // Vérifier après 10 secondes puis toutes les minutes
   setTimeout(verifierMiseAJour, 10000);
   updateCheckTimer = setInterval(verifierMiseAJour, VERSION_CHECK_INTERVAL);
 }
@@ -795,8 +767,8 @@ function showToast(msg, type = '') {
   setTimeout(() => t.remove(), 2500);
 }
 
-function ouvrirModal(id) { $(id).classList.add('ouvert'); }
-function fermerModal(id) { $(id).classList.remove('ouvert'); }
+function ouvrirModal(id) { $(id).style.display = 'flex'; $(id).classList.add('ouvert'); }
+function fermerModal(id) { $(id).classList.remove('ouvert'); $(id).style.display = 'none'; }
 
 function setSyncIndicator(syncing) {
   const ind = $('syncIndicator');
@@ -982,13 +954,11 @@ async function chargerMilitants() {
   const sel = $('loginNom');
   if (!sel) return;
 
-  // Toujours vider le cache pour avoir les rôles à jour
   try { localStorage.removeItem(CACHE_KEY_MILITANTS); } catch(e) {}
   
   listeMilitants = MILITANTS_FALLBACK;
   remplirSelectMilitants();
   
-  // Charger depuis le serveur
   try {
     const resp = await fetchRapide(SCRIPT_URL + '?action=getMilitants', {}, 15000);
     const data = await resp.json();
@@ -1002,24 +972,20 @@ async function chargerMilitants() {
   }
 }
 
-// Précharger les données des personnes pendant le splash
 async function prechargerDonnees() {
   try {
-    // Vérifier si cache récent (moins de 5 min)
-    const cacheTime = localStorage.getItem(CACHE_KEY + '_time');
+    const cacheTime = localStorage.getItem(CACHE_KEY_PERSONNES + '_time');
     if (cacheTime && (Date.now() - parseInt(cacheTime)) < 300000) {
       console.log('Cache récent, pas de préchargement');
       return;
     }
     
-    // Précharger les données
     const resp = await fetch(SCRIPT_URL + '?action=getAllPersonnes');
     const data = await resp.json();
     if (data.personnes?.length) {
-      localStorage.setItem(CACHE_KEY, JSON.stringify(data.personnes));
-      localStorage.setItem(CACHE_KEY + '_time', Date.now().toString());
+      localStorage.setItem(CACHE_KEY_PERSONNES, JSON.stringify(data.personnes));
+      localStorage.setItem(CACHE_KEY_PERSONNES + '_time', Date.now().toString());
       toutesPersonnes = data.personnes;
-      personnesFiltrees = [...toutesPersonnes];
       console.log('✅ Données préchargées:', data.personnes.length);
     }
   } catch(e) {
@@ -1032,11 +998,9 @@ function remplirSelectMilitants() {
   const val = sel.value;
   sel.innerHTML = '<option value="">-- Choisir --</option>';
   
-  // Si téléopérateur avec token, montrer seulement son nom
   let liste = listeMilitants;
   if (nomTeleop) {
     liste = listeMilitants.filter(m => m.nom === nomTeleop);
-    // Pré-sélectionner automatiquement
     if (liste.length === 1) {
       setTimeout(() => {
         sel.value = nomTeleop;
@@ -1105,7 +1069,6 @@ function seConnecter() {
   const prenom = militant.nom.split(' ').pop();
   $('btnUser').textContent = '👤 ' + prenom + (currentRole === 'admin' ? ' 👑' : currentRole === 'teleoperateur' ? ' 📞' : '') + ' — Quitter';
   
-  // Couleur du header selon le rôle
   const couleursRole = {
     'admin': 'var(--role-admin)',
     'superviseur': 'var(--role-superviseur)',
@@ -1116,9 +1079,7 @@ function seConnecter() {
   };
   $('mainHeader').style.background = couleursRole[currentRole] || 'var(--bleu)';
   
-  // Téléopérateur : onglets spécifiques uniquement
   if (currentRole === 'teleoperateur') {
-    // Cacher Recherche et Saisie
     document.querySelectorAll('.tab').forEach(t => {
       if (t.dataset.page === 'recherche' || t.dataset.page === 'saisie') {
         t.style.display = 'none';
@@ -1126,13 +1087,11 @@ function seConnecter() {
     });
     ajouterOnglet('contact', '📞 Contact');
     ajouterOnglet('agenda', '📅 Agenda');
-    // Activer Contact par défaut
     setTimeout(() => {
       document.querySelector('.tab[data-page="contact"]')?.click();
       chargerContact();
     }, 100);
   } else {
-    // Rôles normaux
     if (currentRole === 'superviseur' || currentRole === 'admin' || currentRole === 'responsable bureaux' || currentRole === 'manager') {
       ajouterOnglet('stats', '📊 Stats');
     }
@@ -1155,7 +1114,6 @@ function seConnecter() {
   demarrerSync();
   demarrerVerificationMaj();
   
-  // Précharger Stats et Obs en arrière-plan pour les rôles concernés
   if (currentRole === 'manager' || currentRole === 'responsable bureaux' || currentRole === 'superviseur' || currentRole === 'admin') {
     setTimeout(() => prechargerStats(), 2000);
   }
@@ -1285,7 +1243,6 @@ function initRecherche() {
 
 function retourRecherche() {
   showPage('recherche');
-  // Forcer le rafraîchissement des résultats
   setTimeout(() => rechercher(), 50);
 }
 
@@ -1309,7 +1266,6 @@ function rechercher() {
     return;
   }
 
-  // Si recherche par ID exact
   if (qId && !qNom && !qNomUsage && !qPrenom) {
     const exact = toutesPersonnes.find(p => String(p[0]) === qId);
     if (exact) {
@@ -1337,7 +1293,6 @@ function rechercher() {
     if (ok) resultats.push(p);
   }
 
-  // Trier : ID exact en premier
   if (qId) {
     resultats.sort((a, b) => {
       const aExact = String(a[0]) === qId ? 0 : 1;
@@ -1514,7 +1469,6 @@ function afficherOverlay(texte = 'Enregistrement...') {
   $('overlayProgress').style.width = '0%';
   $('overlayChargement').style.display = 'flex';
   
-  // Animation de la barre de progression
   setTimeout(() => $('overlayProgress').style.width = '30%', 100);
   setTimeout(() => $('overlayProgress').style.width = '60%', 500);
   setTimeout(() => $('overlayProgress').style.width = '80%', 1000);
@@ -1564,7 +1518,6 @@ async function executerEnregistrement() {
   const tel = $('fTel')?.value || '';
 
   try {
-    // Appel serveur
     const params = new URLSearchParams({
       action: 'enregistrer',
       id: String(currentPersonne.id),
@@ -1576,7 +1529,6 @@ async function executerEnregistrement() {
     
     await fetch(SCRIPT_URL, { method: 'POST', body: params });
     
-    // Mise à jour locale après succès serveur
     currentPersonne.statut = statut;
     currentPersonne.candidatActuel = candidat;
     currentPersonne.notes = notes;
@@ -1586,7 +1538,6 @@ async function executerEnregistrement() {
     currentPersonne.tel = tel;
     currentPersonneServeur = null;
 
-    // Mise à jour robuste de toutesPersonnes
     const id = currentPersonne.id;
     for (let i = 0; i < toutesPersonnes.length; i++) {
       if (String(toutesPersonnes[i][0]) === String(id)) {
@@ -1626,7 +1577,6 @@ async function confirmerReinitialisation() {
   if (!afficherOverlay('Réinitialisation...')) return;
 
   try {
-    // Appel serveur avec militant
     await fetch(SCRIPT_URL, { 
       method: 'POST', 
       body: new URLSearchParams({ 
@@ -1636,7 +1586,6 @@ async function confirmerReinitialisation() {
       }) 
     });
     
-    // Mise à jour locale de currentPersonne
     currentPersonne.statut = 'Non visité';
     currentPersonne.candidatActuel = '';
     currentPersonne.notes = '';
@@ -1644,7 +1593,6 @@ async function confirmerReinitialisation() {
     currentPersonne.militant = '';
     currentPersonne.dateDerniereVisite = '';
     
-    // Mise à jour robuste de toutesPersonnes
     const id = currentPersonne.id;
     for (let i = 0; i < toutesPersonnes.length; i++) {
       if (String(toutesPersonnes[i][0]) === String(id)) {
@@ -1658,7 +1606,6 @@ async function confirmerReinitialisation() {
       }
     }
     
-    // Sauvegarder le cache
     try { localStorage.setItem(CACHE_KEY_PERSONNES, JSON.stringify(toutesPersonnes)); } catch(e) {}
     
     masquerOverlay(true);
@@ -1675,7 +1622,6 @@ async function confirmerReinitialisation() {
 // STATS
 // ============================================
 async function chargerStats() {
-  // 1. Afficher depuis cache mémoire ou localStorage immédiatement
   if (statsCache) {
     afficherStats(statsCache);
     return;
@@ -1686,11 +1632,10 @@ async function chargerStats() {
     if (cached) {
       statsCache = JSON.parse(cached);
       afficherStats(statsCache);
-      return; // PAS de rafraîchissement automatique
+      return;
     }
   } catch(e) {}
 
-  // 2. Sinon charger depuis serveur
   $('statsContenu').innerHTML = '<div class="loading"><div class="spinner"></div>Chargement...</div>';
   await rafraichirStatsServeur();
 }
@@ -1717,9 +1662,8 @@ async function rafraichirStatsServeur() {
   }
 }
 
-// Préchargement silencieux en arrière-plan
 async function prechargerStats() {
-  if (localStorage.getItem(CACHE_KEY_STATS)) return; // Déjà en cache
+  if (localStorage.getItem(CACHE_KEY_STATS)) return;
   try {
     const resp = await fetchRapide(SCRIPT_URL + '?action=stats', {}, 30000);
     const data = await resp.json();
@@ -1732,7 +1676,7 @@ async function prechargerStats() {
 }
 
 async function prechargerObs() {
-  if (localStorage.getItem(CACHE_KEY_OBS)) return; // Déjà en cache
+  if (localStorage.getItem(CACHE_KEY_OBS)) return;
   try {
     const resp = await fetchRapide(SCRIPT_URL + '?action=getObservations', {}, 30000);
     const data = await resp.json();
@@ -1890,18 +1834,15 @@ async function actualiserObservations() {
   div.innerHTML = '<div class="loading"><div class="spinner"></div>Chargement...</div>';
   
   try {
-    // Essayer d'abord l'appel rapide
     const resp = await fetchRapide(SCRIPT_URL + '?action=getObservations', {}, 30000);
     const data = await resp.json();
     
-    // Si erreur ou pas de données, fallback sur getAllPersonnes
     if (data.error || !data.observations) {
       console.log('Fallback sur getAllPersonnes');
       await actualiserObservationsFallback();
       return;
     }
     
-    // Sauvegarder dans localStorage
     try { localStorage.setItem(CACHE_KEY_OBS, JSON.stringify(data.observations)); } catch(e) {}
     
     if (data.observations.length > 0) {
@@ -1921,7 +1862,6 @@ async function actualiserObservationsFallback() {
   div.innerHTML = '<div class="loading"><div class="spinner"></div>Chargement complet...</div>';
   
   try {
-    // Vider et recharger tout
     localStorage.removeItem(CACHE_KEY_PERSONNES);
     const resp = await fetchRapide(SCRIPT_URL + '?action=getAllPersonnes', {}, 60000);
     const data = await resp.json();
@@ -1930,7 +1870,6 @@ async function actualiserObservationsFallback() {
       toutesPersonnes = data.personnes;
       try { localStorage.setItem(CACHE_KEY_PERSONNES, JSON.stringify(toutesPersonnes)); } catch(e) {}
       
-      // Filtrer les observations
       const avecObs = toutesPersonnes.filter(p => p[15] && String(p[15]).trim() !== '');
       
       if (avecObs.length > 0) {
@@ -2032,29 +1971,24 @@ function afficherObservationRapide(id, nomEnc, prenomEnc, obsEnc, militant, date
   ouvrirModal('modalObservation');
 }
 
-// Fonction supprimée - fusionnée dans actualiserObservations
-
 function chargerObservations() {
   const div = $('obsContenu');
   
-  // 1. Essayer le cache localStorage des observations (INSTANTANÉ)
   try {
     const cached = localStorage.getItem(CACHE_KEY_OBS);
     if (cached) {
       const observations = JSON.parse(cached);
       if (observations.length > 0) {
         afficherObservationsRapide(observations);
-        return; // PAS de rafraîchissement automatique
+        return;
       }
     }
   } catch(e) {}
   
-  // 2. Sinon essayer depuis toutesPersonnes en cache
   const avecObs = toutesPersonnes.filter(p => p[15] && String(p[15]).trim() !== '');
   
   if (avecObs.length) {
     afficherObservationsDepuisCache(avecObs);
-    // Sauvegarder dans cache obs
     const obsData = avecObs.map(p => ({
       id: p[0], nom: p[1], prenom: p[2], statut: p[3],
       dateVisite: p[11] || '', candidat: p[10] || '',
@@ -2064,7 +1998,6 @@ function chargerObservations() {
     return;
   }
   
-  // 3. Sinon charger depuis serveur
   actualiserObservations();
 }
 
@@ -2102,12 +2035,8 @@ function ouvrirFicheDepuisObs() {
 // ============================================
 // GESTION
 // ============================================
-// ============================================
-// AJOUTER UN MILITANT
-// ============================================
 function ouvrirAjoutMilitant() {
   ouvrirModal('modalAjoutMilitant');
-  // Reset les champs après ouverture
   setTimeout(() => {
     const nom = $('nouveauNom');
     const pin = $('nouveauPin');
@@ -2123,7 +2052,6 @@ async function confirmerAjoutMilitant() {
   const pin = $('nouveauPin').value.trim();
   const role = $('nouveauRole').value;
   
-  // Validation
   if (!nom) {
     showToast('❌ Entrez un nom', 'erreur');
     return;
@@ -2133,7 +2061,6 @@ async function confirmerAjoutMilitant() {
     return;
   }
   
-  // Vérifier si le nom existe déjà
   if (listeMilitants.some(m => m.nom.toLowerCase() === nom.toLowerCase())) {
     showToast('❌ Ce nom existe déjà', 'erreur');
     return;
@@ -2166,13 +2093,11 @@ async function confirmerAjoutMilitant() {
     }
     
     if (data.ok) {
-      // Ajouter localement
       listeMilitants.push({ nom, pin, role, actif: true });
       localStorage.setItem(CACHE_KEY_MILITANTS, JSON.stringify(listeMilitants));
       
       showToast('✅ Militant ajouté !', 'succes');
       
-      // Rafraîchir la liste dans la popup
       afficherGestionMilitants();
     } else {
       showToast('❌ ' + (data.msg || data.error || 'Erreur inconnue'), 'erreur');
@@ -2313,9 +2238,6 @@ async function modifierPin(nom) {
   }
 }
 
-// ============================================
-// SUPPRIMER UN MILITANT
-// ============================================
 let militantASupprimer = null;
 
 function confirmerSupprimerMilitant(nom) {
@@ -2342,7 +2264,6 @@ async function executerSuppressionMilitant() {
     const data = await resp.json();
     
     if (data.ok) {
-      // Supprimer localement
       listeMilitants = listeMilitants.filter(m => m.nom !== militantASupprimer);
       localStorage.setItem(CACHE_KEY_MILITANTS, JSON.stringify(listeMilitants));
       
@@ -2408,1078 +2329,45 @@ function afficherExport() {
 }
 
 // ============================================
-// TÉLÉOPÉRATEUR - CONTACT
+// TÉLÉOPÉRATEUR - CONTACT (STUB)
 // ============================================
 let listeContact = [];
 let currentContactPersonne = null;
-let scriptAppel = "Bonjour {CIVILITE} {NOM}, je vous appelle de la part de notre équipe pour vous inviter à notre événement. Êtes-vous disponible ?";
+let scriptAppel = "Bonjour {CIVILITE} {NOM}, je vous appelle...";
 
 async function chargerContact() {
-  const div = $('contactContenu');
-  div.innerHTML = '<div style="text-align:center;padding:40px;color:#888;">⏳ Chargement...</div>';
-  
-  try {
-    const resp = await fetch(SCRIPT_URL + '?action=getContactTeleop&teleop=' + encodeURIComponent(currentMilitant));
-    const data = await resp.json();
-    
-    if (data.error) {
-      div.innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c;">❌ ' + data.error + '</div>';
-      return;
-    }
-    
-    listeContact = data.personnes || [];
-    scriptAppel = data.script || scriptAppel;
-    afficherListeContact();
-  } catch(e) {
-    div.innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c;">❌ Erreur de connexion</div>';
-  }
+  $('contactContenu').innerHTML = '<div class="vide">📞 Module téléopérateur</div>';
 }
 
-function afficherListeContact() {
-  const div = $('contactContenu');
-  
-  if (!listeContact.length) {
-    div.innerHTML = '<div style="text-align:center;padding:40px;color:#888;">📭 Aucun contact assigné</div>';
-    return;
-  }
-  
-  // Stats rapides
-  const total = listeContact.length;
-  const confirmes = listeContact.filter(p => p.reponse === 'Confirmer').length;
-  const refuses = listeContact.filter(p => p.reponse === 'Refuser').length;
-  const rappeler = listeContact.filter(p => p.reponse === 'A rappeler').length;
-  const restants = total - confirmes - refuses - rappeler;
-  
-  let html = `
-    <div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:12px;padding:16px;margin-bottom:16px;color:white;">
-      <div style="font-size:13px;opacity:.8;margin-bottom:8px;">📊 Progression</div>
-      <div style="display:flex;justify-content:space-around;text-align:center;">
-        <div><div style="font-size:24px;font-weight:700;">${restants}</div><div style="font-size:11px;opacity:.8;">À traiter</div></div>
-        <div><div style="font-size:24px;font-weight:700;color:#2ecc71;">${confirmes}</div><div style="font-size:11px;opacity:.8;">Confirmés</div></div>
-        <div><div style="font-size:24px;font-weight:700;color:#e74c3c;">${refuses}</div><div style="font-size:11px;opacity:.8;">Refusés</div></div>
-        <div><div style="font-size:24px;font-weight:700;color:#f39c12;">${rappeler}</div><div style="font-size:11px;opacity:.8;">À rappeler</div></div>
-      </div>
-    </div>
-    <div style="margin-bottom:12px;">
-      <select id="filtreContact" onchange="filtrerContact()" style="width:100%;padding:10px;border-radius:8px;border:1px solid #ddd;">
-        <option value="tous">Tous (${total})</option>
-        <option value="atraiter">À traiter (${restants})</option>
-        <option value="confirmer">Confirmés (${confirmes})</option>
-        <option value="refuser">Refusés (${refuses})</option>
-        <option value="rappeler">À rappeler (${rappeler})</option>
-      </select>
-    </div>
-  `;
-  
-  for (const p of listeContact) {
-    const sexeIcon = p.sexe === 'M' ? '👨' : p.sexe === 'F' ? '👩' : '👤';
-    const age = p.age ? p.age + ' ans' : '';
-    const civilite = p.sexe === 'M' ? 'M.' : p.sexe === 'F' ? 'Mme' : '';
-    const script = scriptAppel
-      .replace('{NOM}', p.nom)
-      .replace('{PRENOM}', p.prenom)
-      .replace('{CIVILITE}', civilite)
-      .replace('{AGE}', p.age || '');
-    
-    let statutBadge = '';
-    let cardStyle = '';
-    if (p.reponse === 'Confirmer') {
-      statutBadge = '<span style="background:#2ecc71;color:white;padding:2px 8px;border-radius:10px;font-size:11px;">✅ Confirmé</span>';
-      cardStyle = 'border-left:4px solid #2ecc71;';
-    } else if (p.reponse === 'Refuser') {
-      statutBadge = '<span style="background:#e74c3c;color:white;padding:2px 8px;border-radius:10px;font-size:11px;">❌ Refusé</span>';
-      cardStyle = 'border-left:4px solid #e74c3c;';
-    } else if (p.reponse === 'A rappeler') {
-      statutBadge = '<span style="background:#f39c12;color:white;padding:2px 8px;border-radius:10px;font-size:11px;">🔄 ' + (p.dateRappel || 'À rappeler') + '</span>';
-      cardStyle = 'border-left:4px solid #f39c12;';
-    }
-    
-    html += `
-      <div class="contact-card" data-reponse="${p.reponse || ''}" style="background:white;border-radius:12px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);${cardStyle}">
-        <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px;">
-          <div>
-            <div style="font-weight:700;font-size:16px;color:#1a3a6b;">${p.nom} ${p.prenom}</div>
-            <div style="color:#666;font-size:13px;">${sexeIcon} ${age}</div>
-          </div>
-          ${statutBadge}
-        </div>
-        
-        <div style="background:#f8f9fa;border-radius:8px;padding:12px;margin-bottom:12px;font-size:13px;color:#555;line-height:1.5;">
-          📝 <em>"${script}"</em>
-        </div>
-        
-        <div style="display:flex;gap:8px;margin-bottom:12px;">
-          ${p.tel ? `<button onclick="demanderAppel(${p.id}, '${p.nom} ${p.prenom}')" style="flex:1;background:#27ae60;color:white;border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">📞 Appeler</button>` : '<button disabled style="flex:1;background:#ccc;color:#888;border:none;padding:12px;border-radius:8px;font-size:14px;">📞 Pas de tél</button>'}
-          ${p.mail ? `<button onclick="demanderMail(${p.id}, '${p.nom} ${p.prenom}')" style="flex:1;background:#3498db;color:white;border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">📧 Mail</button>` : '<button disabled style="flex:1;background:#ccc;color:#888;border:none;padding:12px;border-radius:8px;font-size:14px;">📧 Pas de mail</button>'}
-        </div>
-        
-        <div style="display:flex;gap:8px;">
-          <button onclick="enregistrerReponse(${p.id}, 'Confirmer')" style="flex:1;background:${p.reponse === 'Confirmer' ? '#1e8449' : '#e8f8f0'};color:${p.reponse === 'Confirmer' ? 'white' : '#27ae60'};border:2px solid #27ae60;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">✅ Confirmer</button>
-          <button onclick="enregistrerReponse(${p.id}, 'Refuser')" style="flex:1;background:${p.reponse === 'Refuser' ? '#922b21' : '#fdedec'};color:${p.reponse === 'Refuser' ? 'white' : '#e74c3c'};border:2px solid #e74c3c;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">❌ Refuser</button>
-          <button onclick="demanderRappeler(${p.id}, '${p.nom} ${p.prenom}')" style="flex:1;background:${p.reponse === 'A rappeler' ? '#9c640c' : '#fef5e7'};color:${p.reponse === 'A rappeler' ? 'white' : '#e67e22'};border:2px solid #e67e22;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">🔄 Rappeler</button>
-        </div>
-      </div>
-    `;
-  }
-  
-  div.innerHTML = html;
-}
-
-function filtrerContact() {
-  const filtre = $('filtreContact').value;
-  document.querySelectorAll('.contact-card').forEach(card => {
-    const reponse = card.dataset.reponse;
-    let visible = true;
-    if (filtre === 'atraiter') visible = !reponse;
-    else if (filtre === 'confirmer') visible = reponse === 'Confirmer';
-    else if (filtre === 'refuser') visible = reponse === 'Refuser';
-    else if (filtre === 'rappeler') visible = reponse === 'A rappeler';
-    card.style.display = visible ? 'block' : 'none';
-  });
-}
-
-function demanderAppel(id, nom) {
-  currentContactPersonne = listeContact.find(p => p.id === id);
-  $('confirmAppelNom').textContent = nom;
-  ouvrirModal('modalConfirmAppel');
-}
-
-function executerAppel() {
-  fermerModal('modalConfirmAppel');
-  if (currentContactPersonne && currentContactPersonne.tel) {
-    window.location.href = 'tel:' + currentContactPersonne.tel.replace(/\s/g, '');
-  }
-}
-
-function demanderMail(id, nom) {
-  currentContactPersonne = listeContact.find(p => p.id === id);
-  $('confirmMailNom').textContent = nom;
-  ouvrirModal('modalConfirmMail');
-}
-
-function executerMail() {
-  fermerModal('modalConfirmMail');
-  if (currentContactPersonne && currentContactPersonne.mail) {
-    window.location.href = 'mailto:' + currentContactPersonne.mail;
-  }
-}
-
-async function enregistrerReponse(id, reponse) {
-  showToast('⏳ Enregistrement...');
-  try {
-    await fetch(SCRIPT_URL, {
-      method: 'POST',
-      body: new URLSearchParams({
-        action: 'enregistrerReponseTeleop',
-        id: String(id),
-        reponse: reponse,
-        teleop: currentMilitant
-      })
-    });
-    
-    // Mise à jour locale
-    const p = listeContact.find(x => x.id === id);
-    if (p) p.reponse = reponse;
-    afficherListeContact();
-    showToast('✅ Enregistré !');
-  } catch(e) {
-    showToast('❌ Erreur');
-  }
-}
-
-function demanderRappeler(id, nom) {
-  currentContactPersonne = listeContact.find(p => p.id === id);
-  $('confirmRappelNom').textContent = nom;
-  // Date par défaut : demain
-  const demain = new Date();
-  demain.setDate(demain.getDate() + 1);
-  $('rappelDate').value = demain.toISOString().split('T')[0];
-  ouvrirModal('modalRappeler');
-}
-
-async function executerRappeler() {
-  const date = $('rappelDate').value;
-  const dispo = $('rappelDispo').value;
-  
-  if (!date) {
-    showToast('⚠️ Choisissez une date');
-    return;
-  }
-  
-  fermerModal('modalRappeler');
-  showToast('⏳ Enregistrement...');
-  
-  try {
-    await fetch(SCRIPT_URL, {
-      method: 'POST',
-      body: new URLSearchParams({
-        action: 'enregistrerReponseTeleop',
-        id: String(currentContactPersonne.id),
-        reponse: 'A rappeler',
-        dateRappel: date,
-        dispoRappel: dispo,
-        teleop: currentMilitant
-      })
-    });
-    
-    // Mise à jour locale
-    const p = listeContact.find(x => x.id === currentContactPersonne.id);
-    if (p) {
-      p.reponse = 'A rappeler';
-      p.dateRappel = date;
-      p.dispoRappel = dispo;
-    }
-    afficherListeContact();
-    showToast('✅ Rappel programmé !');
-  } catch(e) {
-    showToast('❌ Erreur');
-  }
-}
-
-// ============================================
-// TÉLÉOPÉRATEUR - AGENDA
-// ============================================
 async function chargerAgenda() {
-  const div = $('agendaContenu');
-  div.innerHTML = '<div style="text-align:center;padding:40px;color:#888;">⏳ Chargement...</div>';
-  
-  try {
-    const resp = await fetch(SCRIPT_URL + '?action=getAgendaTeleop&teleop=' + encodeURIComponent(currentMilitant));
-    const data = await resp.json();
-    
-    if (data.error) {
-      div.innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c;">❌ ' + data.error + '</div>';
-      return;
-    }
-    
-    afficherAgenda(data);
-  } catch(e) {
-    div.innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c;">❌ Erreur de connexion</div>';
-  }
-}
-
-function afficherAgenda(data) {
-  const div = $('agendaContenu');
-  
-  const total = data.total || 0;
-  const confirmes = data.confirmes || 0;
-  const refuses = data.refuses || 0;
-  const rappeler = data.rappeler || 0;
-  const traites = confirmes + refuses + rappeler;
-  const pourcent = total > 0 ? Math.round((traites / total) * 100) : 0;
-  
-  // Camembert SVG simple
-  const r = 60;
-  const cx = 70;
-  const cy = 70;
-  const pConfirme = total > 0 ? confirmes / total : 0;
-  const pRefuse = total > 0 ? refuses / total : 0;
-  const pRappeler = total > 0 ? rappeler / total : 0;
-  const pRestant = 1 - pConfirme - pRefuse - pRappeler;
-  
-  function arcPath(startAngle, endAngle, color) {
-    if (endAngle - startAngle <= 0) return '';
-    const start = polarToCartesian(cx, cy, r, endAngle);
-    const end = polarToCartesian(cx, cy, r, startAngle);
-    const largeArc = endAngle - startAngle > 180 ? 1 : 0;
-    return `<path d="M ${cx} ${cy} L ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 0 ${end.x} ${end.y} Z" fill="${color}"/>`;
-  }
-  
-  function polarToCartesian(cx, cy, r, angle) {
-    const rad = (angle - 90) * Math.PI / 180;
-    return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
-  }
-  
-  let angle = 0;
-  let camembert = '<svg width="140" height="140">';
-  camembert += arcPath(angle, angle + pConfirme * 360, '#2ecc71'); angle += pConfirme * 360;
-  camembert += arcPath(angle, angle + pRefuse * 360, '#e74c3c'); angle += pRefuse * 360;
-  camembert += arcPath(angle, angle + pRappeler * 360, '#f39c12'); angle += pRappeler * 360;
-  camembert += arcPath(angle, angle + pRestant * 360, '#bdc3c7');
-  camembert += `<circle cx="${cx}" cy="${cy}" r="35" fill="white"/>`;
-  camembert += `<text x="${cx}" y="${cy}" text-anchor="middle" dy="5" style="font-size:18px;font-weight:700;fill:#333;">${pourcent}%</text>`;
-  camembert += '</svg>';
-  
-  // Historique par jour
-  const historique = data.historique || [];
-  let histHtml = '';
-  for (const jour of historique) {
-    histHtml += `
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:white;border-radius:8px;margin-bottom:8px;">
-        <div style="font-weight:600;">${jour.date}</div>
-        <div style="display:flex;gap:12px;font-size:13px;">
-          <span style="color:#27ae60;">✅ ${jour.confirmes}</span>
-          <span style="color:#e74c3c;">❌ ${jour.refuses}</span>
-          <span style="color:#f39c12;">🔄 ${jour.rappeler}</span>
-        </div>
-      </div>
-    `;
-  }
-  
-  // Rappels du jour
-  const rappelsDuJour = data.rappelsDuJour || [];
-  let rappelsHtml = '';
-  if (rappelsDuJour.length > 0) {
-    rappelsHtml = `
-      <div style="background:#fef5e7;border:2px solid #f39c12;border-radius:12px;padding:16px;margin-bottom:16px;">
-        <div style="font-weight:700;color:#e67e22;margin-bottom:12px;">🔔 Rappels du jour (${rappelsDuJour.length})</div>
-    `;
-    for (const p of rappelsDuJour) {
-      rappelsHtml += `
-        <div style="background:white;border-radius:8px;padding:10px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
-          <div>
-            <div style="font-weight:600;">${p.nom} ${p.prenom}</div>
-            <div style="font-size:12px;color:#888;">${p.dispo || ''}</div>
-          </div>
-          <button onclick="document.querySelector('.tab[data-page=contact]').click()" style="background:#e67e22;color:white;border:none;padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;">Voir</button>
-        </div>
-      `;
-    }
-    rappelsHtml += '</div>';
-  }
-  
-  div.innerHTML = `
-    <div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:12px;padding:20px;margin-bottom:16px;color:white;">
-      <div style="display:flex;align-items:center;gap:20px;">
-        <div>${camembert}</div>
-        <div style="flex:1;">
-          <div style="font-size:14px;opacity:.8;margin-bottom:8px;">📊 Ma progression</div>
-          <div style="font-size:28px;font-weight:700;">${traites} / ${total}</div>
-          <div style="font-size:13px;opacity:.8;margin-top:4px;">contacts traités</div>
-          <div style="display:flex;gap:12px;margin-top:12px;font-size:12px;">
-            <span>🟢 ${confirmes}</span>
-            <span>🔴 ${refuses}</span>
-            <span>🟠 ${rappeler}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    ${rappelsHtml}
-    
-    <div style="margin-bottom:12px;">
-      <div style="font-weight:700;color:#1a3a6b;margin-bottom:12px;">📅 Historique par jour</div>
-      ${histHtml || '<div style="text-align:center;padding:20px;color:#888;">Aucun historique</div>'}
-    </div>
-  `;
+  $('agendaContenu').innerHTML = '<div class="vide">📅 Agenda téléopérateur</div>';
 }
 
 // ============================================
-// ADMIN - ÉVÉNEMENT
+// ÉVÉNEMENT (STUB)
 // ============================================
-let eventSection = 'menu';
-
 function ouvrirEvenement() {
-  eventSection = 'menu';
-  afficherMenuEvenement();
-  ouvrirModal('modalEvenement');
-}
-
-function fermerEvenement() {
-  fermerModal('modalEvenement');
-}
-
-function fermerOuRetourEvenement() {
-  if (eventSection === 'menu') {
-    fermerEvenement();
-  } else {
-    retourMenuEvenement();
-  }
-}
-
-function retourMenuEvenement() {
-  eventSection = 'menu';
-  afficherMenuEvenement();
-}
-
-function afficherMenuEvenement() {
-  $('eventTitre').textContent = '📅 Événement';
-  $('eventBtnRetour').style.display = 'none';
-  
-  $('eventContenu').innerHTML = `
-    <div style="display:flex;flex-direction:column;gap:12px;">
-      <button onclick="afficherTeleoperateurs()" style="background:#f8f9fa;border:1px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:12px;">
-        <span style="font-size:24px;">👥</span>
-        <div>
-          <div style="font-weight:600;color:#1a3a6b;">Liste téléopérateurs</div>
-          <div style="font-size:12px;color:#888;">Voir tous les téléopérateurs</div>
-        </div>
-      </button>
-      <button onclick="afficherAssignerContacts()" style="background:#f8f9fa;border:1px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:12px;">
-        <span style="font-size:24px;">📋</span>
-        <div>
-          <div style="font-weight:600;color:#1a3a6b;">Assigner contacts</div>
-          <div style="font-size:12px;color:#888;">Attribuer des personnes à un téléopérateur</div>
-        </div>
-      </button>
-      <button onclick="afficherParametresEvent()" style="background:#f8f9fa;border:1px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:12px;">
-        <span style="font-size:24px;">⚙️</span>
-        <div>
-          <div style="font-weight:600;color:#1a3a6b;">Paramètres</div>
-          <div style="font-size:12px;color:#888;">Script d'appel, configuration</div>
-        </div>
-      </button>
-      <button onclick="afficherCreerTeleop()" style="background:#8e44ad;border:none;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:12px;color:white;">
-        <span style="font-size:24px;">➕</span>
-        <div>
-          <div style="font-weight:600;">Créer téléopérateur</div>
-          <div style="font-size:12px;opacity:.8;">Ajouter un nouveau poste</div>
-        </div>
-      </button>
-      <div style="border-top:1px solid #e0e4ea;margin:8px 0;"></div>
-      <div style="font-size:12px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Aperçu téléopérateur</div>
-      <button onclick="fermerEvenement(); document.querySelector('.tab[data-page=contact]')?.click();" style="background:#f8f9fa;border:1px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:12px;">
-        <span style="font-size:24px;">📞</span>
-        <div>
-          <div style="font-weight:600;color:#1a3a6b;">Contact</div>
-          <div style="font-size:12px;color:#888;">Voir l'interface d'appel</div>
-        </div>
-      </button>
-      <button onclick="fermerEvenement(); document.querySelector('.tab[data-page=agenda]')?.click();" style="background:#f8f9fa;border:1px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:12px;">
-        <span style="font-size:24px;">📅</span>
-        <div>
-          <div style="font-weight:600;color:#1a3a6b;">Agenda</div>
-          <div style="font-size:12px;color:#888;">Voir les statistiques</div>
-        </div>
-      </button>
-    </div>
-  `;
-}
-
-async function afficherTeleoperateurs() {
-  eventSection = 'teleops';
-  $('eventTitre').textContent = '👥 Téléopérateurs';
-  $('eventBtnRetour').style.display = 'inline-block';
-  $('eventContenu').innerHTML = '<div style="text-align:center;padding:40px;color:#888;">⏳ Chargement...</div>';
-  
-  try {
-    const resp = await fetch(SCRIPT_URL + '?action=getTeleoperateurs');
-    const data = await resp.json();
-    const teleops = data.teleoperateurs || [];
-    
-    if (!teleops.length) {
-      $('eventContenu').innerHTML = '<div style="text-align:center;padding:40px;color:#888;">Aucun téléopérateur créé</div>';
-      return;
-    }
-    
-    let html = '';
-    for (const t of teleops) {
-      const tokenActif = t.token ? '🟢' : '🔴';
-      html += `
-        <div style="background:white;border:1px solid #e0e4ea;border-radius:10px;padding:14px;margin-bottom:10px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-            <div>
-              <div style="font-weight:600;color:#1a3a6b;">${tokenActif} ${t.nom}</div>
-              <div style="font-size:12px;color:#888;">${t.contacts || 0} contacts · ${t.traites || 0} traités</div>
-              ${t.mail ? `<div style="font-size:11px;color:#666;">📧 ${t.mail}</div>` : ''}
-            </div>
-            <div style="font-size:18px;color:#27ae60;font-weight:700;">${t.pourcent || 0}%</div>
-          </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button onclick="renvoyerAccesTeleop('${t.nom}')" style="flex:1;min-width:100px;background:#3498db;color:white;border:none;padding:8px;border-radius:6px;font-size:11px;cursor:pointer;">📧 Renvoyer</button>
-            ${t.contacts > 0 ? `<button onclick="desassignerTousContacts('${t.nom}')" style="flex:1;min-width:100px;background:#f39c12;color:white;border:none;padding:8px;border-radius:6px;font-size:11px;cursor:pointer;">🔄 Retirer contacts</button>` : ''}
-            <button onclick="confirmerSuppTeleop('${t.nom}')" style="flex:1;min-width:100px;background:#e74c3c;color:white;border:none;padding:8px;border-radius:6px;font-size:11px;cursor:pointer;">🗑️ Supprimer</button>
-          </div>
-        </div>
-      `;
-    }
-    
-    $('eventContenu').innerHTML = html;
-  } catch(e) {
-    $('eventContenu').innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c;">❌ Erreur</div>';
-  }
-}
-
-function confirmerSuppTeleop(nom) {
-  if (confirm('⚠️ Supprimer ' + nom + ' ?\n\nSon lien d\'accès sera invalidé et il ne pourra plus se connecter.')) {
-    supprimerTeleoperateur(nom);
-  }
-}
-
-async function supprimerTeleoperateur(nom) {
-  showToast('⏳ Suppression...');
-  try {
-    const resp = await fetch(SCRIPT_URL, {
-      method: 'POST',
-      body: new URLSearchParams({
-        action: 'supprimerTeleoperateur',
-        nom: nom
-      })
-    });
-    const data = await resp.json();
-    if (data.ok) {
-      showToast('✅ Téléopérateur supprimé !');
-      afficherTeleoperateurs();
-    } else {
-      showToast('❌ ' + (data.msg || 'Erreur'));
-    }
-  } catch(e) {
-    showToast('❌ Erreur');
-  }
-}
-
-async function renvoyerAccesTeleop(nom) {
-  showToast('⏳ Envoi...');
-  try {
-    const resp = await fetch(SCRIPT_URL, {
-      method: 'POST',
-      body: new URLSearchParams({
-        action: 'renvoyerAccesTeleop',
-        nom: nom
-      })
-    });
-    const data = await resp.json();
-    if (data.ok) {
-      showToast('✅ Mail envoyé !');
-    } else {
-      showToast('❌ ' + (data.msg || 'Erreur'));
-    }
-  } catch(e) {
-    showToast('❌ Erreur');
-  }
+  showToast('📅 Module événement', '');
 }
 
 // ============================================
-// ASSIGNER CONTACTS À UN TÉLÉOPÉRATEUR
+// SPLASH & INIT
 // ============================================
-let listeTelepsPourAssign = [];
-let statsAssignation = null;
-
-async function afficherAssignerContacts() {
-  eventSection = 'assigner';
-  $('eventTitre').textContent = '📋 Assigner contacts';
-  $('eventBtnRetour').style.display = 'inline-block';
-  $('eventContenu').innerHTML = '<div style="text-align:center;padding:40px;color:#888;">⏳ Chargement...</div>';
-  
-  try {
-    // Charger les téléopérateurs et les stats
-    const [respTeleops, respStats] = await Promise.all([
-      fetch(SCRIPT_URL + '?action=getTeleoperateurs'),
-      fetch(SCRIPT_URL + '?action=getStatsAssignation')
-    ]);
-    
-    const dataTeleops = await respTeleops.json();
-    const dataStats = await respStats.json();
-    
-    listeTelepsPourAssign = dataTeleops.teleoperateurs || [];
-    statsAssignation = dataStats;
-    
-    if (!listeTelepsPourAssign.length) {
-      $('eventContenu').innerHTML = `
-        <div style="text-align:center;padding:40px;">
-          <div style="font-size:48px;margin-bottom:16px;">👤</div>
-          <div style="color:#888;margin-bottom:16px;">Aucun téléopérateur créé</div>
-          <button onclick="afficherCreerTeleop()" style="background:#8e44ad;color:white;border:none;padding:12px 24px;border-radius:8px;font-size:14px;cursor:pointer;">➕ Créer un téléopérateur</button>
-        </div>
-      `;
-      return;
-    }
-    
-    afficherFormulaireAssignation();
-  } catch(e) {
-    $('eventContenu').innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c;">❌ Erreur de chargement</div>';
-  }
-}
-
-function afficherFormulaireAssignation() {
-  const stats = statsAssignation || {};
-  const totalAvecContact = stats.totalAvecContact || 0;
-  const dejaAssignes = stats.dejaAssignes || 0;
-  const disponibles = stats.disponibles || 0;
-  const bureaux = stats.bureaux || [];
-  
-  // Options téléopérateurs
-  const optsTeleop = listeTelepsPourAssign.map(t => 
-    `<option value="${t.nom}">${t.nom} (${t.contacts || 0} contacts)</option>`
-  ).join('');
-  
-  // Options bureaux
-  const optsBureaux = bureaux.map(b => 
-    `<option value="${b.nom}">${b.nom} (${b.disponibles} dispo)</option>`
-  ).join('');
-  
-  $('eventContenu').innerHTML = `
-    <div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:12px;padding:16px;margin-bottom:16px;color:white;">
-      <div style="font-size:13px;opacity:.8;margin-bottom:8px;">📊 Contacts avec tél/mail</div>
-      <div style="display:flex;justify-content:space-around;text-align:center;">
-        <div><div style="font-size:24px;font-weight:700;">${totalAvecContact}</div><div style="font-size:11px;opacity:.8;">Total</div></div>
-        <div><div style="font-size:24px;font-weight:700;color:#f39c12;">${dejaAssignes}</div><div style="font-size:11px;opacity:.8;">Assignés</div></div>
-        <div><div style="font-size:24px;font-weight:700;color:#2ecc71;">${disponibles}</div><div style="font-size:11px;opacity:.8;">Disponibles</div></div>
-      </div>
-    </div>
-    
-    <div class="field" style="margin-bottom:12px;">
-      <label>Téléopérateur</label>
-      <select id="assignTeleop" style="width:100%;" onchange="majApercuAssignation()">
-        <option value="">-- Choisir --</option>
-        ${optsTeleop}
-      </select>
-    </div>
-    
-    <div class="field" style="margin-bottom:12px;">
-      <label>Mode d'assignation</label>
-      <select id="assignMode" style="width:100%;" onchange="majOptionsAssignation()">
-        <option value="nombre">Par nombre de contacts</option>
-        <option value="bureau">Par bureau de vote</option>
-        <option value="tous">Tous les disponibles</option>
-      </select>
-    </div>
-    
-    <div id="assignOptions" style="margin-bottom:12px;">
-      <div class="field">
-        <label>Nombre de contacts à assigner</label>
-        <input type="number" id="assignNombre" value="50" min="1" max="500" style="width:100%;" oninput="majApercuAssignation()">
-      </div>
-    </div>
-    
-    <div id="assignApercu" style="background:#f8f9fa;border-radius:8px;padding:12px;margin-bottom:12px;font-size:13px;color:#666;">
-      Sélectionnez un téléopérateur pour voir l'aperçu
-    </div>
-    
-    <button id="btnAssigner" onclick="executerAssignation()" disabled style="background:#8e44ad;color:white;border:none;padding:14px;border-radius:8px;width:100%;font-size:15px;font-weight:600;cursor:pointer;opacity:0.5;">
-      📋 Assigner les contacts
-    </button>
-  `;
-}
-
-function majOptionsAssignation() {
-  const mode = $('assignMode').value;
-  const stats = statsAssignation || {};
-  const bureaux = stats.bureaux || [];
-  
-  let html = '';
-  
-  if (mode === 'nombre') {
-    html = `
-      <div class="field">
-        <label>Nombre de contacts à assigner</label>
-        <input type="number" id="assignNombre" value="50" min="1" max="500" style="width:100%;" oninput="majApercuAssignation()">
-      </div>
-    `;
-  } else if (mode === 'bureau') {
-    const optsBureaux = bureaux.map(b => 
-      `<option value="${b.nom}">${b.nom} (${b.disponibles} dispo)</option>`
-    ).join('');
-    html = `
-      <div class="field">
-        <label>Bureau de vote</label>
-        <select id="assignBureau" style="width:100%;" onchange="majApercuAssignation()">
-          <option value="">-- Choisir --</option>
-          ${optsBureaux}
-        </select>
-      </div>
-    `;
-  } else if (mode === 'tous') {
-    html = `<div style="padding:8px;color:#27ae60;font-size:13px;">✅ Tous les contacts disponibles seront assignés</div>`;
-  }
-  
-  $('assignOptions').innerHTML = html;
-  majApercuAssignation();
-}
-
-function majApercuAssignation() {
-  const teleop = $('assignTeleop')?.value;
-  const mode = $('assignMode')?.value;
-  const stats = statsAssignation || {};
-  const disponibles = stats.disponibles || 0;
-  
-  if (!teleop) {
-    $('assignApercu').innerHTML = 'Sélectionnez un téléopérateur pour voir l\'aperçu';
-    $('btnAssigner').disabled = true;
-    $('btnAssigner').style.opacity = '0.5';
-    return;
-  }
-  
-  let nbContacts = 0;
-  
-  if (mode === 'nombre') {
-    nbContacts = parseInt($('assignNombre')?.value) || 0;
-    nbContacts = Math.min(nbContacts, disponibles);
-  } else if (mode === 'bureau') {
-    const bureau = $('assignBureau')?.value;
-    if (bureau) {
-      const b = (stats.bureaux || []).find(x => x.nom === bureau);
-      nbContacts = b ? b.disponibles : 0;
-    }
-  } else if (mode === 'tous') {
-    nbContacts = disponibles;
-  }
-  
-  if (nbContacts > 0) {
-    $('assignApercu').innerHTML = `
-      <div style="color:#27ae60;font-weight:600;">✅ ${nbContacts} contact(s) seront assignés à ${teleop}</div>
-    `;
-    $('btnAssigner').disabled = false;
-    $('btnAssigner').style.opacity = '1';
-  } else {
-    $('assignApercu').innerHTML = `<div style="color:#e74c3c;">⚠️ Aucun contact à assigner</div>`;
-    $('btnAssigner').disabled = true;
-    $('btnAssigner').style.opacity = '0.5';
-  }
-}
-
-async function executerAssignation() {
-  const teleop = $('assignTeleop').value;
-  const mode = $('assignMode').value;
-  
-  if (!teleop) {
-    showToast('⚠️ Choisissez un téléopérateur');
-    return;
-  }
-  
-  let params = { action: 'assignerContacts', teleop: teleop, mode: mode };
-  
-  if (mode === 'nombre') {
-    params.nombre = $('assignNombre').value;
-  } else if (mode === 'bureau') {
-    params.bureau = $('assignBureau')?.value;
-    if (!params.bureau) {
-      showToast('⚠️ Choisissez un bureau');
-      return;
-    }
-  }
-  
-  showToast('⏳ Assignation en cours...');
-  
-  try {
-    const resp = await fetch(SCRIPT_URL, {
-      method: 'POST',
-      body: new URLSearchParams(params)
-    });
-    const data = await resp.json();
-    
-    if (data.ok) {
-      showToast(`✅ ${data.nbAssignes || 0} contact(s) assignés !`);
-      afficherAssignerContacts(); // Rafraîchir
-    } else {
-      showToast('❌ ' + (data.msg || 'Erreur'));
-    }
-  } catch(e) {
-    showToast('❌ Erreur');
-  }
-}
-
-async function desassignerTousContacts(teleop) {
-  if (!confirm(`⚠️ Retirer tous les contacts de ${teleop} ?`)) return;
-  
-  showToast('⏳ Désassignation...');
-  
-  try {
-    const resp = await fetch(SCRIPT_URL, {
-      method: 'POST',
-      body: new URLSearchParams({
-        action: 'desassignerContacts',
-        teleop: teleop
-      })
-    });
-    const data = await resp.json();
-    
-    if (data.ok) {
-      showToast(`✅ ${data.nbRetires || 0} contact(s) retirés`);
-      afficherTeleoperateurs();
-    } else {
-      showToast('❌ ' + (data.msg || 'Erreur'));
-    }
-  } catch(e) {
-    showToast('❌ Erreur');
-  }
-}
-
-async function afficherParametresEvent() {
-  eventSection = 'params';
-  $('eventTitre').textContent = '⚙️ Paramètres';
-  $('eventBtnRetour').style.display = 'inline-block';
-  
-  // Charger le script actuel
-  let script = scriptAppel;
-  try {
-    const resp = await fetch(SCRIPT_URL + '?action=getScriptAppel');
-    const data = await resp.json();
-    if (data.script) script = data.script;
-  } catch(e) {}
-  
-  $('eventContenu').innerHTML = `
-    <div style="margin-bottom:16px;">
-      <label style="font-weight:600;color:#1a3a6b;display:block;margin-bottom:8px;">📝 Script d'appel</label>
-      <textarea id="inputScript" style="width:100%;min-height:150px;padding:12px;border:1px solid #e0e4ea;border-radius:8px;font-size:14px;line-height:1.5;">${script}</textarea>
-      <div style="font-size:11px;color:#888;margin-top:8px;">Variables : {NOM}, {PRENOM}, {CIVILITE}, {AGE}</div>
-    </div>
-    <button onclick="sauvegarderScript()" style="background:#8e44ad;color:white;border:none;padding:14px;border-radius:8px;width:100%;font-size:15px;font-weight:600;cursor:pointer;">💾 Sauvegarder</button>
-  `;
-}
-
-async function sauvegarderScript() {
-  const script = $('inputScript').value;
-  showToast('⏳ Sauvegarde...');
-  
-  try {
-    await fetch(SCRIPT_URL, {
-      method: 'POST',
-      body: new URLSearchParams({
-        action: 'sauvegarderScript',
-        script: script
-      })
-    });
-    scriptAppel = script;
-    showToast('✅ Script sauvegardé !');
-  } catch(e) {
-    showToast('❌ Erreur');
-  }
-}
-
-async function afficherCreerTeleop() {
-  eventSection = 'creer';
-  $('eventTitre').textContent = '➕ Créer téléopérateur';
-  $('eventBtnRetour').style.display = 'inline-block';
-  $('eventContenu').innerHTML = '<div style="text-align:center;padding:40px;color:#888;">⏳ Chargement...</div>';
-  
-  // Charger le script depuis Google Sheets
-  let scriptDefaut = `Bonjour {NOM},
-
-Voici l'application pour enregistrer les appels électoraux :
-
-📱 iPhone ou Android
-🔗 Lien : {LIEN}
-
-Comment se connecter :
-1. Cliquez sur le lien ci-dessus
-2. Enregistrez dans votre navigateur
-3. Cliquez sur votre nom : {NOM}
-4. Entrez votre PIN : {PIN}
-5. C'est parti !
-
-⚠️ Ne partagez pas ce lien ni votre PIN !
-
-Bonne campagne ! 🗳️`;
-
-  try {
-    const resp = await fetch(SCRIPT_URL + '?action=getScriptTeleop');
-    const data = await resp.json();
-    if (data.script) scriptDefaut = data.script;
-  } catch(e) {}
-
-  $('eventContenu').innerHTML = `
-    <div class="field" style="margin-bottom:12px;">
-      <label>Nom du téléopérateur</label>
-      <input type="text" id="newTeleopNom" placeholder="Ex: Julien Doro" oninput="verifierFormTeleop()">
-    </div>
-    <div class="field" style="margin-bottom:12px;">
-      <label>PIN (4 chiffres)</label>
-      <input type="text" id="newTeleopPin" placeholder="0000" maxlength="4" oninput="verifierFormTeleop()">
-    </div>
-    <div class="field" style="margin-bottom:12px;">
-      <label>📧 Adresse mail du téléopérateur</label>
-      <input type="email" id="newTeleopMail" placeholder="exemple@email.com" oninput="verifierFormTeleop()">
-    </div>
-    <div class="field" style="margin-bottom:12px;">
-      <label>🔗 Lien de l'application</label>
-      <input type="text" id="newTeleopLien" value="https://boyerdensjean111-hash.github.io/visites/" oninput="verifierFormTeleop()">
-    </div>
-    <div class="field" style="margin-bottom:12px;">
-      <label>📝 Script à envoyer</label>
-      <textarea id="newTeleopScript" style="min-height:180px;font-size:13px;">${scriptDefaut}</textarea>
-    </div>
-    <div id="teleopValidation" style="background:#f8f9fa;border-radius:8px;padding:12px;margin-bottom:12px;font-size:13px;">
-      <div id="validNom" style="color:#999;">⚪ Nom</div>
-      <div id="validPin" style="color:#999;">⚪ PIN</div>
-      <div id="validMail" style="color:#999;">⚪ Mail</div>
-      <div id="validLien" style="color:#999;">⚪ Lien</div>
-    </div>
-    <div style="display:flex;gap:10px;">
-      <button onclick="creerTeleoperateur(false)" style="flex:1;background:#95a5a6;color:white;border:none;padding:14px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">➕ Créer seul</button>
-      <button id="btnCreerEnvoyer" onclick="creerTeleoperateur(true)" style="flex:1;background:#8e44ad;color:white;border:none;padding:14px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;" disabled>📧 Créer + Envoyer</button>
-    </div>
-  `;
-  
-  verifierFormTeleop();
-}
-
-function verifierFormTeleop() {
-  const nom = ($('newTeleopNom')?.value || '').trim();
-  const pin = ($('newTeleopPin')?.value || '').trim();
-  const mail = ($('newTeleopMail')?.value || '').trim();
-  const lien = ($('newTeleopLien')?.value || '').trim();
-  
-  const validNom = nom.length >= 2;
-  const validPin = /^\d{4}$/.test(pin);
-  const validMail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail);
-  const validLien = lien.startsWith('http');
-  
-  $('validNom').innerHTML = validNom ? '✅ Nom' : '⚪ Nom';
-  $('validNom').style.color = validNom ? '#27ae60' : '#999';
-  
-  $('validPin').innerHTML = validPin ? '✅ PIN (4 chiffres)' : '⚪ PIN';
-  $('validPin').style.color = validPin ? '#27ae60' : '#999';
-  
-  $('validMail').innerHTML = validMail ? '✅ Mail' : '⚪ Mail';
-  $('validMail').style.color = validMail ? '#27ae60' : '#999';
-  
-  $('validLien').innerHTML = validLien ? '✅ Lien' : '⚪ Lien';
-  $('validLien').style.color = validLien ? '#27ae60' : '#999';
-  
-  const toutOk = validNom && validPin && validMail && validLien;
-  $('btnCreerEnvoyer').disabled = !toutOk;
-  $('btnCreerEnvoyer').style.opacity = toutOk ? '1' : '0.5';
-}
-
-async function creerTeleoperateur(avecEnvoi) {
-  const nom = $('newTeleopNom').value.trim();
-  const pin = $('newTeleopPin').value.trim();
-  const mail = $('newTeleopMail').value.trim();
-  const lien = $('newTeleopLien').value.trim();
-  const script = $('newTeleopScript').value;
-  
-  if (!nom) { showToast('⚠️ Entrez un nom'); return; }
-  if (!/^\d{4}$/.test(pin)) { showToast('⚠️ PIN = 4 chiffres'); return; }
-  
-  if (avecEnvoi) {
-    if (!mail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) {
-      showToast('⚠️ Mail invalide');
-      return;
-    }
-  }
-  
-  showToast('⏳ Création...');
-  
-  try {
-    const resp = await fetch(SCRIPT_URL, {
-      method: 'POST',
-      body: new URLSearchParams({
-        action: 'creerTeleoperateur',
-        nom: nom,
-        pin: pin,
-        mail: mail,
-        lien: lien,
-        script: script,
-        envoyerMail: avecEnvoi ? '1' : '0'
-      })
-    });
-    const data = await resp.json();
-    
-    if (data.ok) {
-      if (avecEnvoi && data.mailEnvoye) {
-        showToast('✅ Créé + Mail envoyé !');
-      } else if (avecEnvoi && !data.mailEnvoye) {
-        showToast('⚠️ Créé mais mail non envoyé : ' + (data.mailErreur || ''));
-      } else {
-        showToast('✅ Téléopérateur créé !');
-      }
-      retourMenuEvenement();
-    } else {
-      showToast('❌ ' + (data.msg || 'Erreur'));
-    }
-  } catch(e) {
-    showToast('❌ Erreur');
-  }
-}
-
-// ============================================
-// INIT
-// ============================================
-// ============================================
-// ============================================
-// VÉRIFICATION POST-SCRUTIN
-// ============================================
-const DATE_SCRUTIN = new Date('2026-03-22T23:59:59'); // 2e tour : 22/03/2026
+const DATE_SCRUTIN = new Date('2026-03-22T23:59:59');
 
 function verifierPostScrutin() {
   const maintenant = new Date();
   if (maintenant > DATE_SCRUTIN) {
-    // Post-scrutin : afficher l'alerte
     setTimeout(() => {
       afficherAlerteSupression();
-    }, 3500); // Après le splash
+    }, 3500);
   }
 }
 
 function afficherAlerteSupression() {
-  const modal = document.createElement('div');
-  modal.id = 'modalSuppression';
-  modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:10000;padding:20px;';
-  
-  const joursDepuis = Math.floor((new Date() - DATE_SCRUTIN) / (1000 * 60 * 60 * 24));
-  
-  modal.innerHTML = `
-    <div style="background:white;border-radius:16px;max-width:400px;width:100%;padding:30px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.3);">
-      <div style="font-size:60px;margin-bottom:16px;">⚠️</div>
-      <h2 style="color:#c0392b;font-size:20px;margin:0 0 12px 0;">SCRUTIN TERMINÉ</h2>
-      <p style="color:#666;font-size:14px;line-height:1.6;margin:0 0 20px 0;">
-        Le scrutin est terminé depuis <strong>${joursDepuis} jour(s)</strong>.<br><br>
-        <strong>Conformément au RGPD</strong>, les données doivent être supprimées.
-      </p>
-      <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:12px;margin-bottom:20px;text-align:left;font-size:12px;color:#856404;">
-        <strong>📋 Procédure :</strong><br>
-        1. Screenshot du Sheet (preuve)<br>
-        2. Google Sheet → Corbeille<br>
-        3. Drive → Vider la corbeille
-      </div>
-      <div style="display:flex;gap:10px;">
-        <button onclick="document.getElementById('modalSuppression').remove()" style="flex:1;padding:12px;background:#95a5a6;color:white;border:none;border-radius:8px;font-size:14px;cursor:pointer;">Plus tard</button>
-        <button onclick="ouvrirGuideSupression()" style="flex:1;padding:12px;background:#c0392b;color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">🗑️ Voir le guide</button>
-      </div>
-    </div>
-  `;
-  
-  document.body.appendChild(modal);
+  // Alert post-scrutin (à implémenter si nécessaire)
 }
 
-function ouvrirGuideSupression() {
-  document.getElementById('modalSuppression').remove();
-  
-  const guide = document.createElement('div');
-  guide.id = 'modalGuideSuppression';
-  guide.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:10000;padding:20px;overflow-y:auto;';
-  
-  guide.innerHTML = `
-    <div style="background:white;border-radius:16px;max-width:450px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.3);">
-      <div style="background:#c0392b;color:white;padding:20px;border-radius:16px 16px 0 0;text-align:center;">
-        <div style="font-size:40px;margin-bottom:8px;">🗑️</div>
-        <h2 style="margin:0;font-size:18px;">Guide de Suppression</h2>
-      </div>
-      <div style="padding:20px;">
-        <div style="background:#e8f4fd;border-radius:8px;padding:14px;margin-bottom:16px;">
-          <strong style="color:#1a3a6b;">📸 Étape 1 : Sauvegarde preuve</strong>
-          <p style="margin:8px 0 0 0;font-size:13px;color:#333;">
-            • Screenshot du Sheet complet<br>
-            • Nommer : "Preuve_${new Date().toLocaleDateString('fr-FR').replace(/\//g, '-')}.jpg"
-          </p>
-        </div>
-        
-        <div style="background:#fff3cd;border-radius:8px;padding:14px;margin-bottom:16px;">
-          <strong style="color:#856404;">🗂️ Étape 2 : Supprimer le contenu</strong>
-          <p style="margin:8px 0 0 0;font-size:13px;color:#333;">
-            • Ouvrir Google Sheet<br>
-            • Ctrl+A (tout sélectionner)<br>
-            • Touche SUPPR (effacer)
-          </p>
-        </div>
-        
-        <div style="background:#f8d7da;border-radius:8px;padding:14px;margin-bottom:16px;">
-          <strong style="color:#721c24;">🔥 Étape 3 : Destruction définitive</strong>
-          <p style="margin:8px 0 0 0;font-size:13px;color:#333;">
-            • Fichier → "Déplacer vers la corbeille"<br>
-            • Google Drive → Corbeille<br>
-            • "Vider la corbeille"
-          </p>
-        </div>
-        
-        <div style="background:#d4edda;border-radius:8px;padding:14px;margin-bottom:20px;">
-          <strong style="color:#155724;">✅ Vérification</strong>
-          <p style="margin:8px 0 0 0;font-size:13px;color:#333;">
-            • Drive → Recherche "campagne" → RIEN<br>
-            • Garder : Screenshot + Note date suppression
-          </p>
-        </div>
-        
-        <button onclick="document.getElementById('modalGuideSuppression').remove()" style="width:100%;padding:14px;background:#27ae60;color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;">✅ J'ai compris</button>
-      </div>
-    </div>
-  `;
-  
-  document.body.appendChild(guide);
-}
-
-// Passer le splash immédiatement
 function passerSplash() {
   const splash = document.getElementById('ecranSplash');
   if (splash && splash.style.display !== 'none') {
@@ -3492,7 +2380,6 @@ function passerSplash() {
   }
 }
 
-// Changer d'onglet dans la modal Mentions Légales
 function changerOngletLegal(onglet) {
   const tabs = ['Mentions', 'Conformite', 'Suppression'];
   const pages = ['pageMentions', 'pageConformite', 'pageSuppression'];
@@ -3516,60 +2403,28 @@ function afficherMentionsLegales() {
   ouvrirModal('modalLegal');
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  // CHARGER LES DONNÉES IMMÉDIATEMENT (pendant le splash)
-  chargerMilitants();
-  prechargerDonnees();
-  
-  // Vérifier si post-scrutin (après 
-  initRecherche();
-  fetch(SCRIPT_URL + '?action=ping').catch(() => {});
-});
-
 let tokenTeleop = null;
 let nomTeleop = null;
 
-async function verifierToken(token) {
-  try {
-    const resp = await fetch(SCRIPT_URL + '?action=verifierToken&token=' + encodeURIComponent(token));
-    const data = await resp.json();
-    
-    if (!data.ok) {
-      // Token invalide - afficher erreur
-      document.body.innerHTML = `
-        <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f8f9fa;">
-          <div style="text-align:center;padding:40px;max-width:400px;">
-            <div style="font-size:60px;margin-bottom:20px;">🚫</div>
-            <h1 style="color:#e74c3c;margin-bottom:16px;">Accès refusé</h1>
-            <p style="color:#666;margin-bottom:20px;">${data.msg || 'Ce lien n\'est plus valide ou a été désactivé.'}</p>
-            <p style="color:#888;font-size:13px;">Contactez votre responsable pour obtenir un nouveau lien d'accès.</p>
-          </div>
-        </div>
-      `;
-    } else {
-      // Token valide - personnaliser l'interface téléopérateur
-      tokenTeleop = token;
-      nomTeleop = data.nom;
-      
-      // Changer le titre et la couleur
-      $('loginLogo').textContent = '📞 Téléopérateur';
-      $('loginLogo').style.color = '#1a3a6b';
-      $('loginSub').innerHTML = 'Campagne d\'appels · <span style="opacity:.5;font-size:11px;">v126</span>';
-      $('loginSub').style.color = '#666';
-      $('ecranLogin').style.background = '#f0f2f5';
-      
-      // Pré-sélectionner le nom directement
-      setTimeout(() => {
-        const sel = $('loginNom');
-        sel.value = nomTeleop;
-        sel.disabled = true; // Désactiver car il n'y a que lui
-        sel.style.background = '#e8e8e8';
-      }, 500);
-    }
-  } catch(e) {
-    console.error('Erreur vérification token:', e);
-  }
-}
+document.addEventListener('DOMContentLoaded', () => {
+  // Charger les mentions légales IMMÉDIATEMENT (pendant le splash)
+  chargerMentionsLegales();
+  
+  // Charger les militants
+  chargerMilitants();
+  prechargerDonnees();
+  
+  // Init recherche
+  initRecherche();
+  
+  // Ping serveur
+  fetch(SCRIPT_URL + '?action=ping').catch(() => {});
+  
+  // Splash auto après 10s
+  setTimeout(() => {
+    passerSplash();
+  }, 10000);
+});
 </script>
 </body>
 </html>
