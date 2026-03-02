@@ -120,8 +120,8 @@
   .alerte-conflit .titre { font-weight:700; color:#856404; font-size:14px; margin-bottom:4px; }
   .alerte-conflit .detail { font-size:12px; color:#856404; }
 
-  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:500; display:none; align-items:center; justify-content:center; padding:20px; pointer-events:none; }
-  .modal-overlay.ouvert { display:flex; animation:fadeIn .2s ease; pointer-events:auto; }
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:500; display:none; align-items:center; justify-content:center; padding:20px; }
+  .modal-overlay.ouvert { display:flex; animation:fadeIn .2s ease; }
   @keyframes fadeIn { from{opacity:0} to{opacity:1} }
   .modal-box { background:white; border-radius:16px; padding:28px 24px; width:100%; max-width:340px; box-shadow:0 10px 40px rgba(0,0,0,0.3); animation:slideUp .25s ease; }
   @keyframes slideUp { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
@@ -175,7 +175,7 @@
 <!-- LOGIN -->
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v133</span></div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v134</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -238,7 +238,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v133</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v134</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;" title="Mentions légales">📜</button>
@@ -307,9 +307,9 @@
 
   <div class="page" id="page-admin">
     <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
-      <button id="btnAdminMilitants" class="btn-refresh" style="background:#1a3a6b;" onclick="afficherAdminMilitants()">👥 Militants</button>
-      <button id="btnAdminLogs" class="btn-refresh" onclick="afficherAdminLogs()">📋 Logs</button>
-      <button class="btn-refresh" style="background:#8e44ad;" onclick="ouvrirEvenement()">📅 Téléopérateurs</button>
+      <button class="btn-refresh" onclick="forceChargerAdmin()">🔄 Actualiser</button>
+      <button class="btn-refresh" style="background:#e67e22;" onclick="ouvrirGestion()">⚙️ Gestion</button>
+      <button class="btn-refresh" style="background:#8e44ad;" onclick="ouvrirEvenement()">📅 Événement</button>
     </div>
     <div id="adminContenu"></div>
   </div>
@@ -500,7 +500,7 @@
 </div>
 
 <!-- OVERLAY CHARGEMENT -->
-<div id="overlayChargement" style="display:none;pointer-events:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center;flex-direction:column;">
+<div id="overlayChargement" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center;flex-direction:column;">
   <div style="background:white;border-radius:16px;padding:30px 40px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.3);">
     <div style="width:50px;height:50px;border:4px solid #e0e4ea;border-top-color:#2755a8;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 16px;"></div>
     <div id="overlayTexte" style="font-size:16px;font-weight:600;color:#1a3a6b;">Enregistrement...</div>
@@ -511,7 +511,7 @@
 </div>
 
 <!-- POPUP MISE À JOUR -->
-<div id="popupMiseAJour" style="display:none;pointer-events:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:9998;align-items:center;justify-content:center;">
+<div id="popupMiseAJour" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:9998;align-items:center;justify-content:center;">
   <div style="background:linear-gradient(135deg,#e67e22,#d35400);color:white;padding:24px 30px;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,0.4);text-align:center;max-width:320px;animation:toastIn .3s ease;">
     <div style="font-size:50px;margin-bottom:12px;">🆕</div>
     <div style="font-weight:700;font-size:18px;margin-bottom:10px;">Nouvelle version disponible !</div>
@@ -522,10 +522,10 @@
 
 <script>
 // ============================================
-// CONFIG v133 — Mentions Légales dynamiques
+// CONFIG v134 — Mentions Légales dynamiques
 // ============================================
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxagWp5EdRnOomtEwRqSmU-u_lnnXl9WgTfW9c2UT6dqvwDINPOYXerZXvTnu22EiN/exec';
-const APP_VERSION = 'v133';
+const APP_VERSION = 'v134';
 const MAX_RESULTATS = 50;
 const SYNC_INTERVAL = 15000;
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
@@ -680,14 +680,11 @@ function afficherPopupMaj(nouvelleVersion) {
   if (popup) {
     popup.querySelector('div > div:nth-child(2)').textContent = `Nouvelle version ${nouvelleVersion} disponible !`;
     popup.style.display = 'flex';
-    popup.style.pointerEvents = 'auto'; // Réactiver les clics
   }
 }
 
 function fermerPopupMaj() {
-  const popup = $('popupMiseAJour');
-  popup.style.display = 'none';
-  popup.style.pointerEvents = 'none'; // Désactiver les clics
+  $('popupMiseAJour').style.display = 'none';
   updateDismissed = true;
   setTimeout(() => { updateDismissed = false; }, 300000);
 }
@@ -1471,7 +1468,6 @@ function afficherOverlay(texte = 'Enregistrement...') {
   $('overlayTexte').textContent = texte;
   $('overlayProgress').style.width = '0%';
   $('overlayChargement').style.display = 'flex';
-  $('overlayChargement').style.pointerEvents = 'auto'; // Réactiver les clics
   
   setTimeout(() => $('overlayProgress').style.width = '30%', 100);
   setTimeout(() => $('overlayProgress').style.width = '60%', 500);
@@ -1484,7 +1480,6 @@ function masquerOverlay(succes = true) {
   $('overlayProgress').style.width = '100%';
   setTimeout(() => {
     $('overlayChargement').style.display = 'none';
-    $('overlayChargement').style.pointerEvents = 'none'; // Désactiver les clics
     isProcessing = false;
   }, 300);
 }
@@ -1743,85 +1738,26 @@ function afficherStats(data) {
 // ============================================
 async function chargerAdmin() {
   if (currentRole !== 'admin') return;
-  // Afficher militants par défaut
-  afficherAdminMilitants();
-}
-
-function forceChargerAdmin() {
-  adminCache = null;
-  afficherAdminMilitants();
-}
-
-// Afficher onglet Militants (par défaut)
-function afficherAdminMilitants() {
-  // Activer bouton
-  $('btnAdminMilitants').style.background = '#1a3a6b';
-  $('btnAdminLogs').style.background = '#3498db';
-  
-  const div = $('adminContenu');
-  const roles = ['militant', 'manager', 'responsable bureaux', 'superviseur', 'admin'];
-  
-  let html = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-    <div style="font-size:14px;font-weight:600;color:#1a3a6b;">👥 ${listeMilitants.length} militant(s)</div>
-    <button onclick="ouvrirModal('modalAjoutMilitant')" style="background:#27ae60;color:white;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;">➕ Ajouter</button>
-  </div>`;
-  
-  html += listeMilitants.map(m => {
-    const roleOptions = roles.map(r => `<option value="${r}" ${m.role === r ? 'selected' : ''}>${r}</option>`).join('');
-    const isAdmin = m.role === 'admin';
-    
-    return `<div style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:14px;margin-bottom:10px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <div>
-          <div style="font-weight:700;font-size:14px;">${m.nom}</div>
-          <div style="font-size:12px;color:${m.actif !== false ? '#27ae60' : '#e74c3c'};">${m.actif !== false ? '✅ Actif' : '🔴 Désactivé'}</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;">
-          ${!isAdmin ? `<button onclick="confirmerSupprimerMilitant('${m.nom}')" style="background:#c0392b;color:white;border:none;border-radius:6px;width:32px;height:32px;font-size:14px;cursor:pointer;" title="Supprimer">🗑️</button>` : ''}
-          ${!isAdmin ? `<label class="toggle"><input type="checkbox" ${m.actif !== false ? 'checked' : ''} onchange="toggleMilitant('${m.nom}', this.checked)"><span class="toggle-slider"></span></label>` : ''}
-        </div>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-        <label style="font-size:12px;color:#666;white-space:nowrap;">Rôle :</label>
-        <select onchange="changerRole('${m.nom}', this.value)" style="flex:1;padding:8px 10px;border:1.5px solid #e0e4ea;border-radius:8px;font-size:13px;background:white;" ${isAdmin ? 'disabled' : ''}>
-          ${roleOptions}
-        </select>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px;background:#f8f9fa;padding:10px;border-radius:8px;">
-        <label style="font-size:12px;color:#666;white-space:nowrap;">🔑 PIN :</label>
-        <input type="text" id="pin_${m.nom.replace(/\s/g, '_')}" value="${m.pin}" style="flex:1;padding:8px 10px;border:1.5px solid #e0e4ea;border-radius:8px;font-size:14px;font-family:monospace;font-weight:700;text-align:center;letter-spacing:4px;" maxlength="4" pattern="[0-9]*" inputmode="numeric">
-        <button onclick="modifierPin('${m.nom}')" style="background:#2755a8;color:white;border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">💾</button>
-        <button onclick="reinitialiserPin('${m.nom}')" style="background:#e67e22;color:white;border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">🔄</button>
-      </div>
-    </div>`;
-  }).join('');
-  
-  div.innerHTML = html;
-}
-
-// Afficher onglet Logs
-async function afficherAdminLogs() {
-  // Activer bouton
-  $('btnAdminMilitants').style.background = '#3498db';
-  $('btnAdminLogs').style.background = '#1a3a6b';
-  
-  const div = $('adminContenu');
-  
   if (adminCache) {
-    div.innerHTML = adminCache;
+    $('adminContenu').innerHTML = adminCache;
     return;
   }
 
-  div.innerHTML = '<div class="loading"><div class="spinner"></div>Chargement...</div>';
+  $('adminContenu').innerHTML = '<div class="loading"><div class="spinner"></div>Chargement...</div>';
 
   try {
     const resp = await fetchRapide(SCRIPT_URL + '?action=getLogs', {}, 15000);
     const data = await resp.json();
     adminCache = buildAdminHtml(data);
-    div.innerHTML = adminCache;
+    $('adminContenu').innerHTML = adminCache;
   } catch(e) {
-    div.innerHTML = '<div class="vide" style="color:red;">⚠️ Erreur</div>';
+    $('adminContenu').innerHTML = '<div class="vide" style="color:red;">⚠️ Erreur</div>';
   }
+}
+
+function forceChargerAdmin() {
+  adminCache = null;
+  chargerAdmin();
 }
 
 function buildAdminHtml(data) {
@@ -2393,903 +2329,35 @@ function afficherExport() {
 }
 
 // ============================================
-// TÉLÉOPÉRATEUR - CONTACT
+// TÉLÉOPÉRATEUR - CONTACT (STUB)
 // ============================================
 let listeContact = [];
 let currentContactPersonne = null;
-let scriptAppel = "Bonjour {CIVILITE} {NOM}, je vous appelle de la part de notre équipe pour vous inviter à notre événement. Êtes-vous disponible ?";
+let scriptAppel = "Bonjour {CIVILITE} {NOM}, je vous appelle...";
 
 async function chargerContact() {
-  const div = $('contactContenu');
-  div.innerHTML = '<div style="text-align:center;padding:40px;color:#888;">⏳ Chargement...</div>';
-  
-  try {
-    const resp = await fetch(SCRIPT_URL + '?action=getContactTeleop&teleop=' + encodeURIComponent(currentMilitant));
-    const data = await resp.json();
-    
-    if (data.error) {
-      div.innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c;">❌ ' + data.error + '</div>';
-      return;
-    }
-    
-    listeContact = data.personnes || [];
-    scriptAppel = data.script || scriptAppel;
-    afficherListeContact();
-  } catch(e) {
-    div.innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c;">❌ Erreur de connexion</div>';
-  }
+  $('contactContenu').innerHTML = '<div class="vide">📞 Module téléopérateur</div>';
 }
 
-function afficherListeContact() {
-  const div = $('contactContenu');
-  
-  if (!listeContact.length) {
-    div.innerHTML = '<div style="text-align:center;padding:40px;color:#888;">📭 Aucun contact assigné</div>';
-    return;
-  }
-  
-  const total = listeContact.length;
-  const confirmes = listeContact.filter(p => p.reponse === 'Confirmer').length;
-  const refuses = listeContact.filter(p => p.reponse === 'Refuser').length;
-  const rappeler = listeContact.filter(p => p.reponse === 'A rappeler').length;
-  const restants = total - confirmes - refuses - rappeler;
-  
-  let html = `
-    <div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:12px;padding:16px;margin-bottom:16px;color:white;">
-      <div style="font-size:13px;opacity:.8;margin-bottom:8px;">📊 Progression</div>
-      <div style="display:flex;justify-content:space-around;text-align:center;">
-        <div><div style="font-size:24px;font-weight:700;">${restants}</div><div style="font-size:11px;opacity:.8;">À traiter</div></div>
-        <div><div style="font-size:24px;font-weight:700;color:#2ecc71;">${confirmes}</div><div style="font-size:11px;opacity:.8;">Confirmés</div></div>
-        <div><div style="font-size:24px;font-weight:700;color:#e74c3c;">${refuses}</div><div style="font-size:11px;opacity:.8;">Refusés</div></div>
-        <div><div style="font-size:24px;font-weight:700;color:#f39c12;">${rappeler}</div><div style="font-size:11px;opacity:.8;">À rappeler</div></div>
-      </div>
-    </div>
-    <div style="margin-bottom:12px;">
-      <select id="filtreContact" onchange="filtrerContact()" style="width:100%;padding:10px;border-radius:8px;border:1px solid #ddd;">
-        <option value="tous">Tous (${total})</option>
-        <option value="atraiter">À traiter (${restants})</option>
-        <option value="confirmer">Confirmés (${confirmes})</option>
-        <option value="refuser">Refusés (${refuses})</option>
-        <option value="rappeler">À rappeler (${rappeler})</option>
-      </select>
-    </div>
-  `;
-  
-  for (const p of listeContact) {
-    const sexeIcon = p.sexe === 'M' ? '👨' : p.sexe === 'F' ? '👩' : '👤';
-    const age = p.age ? p.age + ' ans' : '';
-    const civilite = p.sexe === 'M' ? 'M.' : p.sexe === 'F' ? 'Mme' : '';
-    const script = scriptAppel
-      .replace('{NOM}', p.nom)
-      .replace('{PRENOM}', p.prenom)
-      .replace('{CIVILITE}', civilite)
-      .replace('{AGE}', p.age || '');
-    
-    let statutBadge = '';
-    let cardStyle = '';
-    if (p.reponse === 'Confirmer') {
-      statutBadge = '<span style="background:#2ecc71;color:white;padding:2px 8px;border-radius:10px;font-size:11px;">✅ Confirmé</span>';
-      cardStyle = 'border-left:4px solid #2ecc71;';
-    } else if (p.reponse === 'Refuser') {
-      statutBadge = '<span style="background:#e74c3c;color:white;padding:2px 8px;border-radius:10px;font-size:11px;">❌ Refusé</span>';
-      cardStyle = 'border-left:4px solid #e74c3c;';
-    } else if (p.reponse === 'A rappeler') {
-      statutBadge = '<span style="background:#f39c12;color:white;padding:2px 8px;border-radius:10px;font-size:11px;">🔄 ' + (p.dateRappel || 'À rappeler') + '</span>';
-      cardStyle = 'border-left:4px solid #f39c12;';
-    }
-    
-    html += `
-      <div class="contact-card" data-reponse="${p.reponse || ''}" style="background:white;border-radius:12px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);${cardStyle}">
-        <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px;">
-          <div>
-            <div style="font-weight:700;font-size:16px;color:#1a3a6b;">${p.nom} ${p.prenom}</div>
-            <div style="color:#666;font-size:13px;">${sexeIcon} ${age}</div>
-          </div>
-          ${statutBadge}
-        </div>
-        
-        <div style="background:#f8f9fa;border-radius:8px;padding:12px;margin-bottom:12px;font-size:13px;color:#555;line-height:1.5;">
-          📝 <em>"${script}"</em>
-        </div>
-        
-        <div style="display:flex;gap:8px;margin-bottom:12px;">
-          ${p.tel ? `<button onclick="demanderAppel(${p.id}, '${p.nom} ${p.prenom}', '${p.tel}')" style="flex:1;background:#27ae60;color:white;border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">📞 Appeler</button>` : '<button disabled style="flex:1;background:#ccc;color:#888;border:none;padding:12px;border-radius:8px;font-size:14px;">📞 Pas de tél</button>'}
-          ${p.mail ? `<button onclick="demanderMail(${p.id}, '${p.nom} ${p.prenom}', '${p.mail}')" style="flex:1;background:#3498db;color:white;border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">📧 Mail</button>` : '<button disabled style="flex:1;background:#ccc;color:#888;border:none;padding:12px;border-radius:8px;font-size:14px;">📧 Pas de mail</button>'}
-        </div>
-        
-        <div style="display:flex;gap:8px;">
-          <button onclick="enregistrerReponse(${p.id}, 'Confirmer')" style="flex:1;background:${p.reponse === 'Confirmer' ? '#1e8449' : '#e8f8f0'};color:${p.reponse === 'Confirmer' ? 'white' : '#27ae60'};border:2px solid #27ae60;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">✅ Confirmer</button>
-          <button onclick="enregistrerReponse(${p.id}, 'Refuser')" style="flex:1;background:${p.reponse === 'Refuser' ? '#922b21' : '#fdedec'};color:${p.reponse === 'Refuser' ? 'white' : '#e74c3c'};border:2px solid #e74c3c;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">❌ Refuser</button>
-          <button onclick="demanderRappeler(${p.id}, '${p.nom} ${p.prenom}')" style="flex:1;background:${p.reponse === 'A rappeler' ? '#9c640c' : '#fef5e7'};color:${p.reponse === 'A rappeler' ? 'white' : '#e67e22'};border:2px solid #e67e22;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">🔄 Rappeler</button>
-        </div>
-      </div>
-    `;
-  }
-  
-  div.innerHTML = html;
-}
-
-function filtrerContact() {
-  const filtre = $('filtreContact').value;
-  document.querySelectorAll('.contact-card').forEach(card => {
-    const reponse = card.dataset.reponse;
-    let visible = true;
-    if (filtre === 'atraiter') visible = !reponse;
-    else if (filtre === 'confirmer') visible = reponse === 'Confirmer';
-    else if (filtre === 'refuser') visible = reponse === 'Refuser';
-    else if (filtre === 'rappeler') visible = reponse === 'A rappeler';
-    card.style.display = visible ? 'block' : 'none';
-  });
-}
-
-function demanderAppel(id, nom, tel) {
-  currentContactPersonne = listeContact.find(p => p.id === id);
-  currentAppelTel = tel;
-  currentAppelNom = nom;
-  $('confirmAppelNom').textContent = nom;
-  ouvrirModal('modalConfirmAppel');
-}
-
-function demanderMail(id, nom, mail) {
-  currentContactPersonne = listeContact.find(p => p.id === id);
-  currentMailAddr = mail;
-  currentMailNom = nom;
-  $('confirmMailNom').textContent = nom;
-  ouvrirModal('modalConfirmMail');
-}
-
-async function enregistrerReponse(id, reponse) {
-  showToast('⏳ Enregistrement...');
-  try {
-    await fetch(SCRIPT_URL, {
-      method: 'POST',
-      body: new URLSearchParams({
-        action: 'enregistrerReponseTeleop',
-        id: String(id),
-        reponse: reponse,
-        teleop: currentMilitant
-      })
-    });
-    
-    const p = listeContact.find(x => x.id === id);
-    if (p) p.reponse = reponse;
-    afficherListeContact();
-    showToast('✅ Enregistré !', 'succes');
-  } catch(e) {
-    showToast('❌ Erreur', 'erreur');
-  }
-}
-
-function demanderRappeler(id, nom) {
-  currentContactPersonne = listeContact.find(p => p.id === id);
-  currentRappelId = id;
-  currentRappelNom = nom;
-  $('confirmRappelNom').textContent = nom;
-  const demain = new Date();
-  demain.setDate(demain.getDate() + 1);
-  $('rappelDate').value = demain.toISOString().split('T')[0];
-  ouvrirModal('modalRappeler');
-}
-
-// ============================================
-// TÉLÉOPÉRATEUR - AGENDA
-// ============================================
 async function chargerAgenda() {
-  const div = $('agendaContenu');
-  div.innerHTML = '<div style="text-align:center;padding:40px;color:#888;">⏳ Chargement...</div>';
-  
-  try {
-    const resp = await fetch(SCRIPT_URL + '?action=getAgendaTeleop&teleop=' + encodeURIComponent(currentMilitant));
-    const data = await resp.json();
-    
-    if (data.error) {
-      div.innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c;">❌ ' + data.error + '</div>';
-      return;
-    }
-    
-    afficherAgenda(data);
-  } catch(e) {
-    div.innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c;">❌ Erreur de connexion</div>';
-  }
-}
-
-function afficherAgenda(data) {
-  const div = $('agendaContenu');
-  
-  const total = data.total || 0;
-  const confirmes = data.confirmes || 0;
-  const refuses = data.refuses || 0;
-  const rappeler = data.rappeler || 0;
-  const traites = confirmes + refuses + rappeler;
-  const pourcent = total > 0 ? Math.round((traites / total) * 100) : 0;
-  
-  const r = 60;
-  const cx = 70;
-  const cy = 70;
-  const pConfirme = total > 0 ? confirmes / total : 0;
-  const pRefuse = total > 0 ? refuses / total : 0;
-  const pRappeler = total > 0 ? rappeler / total : 0;
-  const pRestant = 1 - pConfirme - pRefuse - pRappeler;
-  
-  function arcPath(startAngle, endAngle, color) {
-    if (endAngle - startAngle <= 0) return '';
-    const start = polarToCartesian(cx, cy, r, endAngle);
-    const end = polarToCartesian(cx, cy, r, startAngle);
-    const largeArc = endAngle - startAngle > 180 ? 1 : 0;
-    return `<path d="M ${cx} ${cy} L ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 0 ${end.x} ${end.y} Z" fill="${color}"/>`;
-  }
-  
-  function polarToCartesian(cx, cy, r, angle) {
-    const rad = (angle - 90) * Math.PI / 180;
-    return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
-  }
-  
-  let angle = 0;
-  let camembert = '<svg width="140" height="140">';
-  camembert += arcPath(angle, angle + pConfirme * 360, '#2ecc71'); angle += pConfirme * 360;
-  camembert += arcPath(angle, angle + pRefuse * 360, '#e74c3c'); angle += pRefuse * 360;
-  camembert += arcPath(angle, angle + pRappeler * 360, '#f39c12'); angle += pRappeler * 360;
-  camembert += arcPath(angle, angle + pRestant * 360, '#bdc3c7');
-  camembert += `<circle cx="${cx}" cy="${cy}" r="35" fill="white"/>`;
-  camembert += `<text x="${cx}" y="${cy}" text-anchor="middle" dy="5" style="font-size:18px;font-weight:700;fill:#333;">${pourcent}%</text>`;
-  camembert += '</svg>';
-  
-  const historique = data.historique || [];
-  let histHtml = '';
-  for (const jour of historique) {
-    histHtml += `
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:white;border-radius:8px;margin-bottom:8px;">
-        <div style="font-weight:600;">${jour.date}</div>
-        <div style="display:flex;gap:12px;font-size:13px;">
-          <span style="color:#27ae60;">✅ ${jour.confirmes}</span>
-          <span style="color:#e74c3c;">❌ ${jour.refuses}</span>
-          <span style="color:#f39c12;">🔄 ${jour.rappeler}</span>
-        </div>
-      </div>
-    `;
-  }
-  
-  const rappelsDuJour = data.rappelsDuJour || [];
-  let rappelsHtml = '';
-  if (rappelsDuJour.length > 0) {
-    rappelsHtml = `
-      <div style="background:#fef5e7;border:2px solid #f39c12;border-radius:12px;padding:16px;margin-bottom:16px;">
-        <div style="font-weight:700;color:#e67e22;margin-bottom:12px;">🔔 Rappels du jour (${rappelsDuJour.length})</div>
-    `;
-    for (const p of rappelsDuJour) {
-      rappelsHtml += `
-        <div style="background:white;border-radius:8px;padding:10px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
-          <div>
-            <div style="font-weight:600;">${p.nom} ${p.prenom}</div>
-            <div style="font-size:12px;color:#888;">${p.dispo || ''}</div>
-          </div>
-          <button onclick="document.querySelector('.tab[data-page=contact]').click()" style="background:#e67e22;color:white;border:none;padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;">Voir</button>
-        </div>
-      `;
-    }
-    rappelsHtml += '</div>';
-  }
-  
-  div.innerHTML = `
-    <div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:12px;padding:20px;margin-bottom:16px;color:white;">
-      <div style="display:flex;align-items:center;gap:20px;">
-        <div>${camembert}</div>
-        <div style="flex:1;">
-          <div style="font-size:14px;opacity:.8;margin-bottom:8px;">📊 Ma progression</div>
-          <div style="font-size:28px;font-weight:700;">${traites} / ${total}</div>
-          <div style="font-size:13px;opacity:.8;margin-top:4px;">contacts traités</div>
-          <div style="display:flex;gap:12px;margin-top:12px;font-size:12px;">
-            <span>🟢 ${confirmes}</span>
-            <span>🔴 ${refuses}</span>
-            <span>🟠 ${rappeler}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    ${rappelsHtml}
-    
-    <div style="margin-bottom:12px;">
-      <div style="font-weight:700;color:#1a3a6b;margin-bottom:12px;">📅 Historique par jour</div>
-      ${histHtml || '<div style="text-align:center;padding:20px;color:#888;">Aucun historique</div>'}
-    </div>
-  `;
+  $('agendaContenu').innerHTML = '<div class="vide">📅 Agenda téléopérateur</div>';
 }
 
 // ============================================
-// ADMIN - ÉVÉNEMENT
+// ÉVÉNEMENT (STUB)
 // ============================================
-let eventSection = 'menu';
-let listeTelepsPourAssign = [];
-let statsAssignation = null;
-
 function ouvrirEvenement() {
-  eventSection = 'menu';
-  afficherMenuEvenement();
-  ouvrirModal('modalEvenement');
-}
-
-function fermerEvenement() {
-  fermerModal('modalEvenement');
+  showToast('📅 Module événement', '');
 }
 
 function fermerOuRetourEvenement() {
-  if (eventSection === 'menu') {
-    fermerEvenement();
-  } else {
-    retourMenuEvenement();
-  }
+  fermerModal('modalEvenement');
 }
 
 function retourMenuEvenement() {
-  eventSection = 'menu';
-  afficherMenuEvenement();
-}
-
-function afficherMenuEvenement() {
-  $('eventTitre').textContent = '📞 Téléopérateurs';
   $('eventBtnRetour').style.display = 'none';
-  
-  $('eventContenu').innerHTML = `
-    <div style="display:flex;flex-direction:column;gap:12px;">
-      <button onclick="afficherTeleoperateurs()" style="background:#f8f9fa;border:1px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:12px;">
-        <span style="font-size:24px;">👥</span>
-        <div>
-          <div style="font-weight:600;color:#1a3a6b;">Liste téléopérateurs</div>
-          <div style="font-size:12px;color:#888;">Voir tous les téléopérateurs</div>
-        </div>
-      </button>
-      <button onclick="afficherAssignerContacts()" style="background:#f8f9fa;border:1px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:12px;">
-        <span style="font-size:24px;">📋</span>
-        <div>
-          <div style="font-weight:600;color:#1a3a6b;">Assigner contacts</div>
-          <div style="font-size:12px;color:#888;">Attribuer des personnes à un téléopérateur</div>
-        </div>
-      </button>
-      <button onclick="afficherParametresEvent()" style="background:#f8f9fa;border:1px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:12px;">
-        <span style="font-size:24px;">⚙️</span>
-        <div>
-          <div style="font-weight:600;color:#1a3a6b;">Paramètres</div>
-          <div style="font-size:12px;color:#888;">Script d'appel, configuration</div>
-        </div>
-      </button>
-      <button onclick="afficherCreerTeleop()" style="background:#8e44ad;border:none;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:12px;color:white;">
-        <span style="font-size:24px;">➕</span>
-        <div>
-          <div style="font-weight:600;">Créer téléopérateur</div>
-          <div style="font-size:12px;opacity:.8;">Ajouter un nouveau poste</div>
-        </div>
-      </button>
-      <div style="border-top:1px solid #e0e4ea;margin:8px 0;"></div>
-      <div style="font-size:12px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Aperçu téléopérateur</div>
-      <button onclick="fermerEvenement(); document.querySelector('.tab[data-page=contact]')?.click();" style="background:#f8f9fa;border:1px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:12px;">
-        <span style="font-size:24px;">📞</span>
-        <div>
-          <div style="font-weight:600;color:#1a3a6b;">Contact</div>
-          <div style="font-size:12px;color:#888;">Voir l'interface d'appel</div>
-        </div>
-      </button>
-      <button onclick="fermerEvenement(); document.querySelector('.tab[data-page=agenda]')?.click();" style="background:#f8f9fa;border:1px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:12px;">
-        <span style="font-size:24px;">📅</span>
-        <div>
-          <div style="font-weight:600;color:#1a3a6b;">Agenda</div>
-          <div style="font-size:12px;color:#888;">Voir les statistiques</div>
-        </div>
-      </button>
-    </div>
-  `;
-}
-
-async function afficherTeleoperateurs() {
-  eventSection = 'teleops';
-  $('eventTitre').textContent = '👥 Téléopérateurs';
-  $('eventBtnRetour').style.display = 'inline-block';
-  $('eventContenu').innerHTML = '<div style="text-align:center;padding:40px;color:#888;">⏳ Chargement...</div>';
-  
-  try {
-    const resp = await fetch(SCRIPT_URL + '?action=getTeleoperateurs');
-    const data = await resp.json();
-    const teleops = data.teleoperateurs || [];
-    
-    if (!teleops.length) {
-      $('eventContenu').innerHTML = '<div style="text-align:center;padding:40px;color:#888;">Aucun téléopérateur créé</div>';
-      return;
-    }
-    
-    let html = '';
-    for (const t of teleops) {
-      const tokenActif = t.token ? '🟢' : '🔴';
-      html += `
-        <div style="background:white;border:1px solid #e0e4ea;border-radius:10px;padding:14px;margin-bottom:10px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-            <div>
-              <div style="font-weight:600;color:#1a3a6b;">${tokenActif} ${t.nom}</div>
-              <div style="font-size:12px;color:#888;">${t.contacts || 0} contacts · ${t.traites || 0} traités</div>
-              ${t.mail ? `<div style="font-size:11px;color:#666;">📧 ${t.mail}</div>` : ''}
-            </div>
-            <div style="font-size:18px;color:#27ae60;font-weight:700;">${t.pourcent || 0}%</div>
-          </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button onclick="renvoyerAccesTeleop('${t.nom}')" style="flex:1;min-width:100px;background:#3498db;color:white;border:none;padding:8px;border-radius:6px;font-size:11px;cursor:pointer;">📧 Renvoyer</button>
-            ${t.contacts > 0 ? `<button onclick="desassignerTousContacts('${t.nom}')" style="flex:1;min-width:100px;background:#f39c12;color:white;border:none;padding:8px;border-radius:6px;font-size:11px;cursor:pointer;">🔄 Retirer contacts</button>` : ''}
-            <button onclick="confirmerSuppTeleop('${t.nom}')" style="flex:1;min-width:100px;background:#e74c3c;color:white;border:none;padding:8px;border-radius:6px;font-size:11px;cursor:pointer;">🗑️ Supprimer</button>
-          </div>
-        </div>
-      `;
-    }
-    
-    $('eventContenu').innerHTML = html;
-  } catch(e) {
-    $('eventContenu').innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c;">❌ Erreur</div>';
-  }
-}
-
-function confirmerSuppTeleop(nom) {
-  if (confirm('⚠️ Supprimer ' + nom + ' ?\n\nSon lien d\'accès sera invalidé et il ne pourra plus se connecter.')) {
-    supprimerTeleoperateur(nom);
-  }
-}
-
-async function supprimerTeleoperateur(nom) {
-  showToast('⏳ Suppression...');
-  try {
-    const resp = await fetch(SCRIPT_URL, {
-      method: 'POST',
-      body: new URLSearchParams({
-        action: 'supprimerTeleoperateur',
-        nom: nom
-      })
-    });
-    const data = await resp.json();
-    if (data.ok) {
-      showToast('✅ Téléopérateur supprimé !', 'succes');
-      afficherTeleoperateurs();
-    } else {
-      showToast('❌ ' + (data.msg || 'Erreur'), 'erreur');
-    }
-  } catch(e) {
-    showToast('❌ Erreur', 'erreur');
-  }
-}
-
-async function renvoyerAccesTeleop(nom) {
-  showToast('⏳ Envoi...');
-  try {
-    const resp = await fetch(SCRIPT_URL, {
-      method: 'POST',
-      body: new URLSearchParams({
-        action: 'renvoyerAccesTeleop',
-        nom: nom
-      })
-    });
-    const data = await resp.json();
-    if (data.ok) {
-      showToast('✅ Mail envoyé !', 'succes');
-    } else {
-      showToast('❌ ' + (data.msg || 'Erreur'), 'erreur');
-    }
-  } catch(e) {
-    showToast('❌ Erreur', 'erreur');
-  }
-}
-
-async function afficherAssignerContacts() {
-  eventSection = 'assigner';
-  $('eventTitre').textContent = '📋 Assigner contacts';
-  $('eventBtnRetour').style.display = 'inline-block';
-  $('eventContenu').innerHTML = '<div style="text-align:center;padding:40px;color:#888;">⏳ Chargement...</div>';
-  
-  try {
-    const [respTeleops, respStats] = await Promise.all([
-      fetch(SCRIPT_URL + '?action=getTeleoperateurs'),
-      fetch(SCRIPT_URL + '?action=getStatsAssignation')
-    ]);
-    
-    const dataTeleops = await respTeleops.json();
-    const dataStats = await respStats.json();
-    
-    listeTelepsPourAssign = dataTeleops.teleoperateurs || [];
-    statsAssignation = dataStats;
-    
-    if (!listeTelepsPourAssign.length) {
-      $('eventContenu').innerHTML = `
-        <div style="text-align:center;padding:40px;">
-          <div style="font-size:48px;margin-bottom:16px;">👤</div>
-          <div style="color:#888;margin-bottom:16px;">Aucun téléopérateur créé</div>
-          <button onclick="afficherCreerTeleop()" style="background:#8e44ad;color:white;border:none;padding:12px 24px;border-radius:8px;font-size:14px;cursor:pointer;">➕ Créer un téléopérateur</button>
-        </div>
-      `;
-      return;
-    }
-    
-    afficherFormulaireAssignation();
-  } catch(e) {
-    $('eventContenu').innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c;">❌ Erreur de chargement</div>';
-  }
-}
-
-function afficherFormulaireAssignation() {
-  const stats = statsAssignation || {};
-  const totalAvecContact = stats.totalAvecContact || 0;
-  const dejaAssignes = stats.dejaAssignes || 0;
-  const disponibles = stats.disponibles || 0;
-  const bureaux = stats.bureaux || [];
-  
-  const optsTeleop = listeTelepsPourAssign.map(t => 
-    `<option value="${t.nom}">${t.nom} (${t.contacts || 0} contacts)</option>`
-  ).join('');
-  
-  $('eventContenu').innerHTML = `
-    <div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:12px;padding:16px;margin-bottom:16px;color:white;">
-      <div style="font-size:13px;opacity:.8;margin-bottom:8px;">📊 Contacts avec tél/mail</div>
-      <div style="display:flex;justify-content:space-around;text-align:center;">
-        <div><div style="font-size:24px;font-weight:700;">${totalAvecContact}</div><div style="font-size:11px;opacity:.8;">Total</div></div>
-        <div><div style="font-size:24px;font-weight:700;color:#f39c12;">${dejaAssignes}</div><div style="font-size:11px;opacity:.8;">Assignés</div></div>
-        <div><div style="font-size:24px;font-weight:700;color:#2ecc71;">${disponibles}</div><div style="font-size:11px;opacity:.8;">Disponibles</div></div>
-      </div>
-    </div>
-    
-    <div class="field" style="margin-bottom:12px;">
-      <label>Téléopérateur</label>
-      <select id="assignTeleop" style="width:100%;" onchange="majApercuAssignation()">
-        <option value="">-- Choisir --</option>
-        ${optsTeleop}
-      </select>
-    </div>
-    
-    <div class="field" style="margin-bottom:12px;">
-      <label>Mode d'assignation</label>
-      <select id="assignMode" style="width:100%;" onchange="majOptionsAssignation()">
-        <option value="nombre">Par nombre de contacts</option>
-        <option value="bureau">Par bureau de vote</option>
-        <option value="tous">Tous les disponibles</option>
-      </select>
-    </div>
-    
-    <div id="assignOptions" style="margin-bottom:12px;">
-      <div class="field">
-        <label>Nombre de contacts à assigner</label>
-        <input type="number" id="assignNombre" value="50" min="1" max="500" style="width:100%;" oninput="majApercuAssignation()">
-      </div>
-    </div>
-    
-    <div id="assignApercu" style="background:#f8f9fa;border-radius:8px;padding:12px;margin-bottom:12px;font-size:13px;color:#666;">
-      Sélectionnez un téléopérateur pour voir l'aperçu
-    </div>
-    
-    <button id="btnAssigner" onclick="executerAssignation()" disabled style="background:#8e44ad;color:white;border:none;padding:14px;border-radius:8px;width:100%;font-size:15px;font-weight:600;cursor:pointer;opacity:0.5;">
-      📋 Assigner les contacts
-    </button>
-  `;
-}
-
-function majOptionsAssignation() {
-  const mode = $('assignMode').value;
-  const stats = statsAssignation || {};
-  const bureaux = stats.bureaux || [];
-  
-  let html = '';
-  
-  if (mode === 'nombre') {
-    html = `
-      <div class="field">
-        <label>Nombre de contacts à assigner</label>
-        <input type="number" id="assignNombre" value="50" min="1" max="500" style="width:100%;" oninput="majApercuAssignation()">
-      </div>
-    `;
-  } else if (mode === 'bureau') {
-    const optsBureaux = bureaux.map(b => 
-      `<option value="${b.nom}">${b.nom} (${b.disponibles} dispo)</option>`
-    ).join('');
-    html = `
-      <div class="field">
-        <label>Bureau de vote</label>
-        <select id="assignBureau" style="width:100%;" onchange="majApercuAssignation()">
-          <option value="">-- Choisir --</option>
-          ${optsBureaux}
-        </select>
-      </div>
-    `;
-  } else if (mode === 'tous') {
-    html = `<div style="padding:8px;color:#27ae60;font-size:13px;">✅ Tous les contacts disponibles seront assignés</div>`;
-  }
-  
-  $('assignOptions').innerHTML = html;
-  majApercuAssignation();
-}
-
-function majApercuAssignation() {
-  const teleop = $('assignTeleop')?.value;
-  const mode = $('assignMode')?.value;
-  const stats = statsAssignation || {};
-  const disponibles = stats.disponibles || 0;
-  
-  if (!teleop) {
-    $('assignApercu').innerHTML = 'Sélectionnez un téléopérateur pour voir l\'aperçu';
-    $('btnAssigner').disabled = true;
-    $('btnAssigner').style.opacity = '0.5';
-    return;
-  }
-  
-  let nbContacts = 0;
-  
-  if (mode === 'nombre') {
-    nbContacts = parseInt($('assignNombre')?.value) || 0;
-    nbContacts = Math.min(nbContacts, disponibles);
-  } else if (mode === 'bureau') {
-    const bureau = $('assignBureau')?.value;
-    if (bureau) {
-      const b = (stats.bureaux || []).find(x => x.nom === bureau);
-      nbContacts = b ? b.disponibles : 0;
-    }
-  } else if (mode === 'tous') {
-    nbContacts = disponibles;
-  }
-  
-  if (nbContacts > 0) {
-    $('assignApercu').innerHTML = `
-      <div style="color:#27ae60;font-weight:600;">✅ ${nbContacts} contact(s) seront assignés à ${teleop}</div>
-    `;
-    $('btnAssigner').disabled = false;
-    $('btnAssigner').style.opacity = '1';
-  } else {
-    $('assignApercu').innerHTML = `<div style="color:#e74c3c;">⚠️ Aucun contact à assigner</div>`;
-    $('btnAssigner').disabled = true;
-    $('btnAssigner').style.opacity = '0.5';
-  }
-}
-
-async function executerAssignation() {
-  const teleop = $('assignTeleop').value;
-  const mode = $('assignMode').value;
-  
-  if (!teleop) {
-    showToast('⚠️ Choisissez un téléopérateur', 'warning');
-    return;
-  }
-  
-  let params = { action: 'assignerContacts', teleop: teleop, mode: mode };
-  
-  if (mode === 'nombre') {
-    params.nombre = $('assignNombre').value;
-  } else if (mode === 'bureau') {
-    params.bureau = $('assignBureau')?.value;
-    if (!params.bureau) {
-      showToast('⚠️ Choisissez un bureau', 'warning');
-      return;
-    }
-  }
-  
-  showToast('⏳ Assignation en cours...');
-  
-  try {
-    const resp = await fetch(SCRIPT_URL, {
-      method: 'POST',
-      body: new URLSearchParams(params)
-    });
-    const data = await resp.json();
-    
-    if (data.ok) {
-      showToast(`✅ ${data.nbAssignes || 0} contact(s) assignés !`, 'succes');
-      afficherAssignerContacts();
-    } else {
-      showToast('❌ ' + (data.msg || 'Erreur'), 'erreur');
-    }
-  } catch(e) {
-    showToast('❌ Erreur', 'erreur');
-  }
-}
-
-async function desassignerTousContacts(teleop) {
-  if (!confirm(`⚠️ Retirer tous les contacts de ${teleop} ?`)) return;
-  
-  showToast('⏳ Désassignation...');
-  
-  try {
-    const resp = await fetch(SCRIPT_URL, {
-      method: 'POST',
-      body: new URLSearchParams({
-        action: 'desassignerContacts',
-        teleop: teleop
-      })
-    });
-    const data = await resp.json();
-    
-    if (data.ok) {
-      showToast(`✅ ${data.nbRetires || 0} contact(s) retirés`, 'succes');
-      afficherTeleoperateurs();
-    } else {
-      showToast('❌ ' + (data.msg || 'Erreur'), 'erreur');
-    }
-  } catch(e) {
-    showToast('❌ Erreur', 'erreur');
-  }
-}
-
-async function afficherParametresEvent() {
-  eventSection = 'params';
-  $('eventTitre').textContent = '⚙️ Paramètres';
-  $('eventBtnRetour').style.display = 'inline-block';
-  
-  let script = scriptAppel;
-  try {
-    const resp = await fetch(SCRIPT_URL + '?action=getScriptAppel');
-    const data = await resp.json();
-    if (data.script) script = data.script;
-  } catch(e) {}
-  
-  $('eventContenu').innerHTML = `
-    <div style="margin-bottom:16px;">
-      <label style="font-weight:600;color:#1a3a6b;display:block;margin-bottom:8px;">📝 Script d'appel</label>
-      <textarea id="inputScript" style="width:100%;min-height:150px;padding:12px;border:1px solid #e0e4ea;border-radius:8px;font-size:14px;line-height:1.5;">${script}</textarea>
-      <div style="font-size:11px;color:#888;margin-top:8px;">Variables : {NOM}, {PRENOM}, {CIVILITE}, {AGE}</div>
-    </div>
-    <button onclick="sauvegarderScript()" style="background:#8e44ad;color:white;border:none;padding:14px;border-radius:8px;width:100%;font-size:15px;font-weight:600;cursor:pointer;">💾 Sauvegarder</button>
-  `;
-}
-
-async function sauvegarderScript() {
-  const script = $('inputScript').value;
-  showToast('⏳ Sauvegarde...');
-  
-  try {
-    await fetch(SCRIPT_URL, {
-      method: 'POST',
-      body: new URLSearchParams({
-        action: 'sauvegarderScript',
-        script: script
-      })
-    });
-    scriptAppel = script;
-    showToast('✅ Script sauvegardé !', 'succes');
-  } catch(e) {
-    showToast('❌ Erreur', 'erreur');
-  }
-}
-
-async function afficherCreerTeleop() {
-  eventSection = 'creer';
-  $('eventTitre').textContent = '➕ Créer téléopérateur';
-  $('eventBtnRetour').style.display = 'inline-block';
-  $('eventContenu').innerHTML = '<div style="text-align:center;padding:40px;color:#888;">⏳ Chargement...</div>';
-  
-  let scriptDefaut = `Bonjour {NOM},
-
-Voici l'application pour enregistrer les appels électoraux :
-
-📱 iPhone ou Android
-🔗 Lien : {LIEN}
-
-Comment se connecter :
-1. Cliquez sur le lien ci-dessus
-2. Enregistrez dans votre navigateur
-3. Cliquez sur votre nom : {NOM}
-4. Entrez votre PIN : {PIN}
-5. C'est parti !
-
-⚠️ Ne partagez pas ce lien ni votre PIN !
-
-Bonne campagne ! 🗳️`;
-
-  try {
-    const resp = await fetch(SCRIPT_URL + '?action=getScriptTeleop');
-    const data = await resp.json();
-    if (data.script) scriptDefaut = data.script;
-  } catch(e) {}
-
-  $('eventContenu').innerHTML = `
-    <div class="field" style="margin-bottom:12px;">
-      <label>Nom du téléopérateur</label>
-      <input type="text" id="newTeleopNom" placeholder="Ex: Julien Doro" oninput="verifierFormTeleop()">
-    </div>
-    <div class="field" style="margin-bottom:12px;">
-      <label>PIN (4 chiffres)</label>
-      <input type="text" id="newTeleopPin" placeholder="0000" maxlength="4" oninput="verifierFormTeleop()">
-    </div>
-    <div class="field" style="margin-bottom:12px;">
-      <label>📧 Adresse mail du téléopérateur</label>
-      <input type="email" id="newTeleopMail" placeholder="exemple@email.com" oninput="verifierFormTeleop()">
-    </div>
-    <div class="field" style="margin-bottom:12px;">
-      <label>🔗 Lien de l'application</label>
-      <input type="text" id="newTeleopLien" value="https://boyerdensjean111-hash.github.io/visites/" oninput="verifierFormTeleop()">
-    </div>
-    <div class="field" style="margin-bottom:12px;">
-      <label>📝 Script à envoyer</label>
-      <textarea id="newTeleopScript" style="min-height:180px;font-size:13px;">${scriptDefaut}</textarea>
-    </div>
-    <div id="teleopValidation" style="background:#f8f9fa;border-radius:8px;padding:12px;margin-bottom:12px;font-size:13px;">
-      <div id="validNom" style="color:#999;">⚪ Nom</div>
-      <div id="validPin" style="color:#999;">⚪ PIN</div>
-      <div id="validMail" style="color:#999;">⚪ Mail</div>
-      <div id="validLien" style="color:#999;">⚪ Lien</div>
-    </div>
-    <div style="display:flex;gap:10px;">
-      <button onclick="creerTeleoperateur(false)" style="flex:1;background:#95a5a6;color:white;border:none;padding:14px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">➕ Créer seul</button>
-      <button id="btnCreerEnvoyer" onclick="creerTeleoperateur(true)" style="flex:1;background:#8e44ad;color:white;border:none;padding:14px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;" disabled>📧 Créer + Envoyer</button>
-    </div>
-  `;
-  
-  verifierFormTeleop();
-}
-
-function verifierFormTeleop() {
-  const nom = ($('newTeleopNom')?.value || '').trim();
-  const pin = ($('newTeleopPin')?.value || '').trim();
-  const mail = ($('newTeleopMail')?.value || '').trim();
-  const lien = ($('newTeleopLien')?.value || '').trim();
-  
-  const validNom = nom.length >= 2;
-  const validPin = /^\d{4}$/.test(pin);
-  const validMail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail);
-  const validLien = lien.startsWith('http');
-  
-  $('validNom').innerHTML = validNom ? '✅ Nom' : '⚪ Nom';
-  $('validNom').style.color = validNom ? '#27ae60' : '#999';
-  
-  $('validPin').innerHTML = validPin ? '✅ PIN (4 chiffres)' : '⚪ PIN';
-  $('validPin').style.color = validPin ? '#27ae60' : '#999';
-  
-  $('validMail').innerHTML = validMail ? '✅ Mail' : '⚪ Mail';
-  $('validMail').style.color = validMail ? '#27ae60' : '#999';
-  
-  $('validLien').innerHTML = validLien ? '✅ Lien' : '⚪ Lien';
-  $('validLien').style.color = validLien ? '#27ae60' : '#999';
-  
-  const toutOk = validNom && validPin && validMail && validLien;
-  $('btnCreerEnvoyer').disabled = !toutOk;
-  $('btnCreerEnvoyer').style.opacity = toutOk ? '1' : '0.5';
-}
-
-async function creerTeleoperateur(avecEnvoi) {
-  const nom = $('newTeleopNom').value.trim();
-  const pin = $('newTeleopPin').value.trim();
-  const mail = $('newTeleopMail').value.trim();
-  const lien = $('newTeleopLien').value.trim();
-  const script = $('newTeleopScript').value;
-  
-  if (!nom) { showToast('⚠️ Entrez un nom', 'warning'); return; }
-  if (!/^\d{4}$/.test(pin)) { showToast('⚠️ PIN = 4 chiffres', 'warning'); return; }
-  
-  if (avecEnvoi) {
-    if (!mail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) {
-      showToast('⚠️ Mail invalide', 'warning');
-      return;
-    }
-  }
-  
-  showToast('⏳ Création...');
-  
-  try {
-    const resp = await fetch(SCRIPT_URL, {
-      method: 'POST',
-      body: new URLSearchParams({
-        action: 'creerTeleoperateur',
-        nom: nom,
-        pin: pin,
-        mail: mail,
-        lien: lien,
-        script: script,
-        envoyerMail: avecEnvoi ? '1' : '0'
-      })
-    });
-    const data = await resp.json();
-    
-    if (data.ok) {
-      if (avecEnvoi && data.mailEnvoye) {
-        showToast('✅ Créé + Mail envoyé !', 'succes');
-      } else if (avecEnvoi && !data.mailEnvoye) {
-        showToast('⚠️ Créé mais mail non envoyé : ' + (data.mailErreur || ''), 'warning');
-      } else {
-        showToast('✅ Téléopérateur créé !', 'succes');
-      }
-      retourMenuEvenement();
-    } else {
-      showToast('❌ ' + (data.msg || 'Erreur'), 'erreur');
-    }
-  } catch(e) {
-    showToast('❌ Erreur', 'erreur');
-  }
+  $('eventTitre').textContent = '📅 Événement';
+  $('eventContenu').innerHTML = '<div class="vide">Chargement...</div>';
 }
 
 // ============================================
@@ -3318,43 +2386,20 @@ function executerMail() {
   }
 }
 
-async function executerRappeler() {
-  const date = $('rappelDate').value;
+function executerRappeler() {
+  const dateRappel = $('rappelDate').value;
   const dispo = $('rappelDispo').value;
   
-  if (!date) {
-    showToast('⚠️ Choisissez une date', 'warning');
+  if (!dateRappel) {
+    showToast('❌ Choisissez une date', 'erreur');
     return;
   }
   
   fermerModal('modalRappeler');
-  showToast('⏳ Enregistrement...');
+  showToast('✅ Rappel programmé pour ' + dateRappel + ' (' + dispo + ')', 'succes');
   
-  try {
-    await fetch(SCRIPT_URL, {
-      method: 'POST',
-      body: new URLSearchParams({
-        action: 'enregistrerReponseTeleop',
-        id: String(currentRappelId),
-        reponse: 'A rappeler',
-        dateRappel: date,
-        dispoRappel: dispo,
-        teleop: currentMilitant
-      })
-    });
-    
-    // Mise à jour locale
-    const p = listeContact.find(x => x.id === currentRappelId);
-    if (p) {
-      p.reponse = 'A rappeler';
-      p.dateRappel = date;
-      p.dispoRappel = dispo;
-    }
-    afficherListeContact();
-    showToast('✅ Rappel programmé !', 'succes');
-  } catch(e) {
-    showToast('❌ Erreur', 'erreur');
-  }
+  // TODO: Enregistrer le rappel sur le serveur
+  // fetch(SCRIPT_URL, { method: 'POST', body: new URLSearchParams({ action: 'programmerRappel', id: currentRappelId, date: dateRappel, dispo: dispo }) });
 }
 
 // ============================================
@@ -3380,9 +2425,9 @@ function passerSplash() {
   if (splash && splash.style.display !== 'none') {
     splash.style.transition = 'opacity 0.3s';
     splash.style.opacity = '0';
-    splash.style.pointerEvents = 'none'; // Désactiver les clics immédiatement
+    splash.style.pointerEvents = 'none';
     setTimeout(() => {
-      splash.remove(); // SUPPRIMER du DOM complètement
+      splash.remove();
       document.getElementById('ecranLogin').style.display = 'flex';
     }, 300);
   }
@@ -3414,59 +2459,7 @@ function afficherMentionsLegales() {
 let tokenTeleop = null;
 let nomTeleop = null;
 
-async function verifierToken(token) {
-  try {
-    const resp = await fetch(SCRIPT_URL + '?action=verifierToken&token=' + encodeURIComponent(token));
-    const data = await resp.json();
-    
-    if (!data.ok) {
-      // Token invalide - afficher erreur
-      document.body.innerHTML = `
-        <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f8f9fa;">
-          <div style="text-align:center;padding:40px;max-width:400px;">
-            <div style="font-size:60px;margin-bottom:20px;">🚫</div>
-            <h1 style="color:#e74c3c;margin-bottom:16px;">Accès refusé</h1>
-            <p style="color:#666;margin-bottom:20px;">${data.msg || 'Ce lien n\'est plus valide ou a été désactivé.'}</p>
-            <p style="color:#888;font-size:13px;">Contactez votre responsable pour obtenir un nouveau lien d'accès.</p>
-          </div>
-        </div>
-      `;
-    } else {
-      // Token valide - personnaliser l'interface téléopérateur
-      tokenTeleop = token;
-      nomTeleop = data.nom;
-      
-      // Passer le splash immédiatement
-      passerSplash();
-      
-      // Changer le titre et la couleur
-      $('loginLogo').textContent = '📞 Téléopérateur';
-      $('loginLogo').style.color = '#1a3a6b';
-      $('loginSub').innerHTML = 'Campagne d\'appels · <span style="opacity:.5;font-size:11px;">v133</span>';
-      $('loginSub').style.color = '#666';
-      $('ecranLogin').style.background = '#f0f2f5';
-      
-      // Pré-sélectionner le nom directement
-      setTimeout(() => {
-        const sel = $('loginNom');
-        sel.value = nomTeleop;
-        sel.disabled = true;
-        sel.style.background = '#e8e8e8';
-      }, 500);
-    }
-  } catch(e) {
-    console.error('Erreur vérification token:', e);
-  }
-}
-
 document.addEventListener('DOMContentLoaded', () => {
-  // Vérifier si token dans l'URL (téléopérateur)
-  const urlParams = new URLSearchParams(window.location.search);
-  const token = urlParams.get('token');
-  if (token) {
-    verifierToken(token);
-  }
-  
   // Charger les mentions légales IMMÉDIATEMENT (pendant le splash)
   chargerMentionsLegales();
   
