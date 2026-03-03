@@ -165,7 +165,7 @@
 </div>
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v140</span></div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v141</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -221,7 +221,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v140</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v141</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;" title="Mentions légales">📜</button>
@@ -387,7 +387,7 @@
 </div>
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyMBmHPmGCSGZLQLC1CzDxDHmLlWK3nxvsLcjq2GQ51hmqkHSjBeRXAxi1xEGWUUc4H/exec';
-const APP_VERSION = 'v140';
+const APP_VERSION = 'v141';
 const MAX_RESULTATS = 50;
 const SYNC_INTERVAL = 15000;
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
@@ -490,8 +490,8 @@ let militantASupprimer = null;
 function confirmerSupprimerMilitant(nom) { militantASupprimer = nom; $('confirmSuppNom').textContent = nom; ouvrirModal('modalSupprimerMilitant'); }
 async function executerSuppressionMilitant() { if (!militantASupprimer) return; fermerModal('modalSupprimerMilitant'); showToast('⏳ Suppression...', ''); try { const resp = await fetch(SCRIPT_URL, { method: 'POST', body: new URLSearchParams({ action: 'supprimerMilitant', nom: militantASupprimer }) }); const data = await resp.json(); if (data.ok) { listeMilitants = listeMilitants.filter(m => m.nom !== militantASupprimer); localStorage.setItem(CACHE_KEY_MILITANTS, JSON.stringify(listeMilitants)); showToast('✅ Militant supprimé !', 'succes'); afficherGestionMilitants(); } else showToast('❌ ' + (data.msg || 'Erreur'), 'erreur'); } catch(e) { showToast('❌ Erreur: ' + e.message, 'erreur'); } militantASupprimer = null; }
 function reinitialiserPin(nom) { const newPin = String(Math.floor(1000 + Math.random() * 9000)); const inputId = 'pin_' + nom.replace(/\s/g, '_'); $(inputId).value = newPin; showToast('🔄 Nouveau PIN généré : ' + newPin + ' (cliquez Sauver)', 'warning'); }
-async function changerRole(nom, role) { try { await fetch(SCRIPT_URL, { method: 'POST', body: new URLSearchParams({ action: 'changerRole', nom, role }) }); const m = listeMilitants.find(x => x.nom === nom); if (m) m.role = role; showToast('✅ Rôle modifié : ' + role, 'succes'); } catch(e) { showToast('❌ Erreur', 'erreur'); } }
-async function toggleMilitant(nom, actif) { try { await fetch(SCRIPT_URL, { method: 'POST', body: new URLSearchParams({ action: 'toggleMilitant', nom, actif: actif ? '1' : '0' }) }); const m = listeMilitants.find(x => x.nom === nom); if (m) m.actif = actif; showToast(actif ? '✅ Activé' : '🔴 Désactivé', 'succes'); } catch(e) { showToast('❌ Erreur', 'erreur'); } }
+async function changerRole(nom, role) { try { await fetch(SCRIPT_URL, { method: 'POST', body: new URLSearchParams({ action: 'changerRole', nom, role }) }); const m = listeMilitants.find(x => x.nom === nom); if (m) m.role = role; localStorage.setItem(CACHE_KEY_MILITANTS, JSON.stringify(listeMilitants)); showToast('✅ Rôle modifié : ' + role, 'succes'); } catch(e) { showToast('❌ Erreur', 'erreur'); } }
+async function toggleMilitant(nom, actif) { try { await fetch(SCRIPT_URL, { method: 'POST', body: new URLSearchParams({ action: 'toggleMilitant', nom, actif: actif ? '1' : '0' }) }); const m = listeMilitants.find(x => x.nom === nom); if (m) m.actif = actif; localStorage.setItem(CACHE_KEY_MILITANTS, JSON.stringify(listeMilitants)); showToast(actif ? '✅ Activé' : '🔴 Désactivé', 'succes'); } catch(e) { showToast('❌ Erreur', 'erreur'); } }
 function afficherExport() { const div = $('gestionContenu'); const stats = {}; toutesPersonnes.forEach(p => { const m = p[14] || '—'; if (!stats[m]) stats[m] = 0; if (p[3] === 'Visité') stats[m]++; }); const sorted = Object.entries(stats).filter(([k]) => k !== '—').sort((a, b) => b[1] - a[1]); div.innerHTML = '<div style="font-weight:700;margin-bottom:10px;">👥 Visites par militant</div>' + sorted.map(([nom, nb]) => `<div style="background:white;border:1px solid #e0e4ea;border-radius:10px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;"><span style="font-weight:600;">${nom}</span><span style="font-family:'Bebas Neue';font-size:20px;color:#1a3a6b;">${nb}</span></div>`).join(''); }
 async function chargerContact() { $('contactContenu').innerHTML = '<div class="vide">📞 Module téléopérateur</div>'; }
 async function chargerAgenda() { $('agendaContenu').innerHTML = '<div class="vide">📅 Agenda téléopérateur</div>'; }
