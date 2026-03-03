@@ -165,7 +165,7 @@
 </div>
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v142</span></div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v143</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -221,7 +221,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v142</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v143</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;" title="Mentions légales">📜</button>
@@ -393,7 +393,7 @@
 </div>
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyMBmHPmGCSGZLQLC1CzDxDHmLlWK3nxvsLcjq2GQ51hmqkHSjBeRXAxi1xEGWUUc4H/exec';
-const APP_VERSION = 'v142';
+const APP_VERSION = 'v143';
 const MAX_RESULTATS = 50;
 const SYNC_INTERVAL = 15000;
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
@@ -505,6 +505,13 @@ async function chargerComparaison() {
   statsDiv.innerHTML = '<div style="text-align:center;color:#888;font-size:12px;">Chargement...</div>';
   detailDiv.innerHTML = '';
   
+  // Fonction pour nettoyer les nombres (enlever espaces, convertir)
+  const parseNum = (val) => {
+    if (typeof val === 'number') return val;
+    if (!val) return 0;
+    return parseInt(String(val).replace(/\s/g, '').replace(',', '.')) || 0;
+  };
+  
   try {
     const resp = await fetchRapide(SCRIPT_URL + '?action=getStatsComparaison', {}, 15000);
     const data = await resp.json();
@@ -514,15 +521,20 @@ async function chargerComparaison() {
       return;
     }
     
+    const totalInscrits = parseNum(data.totalInscrits);
+    const votants2020 = parseNum(data.votants2020);
+    const totalVisites = parseNum(data.totalVisites);
+    const reserveVoix = parseNum(data.reserveVoix);
+    
     // Afficher les stats générales
     statsDiv.innerHTML = `
       <div style="display:flex;justify-content:space-around;background:linear-gradient(135deg,#1a3a6b,#2755a8);border-radius:10px;padding:12px;color:white;text-align:center;margin-bottom:10px;">
-        <div><div style="font-size:20px;font-weight:bold;">${(data.totalInscrits || 0).toLocaleString('fr-FR')}</div><div style="font-size:10px;opacity:.7;">INSCRITS</div></div>
-        <div><div style="font-size:20px;font-weight:bold;">${(data.votants2020 || 0).toLocaleString('fr-FR')}</div><div style="font-size:10px;opacity:.7;">VOTANTS 2020</div></div>
-        <div><div style="font-size:20px;font-weight:bold;">${(data.totalVisites || 0).toLocaleString('fr-FR')}</div><div style="font-size:10px;opacity:.7;">VISITÉS 2026</div></div>
+        <div><div style="font-size:20px;font-weight:bold;">${totalInscrits.toLocaleString('fr-FR')}</div><div style="font-size:10px;opacity:.7;">INSCRITS</div></div>
+        <div><div style="font-size:20px;font-weight:bold;">${votants2020.toLocaleString('fr-FR')}</div><div style="font-size:10px;opacity:.7;">VOTANTS 2020</div></div>
+        <div><div style="font-size:20px;font-weight:bold;">${totalVisites.toLocaleString('fr-FR')}</div><div style="font-size:10px;opacity:.7;">VISITÉS 2026</div></div>
       </div>
       <div style="background:linear-gradient(135deg,#27ae60,#2ecc71);border-radius:10px;padding:10px;color:white;text-align:center;">
-        <div style="font-size:18px;font-weight:bold;">🎯 ${(data.reserveVoix || 0).toLocaleString('fr-FR')}</div>
+        <div style="font-size:18px;font-weight:bold;">🎯 ${reserveVoix.toLocaleString('fr-FR')}</div>
         <div style="font-size:10px;opacity:.8;">RÉSERVE DE VOIX POTENTIELLE</div>
       </div>
     `;
@@ -533,13 +545,14 @@ async function chargerComparaison() {
     const intentions2026 = [];
     
     candidats.forEach(nom => {
-      const r2020 = (data.resultats2020 || []).find(r => r.candidat === nom);
-      const i2026 = (data.intentions2026 || []).find(i => i.candidat === nom);
-      voix2020.push(r2020 ? r2020.voix : 0);
-      intentions2026.push(i2026 ? i2026.visites : 0);
+      const r2020 = (data.resultats2020 || []).find(r => r.candidat && r.candidat.trim() === nom);
+      const i2026 = (data.intentions2026 || []).find(i => i.candidat && i.candidat.trim() === nom);
+      voix2020.push(r2020 ? parseNum(r2020.voix) : 0);
+      intentions2026.push(i2026 ? parseNum(i2026.visites) : 0);
     });
     
-    const objectif = data.objectifGagner || 1362;
+    const objectif = parseNum(data.objectifGagner) || 1362;
+    const maxY = Math.max(objectif * 1.3, Math.max(...voix2020, ...intentions2026) * 1.2);
     
     // Créer le graphique
     if (chartComparaison) chartComparaison.destroy();
@@ -555,7 +568,7 @@ async function chargerComparaison() {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        scales: { y: { beginAtZero: true, max: Math.max(objectif * 1.3, Math.max(...voix2020, ...intentions2026) * 1.2) } },
+        scales: { y: { beginAtZero: true, max: maxY > 0 ? maxY : 2000 } },
         plugins: { legend: { position: 'bottom' } }
       },
       plugins: [{
@@ -588,7 +601,7 @@ async function chargerComparaison() {
       const pct = objectif > 0 ? Math.round(i2026 / objectif * 100) : 0;
       const ecart = i2026 - v2020;
       const ecartColor = ecart >= 0 ? '#27ae60' : '#e74c3c';
-      const ecartText = ecart >= 0 ? '+' + ecart : ecart;
+      const ecartText = ecart >= 0 ? '+' + ecart.toLocaleString('fr-FR') : ecart.toLocaleString('fr-FR');
       detailHtml += `
         <div style="margin-bottom:10px;">
           <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;">
