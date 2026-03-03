@@ -265,6 +265,12 @@
     <div id="statsContenu"></div>
     <div id="statsGraphiques" style="display:none;">
       <div style="background:white;border-radius:12px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+        <div style="font-size:12px;font-weight:700;color:#1a3a6b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">📊 Comparaison 2020 vs 2026</div>
+        <div id="comparaisonStats" style="margin-bottom:15px;"></div>
+        <div style="height:280px;"><canvas id="chartComparaison"></canvas></div>
+        <div id="comparaisonDetail" style="margin-top:15px;"></div>
+      </div>
+      <div style="background:white;border-radius:12px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
         <div style="font-size:12px;font-weight:700;color:#1a3a6b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">🥧 Visités / Non visités</div>
         <canvas id="chartCamembert" style="max-height:220px;"></canvas>
       </div>
@@ -274,12 +280,6 @@
         <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
           <div style="min-width:500px;height:320px;"><canvas id="chartBureau"></canvas></div>
         </div>
-      </div>
-      <div style="background:white;border-radius:12px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
-        <div style="font-size:12px;font-weight:700;color:#1a3a6b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">📊 Comparaison 2020 vs 2026</div>
-        <div id="comparaisonStats" style="margin-bottom:15px;"></div>
-        <div style="height:280px;"><canvas id="chartComparaison"></canvas></div>
-        <div id="comparaisonDetail" style="margin-top:15px;"></div>
       </div>
     </div>
   </div>
@@ -585,9 +585,13 @@ async function chargerComparaison() {
           ctx.moveTo(xAxis.left, y);
           ctx.lineTo(xAxis.right, y);
           ctx.stroke();
+          const txt = '🎯 Objectif: ' + objectif.toLocaleString('fr-FR');
+          ctx.font = 'bold 12px sans-serif';
+          const txtW = ctx.measureText(txt).width;
+          ctx.fillStyle = 'rgba(255,255,255,0.9)';
+          ctx.fillRect(xAxis.left + 5, y - 22, txtW + 6, 18);
           ctx.fillStyle = '#e74c3c';
-          ctx.font = 'bold 11px sans-serif';
-          ctx.fillText('🎯 Objectif: ' + objectif.toLocaleString('fr-FR'), xAxis.right - 95, y - 5);
+          ctx.fillText(txt, xAxis.left + 8, y - 8);
           ctx.restore();
         }
       }]
