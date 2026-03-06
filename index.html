@@ -227,7 +227,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v167</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v170</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;" title="Mentions légales">📜</button>
@@ -312,11 +312,51 @@
   <div class="page" id="page-agenda"><div id="agendaContenu"></div></div>
 </div>
 <div id="modalAjoutMilitant" class="modal-overlay" style="z-index:600;display:none;">
-  <div class="modal-box" style="max-width:360px;">
+  <div class="modal-box" style="max-width:420px;max-height:85vh;overflow-y:auto;">
     <h3>➕ Ajouter un militant</h3>
-    <div class="field" style="margin-bottom:12px;"><label>Nom complet</label><input type="text" id="nouveauNom" placeholder="Ex: Dupont Marie"></div>
-    <div class="field" style="margin-bottom:12px;"><label>PIN (4 chiffres)</label><input type="text" id="nouveauPin" placeholder="1234" maxlength="4" pattern="[0-9]{4}" style="font-family:monospace;font-size:18px;letter-spacing:4px;text-align:center;"></div>
-    <div class="field" style="margin-bottom:16px;"><label>Rôle</label><select id="nouveauRole"><option value="militant">militant</option><option value="manager">manager</option><option value="responsable bureaux">responsable bureaux</option><option value="superviseur">superviseur</option><option value="admin">admin</option></select></div>
+    <div class="field" style="margin-bottom:10px;">
+      <label><span id="indExp">❌</span> Email expéditeur <span style="font-weight:400;color:#888;font-size:11px;">(votre adresse)</span></label>
+      <input type="email" id="emailExpediteur" placeholder="votre@email.com" oninput="majIndicateurs()">
+    </div>
+    <div style="border-top:2px solid #e0e4ea;margin:12px 0;"></div>
+    <div class="field" style="margin-bottom:10px;">
+      <label><span id="indNom">❌</span> Nom complet</label>
+      <input type="text" id="nouveauNom" placeholder="Ex: Dupont Marie" oninput="majIndicateurs()">
+    </div>
+    <div class="field" style="margin-bottom:10px;">
+      <label><span id="indPin">❌</span> PIN (4 chiffres)</label>
+      <input type="text" id="nouveauPin" placeholder="1234" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" style="font-family:monospace;font-size:18px;letter-spacing:4px;text-align:center;" oninput="majIndicateurs()">
+    </div>
+    <div class="field" style="margin-bottom:10px;">
+      <label><span id="indRole">✅</span> Rôle</label>
+      <select id="nouveauRole"><option value="militant">militant</option><option value="manager">manager</option><option value="responsable bureaux">responsable bureaux</option><option value="superviseur">superviseur</option><option value="admin">admin</option></select>
+    </div>
+    <div class="field" style="margin-bottom:10px;">
+      <label><span id="indEmail">❌</span> Email du militant <span style="font-weight:400;color:#888;font-size:11px;">(pour envoi auto)</span></label>
+      <input type="email" id="nouveauEmail" placeholder="militant@mail.com" oninput="majIndicateurs()">
+    </div>
+    <div class="field" style="margin-bottom:10px;">
+      <label><span id="indScript">❌</span> Script d'instructions <span style="font-weight:400;color:#888;font-size:11px;">(chargement auto)</span></label>
+      <textarea id="nouveauScript" rows="3" placeholder="Chargement automatique..." style="font-size:13px;" oninput="majIndicateurs()"></textarea>
+    </div>
+    <div class="field" style="margin-bottom:10px;">
+      <label><span id="indLien">❌</span> Lien application <span style="font-weight:400;color:#888;font-size:11px;">(avec token unique)</span></label>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <input type="text" id="nouveauLien" readonly style="font-size:11px;background:#f0f4f8;flex:1;color:#2755a8;" placeholder="Entrez un nom pour générer...">
+        <button onclick="copierLienMilitant()" style="background:#2755a8;color:white;border:none;border-radius:8px;padding:8px 10px;font-size:13px;cursor:pointer;" title="Copier le lien">📋</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:8px;">
+        <span style="font-size:12px;color:#666;">Lien actif :</span>
+        <label class="toggle" style="margin:0;">
+          <input type="checkbox" id="toggleLienMilitant" checked onchange="majStatutLien()">
+          <span class="toggle-slider"></span>
+        </label>
+        <span id="statutLien" style="font-size:12px;font-weight:600;color:#27ae60;">✅ Activé</span>
+      </div>
+    </div>
+    <div id="btnEnvoyerMailZone" style="margin-bottom:10px;display:none;">
+      <button onclick="envoyerMailMilitant()" style="width:100%;background:#2755a8;color:white;border:none;border-radius:10px;padding:10px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">📧 Envoyer identifiants + lien par mail</button>
+    </div>
     <div class="modal-actions"><button class="modal-btn-cancel" onclick="fermerModal('modalAjoutMilitant')">Annuler</button><button class="modal-btn-ok" style="background:#27ae60;" onclick="confirmerAjoutMilitant()">✅ Ajouter</button></div>
   </div>
 </div>
@@ -407,7 +447,7 @@
 </div>
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyMBmHPmGCSGZLQLC1CzDxDHmLlWK3nxvsLcjq2GQ51hmqkHSjBeRXAxi1xEGWUUc4H/exec';
-const APP_VERSION = 'v167';
+const APP_VERSION = 'v170';
 const MAX_RESULTATS = 50;
 const SYNC_INTERVAL = 15000;
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
@@ -507,8 +547,13 @@ function afficherObservationRapide(id, nomEnc, prenomEnc, obsEnc, militant, date
 function chargerObservations() { const div = $('obsContenu'); try { const cached = localStorage.getItem(CACHE_KEY_OBS); if (cached) { const observations = JSON.parse(cached); if (observations.length > 0) { afficherObservationsRapide(observations); return; } } } catch(e) {} const avecObs = toutesPersonnes.filter(p => p[15] && String(p[15]).trim() !== ''); if (avecObs.length) { afficherObservationsDepuisCache(avecObs); const obsData = avecObs.map(p => ({ id: p[0], nom: p[1], prenom: p[2], statut: p[3], dateVisite: p[11] || '', candidat: p[10] || '', militant: p[14] || '', observation: String(p[15] || '') })); try { localStorage.setItem(CACHE_KEY_OBS, JSON.stringify(obsData)); } catch(e) {} return; } actualiserObservations(); }
 function afficherObservation(id) { currentObsId = id; const p = toutesPersonnes.find(x => x[0] == id); if (!p) return; const nom = p[1]; const prenom = p[2]; const observation = String(p[15] || ''); const militant = p[14] || ''; const dateVisite = p[11] || ''; const candidat = p[10] || ''; $('obsModalTitre').textContent = `📝 ${nom} ${prenom}`; $('obsModalContenu').innerHTML = `<div style="margin-bottom:12px;">${observation}</div><div style="font-size:12px;color:#888;border-top:1px solid #ddd;padding-top:10px;">${militant ? '👤 ' + militant : ''}${dateVisite ? ' · 📅 ' + dateVisite : ''}${candidat ? ' · 🗳️ ' + candidat : ''}</div>`; ouvrirModal('modalObservation'); }
 function ouvrirFicheDepuisObs() { fermerModal('modalObservation'); if (currentObsId) selectionnerPersonne(currentObsId); }
-function ouvrirAjoutMilitant() { ouvrirModal('modalAjoutMilitant'); setTimeout(() => { const nom = $('nouveauNom'); const pin = $('nouveauPin'); const role = $('nouveauRole'); if (nom) nom.value = ''; if (pin) pin.value = ''; if (role) role.value = 'militant'; }, 50); }
-async function confirmerAjoutMilitant() { const nom = $('nouveauNom').value.trim(); const pin = $('nouveauPin').value.trim(); const role = $('nouveauRole').value; if (!nom) { showToast('❌ Entrez un nom', 'erreur'); return; } if (!/^\d{4}$/.test(pin)) { showToast('❌ PIN doit être 4 chiffres', 'erreur'); return; } if (listeMilitants.some(m => m.nom.toLowerCase() === nom.toLowerCase())) { showToast('❌ Ce nom existe déjà', 'erreur'); return; } fermerModal('modalAjoutMilitant'); showToast('⏳ Ajout en cours...', ''); try { const resp = await fetch(SCRIPT_URL, { method: 'POST', body: new URLSearchParams({ action: 'ajouterMilitant', nom, pin, role }) }); const text = await resp.text(); let data; try { data = JSON.parse(text); } catch(e) { showToast('❌ Réponse invalide du serveur', 'erreur'); return; } if (data.ok) { listeMilitants.push({ nom, pin, role, actif: true }); localStorage.setItem(CACHE_KEY_MILITANTS, JSON.stringify(listeMilitants)); showToast('✅ Militant ajouté !', 'succes'); afficherGestionMilitants(); } else showToast('❌ ' + (data.msg || data.error || 'Erreur inconnue'), 'erreur'); } catch(e) { showToast('❌ Erreur: ' + e.message, 'erreur'); } }
+function ouvrirAjoutMilitant() { ouvrirModal('modalAjoutMilitant'); setTimeout(() => { const nom = $('nouveauNom'); const pin = $('nouveauPin'); const role = $('nouveauRole'); const email = $('nouveauEmail'); const script = $('nouveauScript'); const lien = $('nouveauLien'); const emailExp = $('emailExpediteur'); const toggle = $('toggleLienMilitant'); if (nom) nom.value = ''; if (pin) pin.value = ''; if (role) role.value = 'militant'; if (email) email.value = ''; if (script) script.value = ''; if (lien) { lien.value = ''; lien.dataset.nom = ''; lien.dataset.token = ''; } if (toggle) toggle.checked = true; majStatutLien(); const savedEmail = localStorage.getItem('visites_email_expediteur'); if (emailExp && savedEmail) emailExp.value = savedEmail; $('btnEnvoyerMailZone').style.display = 'none'; majIndicateurs(); chargerScriptServeur(); }, 50); }
+function majIndicateurs() { const nom = ($('nouveauNom')?.value || '').trim(); const pin = ($('nouveauPin')?.value || '').trim(); const email = ($('nouveauEmail')?.value || '').trim(); const script = ($('nouveauScript')?.value || '').trim(); const emailExp = ($('emailExpediteur')?.value || '').trim(); const indExp = $('indExp'); const indNom = $('indNom'); const indPin = $('indPin'); const indRole = $('indRole'); const indEmail = $('indEmail'); const indScript = $('indScript'); const indLien = $('indLien'); if (indExp) indExp.textContent = emailExp && emailExp.includes('@') ? '✅' : '❌'; if (indNom) indNom.textContent = nom ? '✅' : '❌'; if (indPin) indPin.textContent = /^\d{4}$/.test(pin) ? '✅' : '❌'; if (indRole) indRole.textContent = '✅'; if (indEmail) indEmail.textContent = email && email.includes('@') ? '✅' : '❌'; if (indScript) indScript.textContent = script ? '✅' : '❌'; const lienInput = $('nouveauLien'); if (nom && lienInput) { if (!lienInput.dataset.nom || lienInput.dataset.nom !== nom) { lienInput.dataset.nom = nom; const token = btoa(unescape(encodeURIComponent(nom))).replace(/[=+/]/g, '').substring(0, 24); lienInput.dataset.token = token; lienInput.value = 'https://boyerdensjean111-hash.github.io/visites/?t=' + token; } if (indLien) indLien.textContent = '✅'; } else if (lienInput) { lienInput.value = ''; lienInput.dataset.nom = ''; lienInput.dataset.token = ''; if (indLien) indLien.textContent = '❌'; } const btnZone = $('btnEnvoyerMailZone'); if (btnZone) btnZone.style.display = (nom && /^\d{4}$/.test(pin) && email && email.includes('@') && emailExp && emailExp.includes('@')) ? 'block' : 'none'; if (emailExp) localStorage.setItem('visites_email_expediteur', emailExp); }
+function majStatutLien() { const toggle = $('toggleLienMilitant'); const statut = $('statutLien'); if (toggle && statut) { if (toggle.checked) { statut.textContent = '✅ Activé'; statut.style.color = '#27ae60'; } else { statut.textContent = '❌ Désactivé'; statut.style.color = '#c0392b'; } } }
+function copierLienMilitant() { const lien = $('nouveauLien'); if (!lien || !lien.value) { showToast('❌ Aucun lien à copier', 'erreur'); return; } if (navigator.clipboard) { navigator.clipboard.writeText(lien.value).then(() => showToast('📋 Lien copié !', 'succes')).catch(() => { lien.select(); document.execCommand('copy'); showToast('📋 Lien copié !', 'succes'); }); } else { lien.select(); document.execCommand('copy'); showToast('📋 Lien copié !', 'succes'); } }
+async function chargerScriptServeur() { try { const resp = await fetchRapide(SCRIPT_URL + '?action=getScriptAppel', {}, 15000); const data = await resp.json(); if (data.script) { $('nouveauScript').value = data.script; majIndicateurs(); } } catch(e) {} }
+function envoyerMailMilitant() { const nom = $('nouveauNom').value.trim(); const pin = $('nouveauPin').value.trim(); const email = $('nouveauEmail').value.trim(); const script = $('nouveauScript').value.trim(); const role = $('nouveauRole').value; const emailExp = $('emailExpediteur').value.trim(); const lien = $('nouveauLien').value || 'https://boyerdensjean111-hash.github.io/visites/'; if (!email) { showToast('❌ Entrez l\'email du militant', 'erreur'); return; } if (!emailExp) { showToast('❌ Entrez votre email expéditeur', 'erreur'); return; } const sujet = encodeURIComponent('Visites Électorales - Vos identifiants'); const corps = encodeURIComponent('Bonjour ' + nom + ',\n\nVoici vos identifiants pour l\'application Visites Électorales :\n\n🔗 Votre lien personnel : ' + lien + '\n👤 Nom : ' + nom + '\n🔑 Code PIN : ' + pin + '\n📋 Rôle : ' + role + '\n\n' + (script ? '📝 Instructions :\n' + script + '\n\n' : '') + 'Cordialement,\n' + currentMilitant); window.open('mailto:' + email + '?subject=' + sujet + '&body=' + corps, '_blank'); showToast('📧 Mail ouvert !', 'succes'); }
+async function confirmerAjoutMilitant() { const nom = $('nouveauNom').value.trim(); const pin = $('nouveauPin').value.trim(); const role = $('nouveauRole').value; const email = $('nouveauEmail').value.trim(); const actif = $('toggleLienMilitant')?.checked !== false; const token = $('nouveauLien')?.dataset?.token || ''; if (!nom) { showToast('❌ Entrez un nom', 'erreur'); return; } if (!/^\d{4}$/.test(pin)) { showToast('❌ PIN doit être 4 chiffres', 'erreur'); return; } if (listeMilitants.some(m => m.nom.toLowerCase() === nom.toLowerCase())) { showToast('❌ Ce nom existe déjà', 'erreur'); return; } fermerModal('modalAjoutMilitant'); showToast('⏳ Ajout en cours...', ''); try { const resp = await fetch(SCRIPT_URL, { method: 'POST', body: new URLSearchParams({ action: 'ajouterMilitant', nom, pin, role }) }); const text = await resp.text(); let data; try { data = JSON.parse(text); } catch(e) { showToast('❌ Réponse invalide du serveur', 'erreur'); return; } if (data.ok) { listeMilitants.push({ nom, pin, role, actif: actif, token: token }); localStorage.setItem(CACHE_KEY_MILITANTS, JSON.stringify(listeMilitants)); if (!actif) { try { await fetch(SCRIPT_URL, { method: 'POST', body: new URLSearchParams({ action: 'toggleMilitant', nom, actif: '0' }) }); } catch(e) {} } if (email) { envoyerMailMilitant(); showToast('✅ Militant ajouté + mail envoyé !', 'succes'); } else { showToast('✅ Militant ajouté !', 'succes'); } afficherGestionMilitants(); } else showToast('❌ ' + (data.msg || data.error || 'Erreur inconnue'), 'erreur'); } catch(e) { showToast('❌ Erreur: ' + e.message, 'erreur'); } }
 function ouvrirGestion() { ouvrirModal('modalGestion'); afficherMenuGestion(); }
 function fermerGestion() { fermerModal('modalGestion'); }
 function afficherMenuGestion() { $('gestionTitre').textContent = '⚙️ Gestion'; $('gestionBtnRetour').style.display = 'none'; $('gestionBtnAjouter').style.display = 'none'; $('gestionContenu').innerHTML = `<div style="display:flex;flex-direction:column;gap:10px;"><button onclick="ouvrirSectionGestion('historique')" style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:14px;width:100%;"><span style="font-size:28px;">📋</span><div><div style="font-weight:700;font-size:14px;color:#1a3a6b;">Historique</div><div style="font-size:12px;color:#888;">Voir les modifications</div></div></button><button onclick="ouvrirSectionGestion('militants')" style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:14px;width:100%;"><span style="font-size:28px;">👥</span><div><div style="font-weight:700;font-size:14px;color:#1a3a6b;">Militants</div><div style="font-size:12px;color:#888;">Activer / désactiver</div></div></button><button onclick="ouvrirSectionGestion('export')" style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:14px;width:100%;"><span style="font-size:28px;">📊</span><div><div style="font-weight:700;font-size:14px;color:#1a3a6b;">Export / Stats</div><div style="font-size:12px;color:#888;">Statistiques avancées</div></div></button></div>`; }
@@ -664,7 +709,7 @@ function passerSplash() { const splash = document.getElementById('ecranSplash');
 function changerOngletLegal(onglet) { const tabs = ['Mentions', 'Conformite', 'Suppression']; const pages = ['pageMentions', 'pageConformite', 'pageSuppression']; tabs.forEach((tab, i) => { const tabEl = document.getElementById('tab' + tab); const pageEl = document.getElementById(pages[i]); const isActive = onglet === tab.toLowerCase(); if (tabEl) { tabEl.style.color = isActive ? '#1a3a6b' : '#888'; tabEl.style.borderBottomColor = isActive ? '#1a3a6b' : 'transparent'; } if (pageEl) pageEl.style.display = isActive ? 'block' : 'none'; }); }
 function afficherMentionsLegales() { ouvrirModal('modalLegal'); }
 let tokenTeleop = null, nomTeleop = null;
-// === BLOCAGE TOUCHE RETOUR TÉLÉPHONE v167 ===
+// === BLOCAGE TOUCHE RETOUR TÉLÉPHONE v170 ===
 // IMPORTANT: pushState au chargement est IGNORÉ par Chrome/Safari mobile
 // Il faut pushState APRÈS la première interaction utilisateur (touch/click)
 let backButtonProtege = false;
@@ -674,24 +719,8 @@ function activerProtectionRetour() {
   for (let i = 0; i < 5; i++) history.pushState({ page: 'app', idx: i }, '', window.location.href);
 }
 function gererRetour() {
-  // Toujours re-empiler pour ne jamais vider l'historique
+  // Bouton retour téléphone TOTALEMENT désactivé — ne fait rien
   history.pushState({ page: 'app' }, '', window.location.href);
-  // Si un modal est ouvert → le fermer
-  const modals = document.querySelectorAll('.modal-overlay.ouvert');
-  if (modals.length > 0) { modals.forEach(m => { m.classList.remove('ouvert'); m.style.display = 'none'; }); return; }
-  // Si modal gestion ouvert
-  const modalGestion = $('modalGestion');
-  if (modalGestion && modalGestion.style.display !== 'none') { fermerGestion(); return; }
-  // Si modal événement ouvert
-  const modalEvent = $('modalEvenement');
-  if (modalEvent && modalEvent.style.display !== 'none') { fermerModal('modalEvenement'); return; }
-  // Si on est sur la page saisie → retour recherche
-  const pageSaisie = $('page-saisie');
-  if (pageSaisie && pageSaisie.classList.contains('active')) { showPage('recherche'); return; }
-  // Si on est sur stats/observations/admin → retour recherche
-  const pageRecherche = $('page-recherche');
-  if (pageRecherche && !pageRecherche.classList.contains('active')) { showPage('recherche'); return; }
-  // Sinon on est déjà sur recherche → ne rien faire (pas de sortie)
 }
 function initBackButton() {
   // 1) Écouter la PREMIÈRE interaction utilisateur pour activer pushState
