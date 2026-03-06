@@ -170,7 +170,7 @@
 </div>
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v157</span></div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v176</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -457,7 +457,7 @@
 </div>
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyMBmHPmGCSGZLQLC1CzDxDHmLlWK3nxvsLcjq2GQ51hmqkHSjBeRXAxi1xEGWUUc4H/exec';
-const APP_VERSION = 'v175';
+const APP_VERSION = 'v176';
 const MAX_RESULTATS = 50;
 const SYNC_INTERVAL = 15000;
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
@@ -508,7 +508,9 @@ async function verifierConflitFiche(id) { const serveur = toutesPersonnes.find(p
 function afficherAlerteConflit(militant, candidat) { const alerteHtml = `<div class="alerte-conflit"><div class="titre">⚠️ Modifié par ${militant}</div><div class="detail">Cette personne vient d'être enregistrée${candidat ? ' · ' + candidat : ''}</div></div>`; const saisie = $('saisieContenu'); if (saisie && !saisie.innerHTML.includes('alerte-conflit')) { const btnRetour = saisie.querySelector('.btn-retour'); if (btnRetour) btnRetour.insertAdjacentHTML('afterend', alerteHtml); } showToast('⚠️ Modifié par ' + militant, 'warning'); }
 async function chargerMilitants() { const sel = $('loginNom'); if (!sel) return; try { localStorage.removeItem(CACHE_KEY_MILITANTS); } catch(e) {} listeMilitants = MILITANTS_FALLBACK; remplirSelectMilitants(); try { const resp = await fetchRapide(SCRIPT_URL + '?action=getMilitants', {}, 15000); const data = await resp.json(); if (data.militants?.length) { listeMilitants = data.militants; localStorage.setItem(CACHE_KEY_MILITANTS, JSON.stringify(listeMilitants)); remplirSelectMilitants(); } } catch(e) {} }
 async function prechargerDonnees() { try { const cacheTime = localStorage.getItem(CACHE_KEY_PERSONNES + '_time'); if (cacheTime && (Date.now() - parseInt(cacheTime)) < 300000) return; const resp = await fetch(SCRIPT_URL + '?action=getAllPersonnes'); const data = await resp.json(); if (data.personnes?.length) { localStorage.setItem(CACHE_KEY_PERSONNES, JSON.stringify(data.personnes)); localStorage.setItem(CACHE_KEY_PERSONNES + '_time', Date.now().toString()); toutesPersonnes = data.personnes; } } catch(e) {} }
-function remplirSelectMilitants() { const sel = $('loginNom'); const val = sel.value; sel.innerHTML = '<option value="">-- Choisir --</option>'; let liste = listeMilitants; if (nomTeleop) { liste = listeMilitants.filter(m => m.nom === nomTeleop); if (liste.length === 1) setTimeout(() => { sel.value = nomTeleop; }, 100); } liste.forEach(m => { const opt = document.createElement('option'); opt.value = m.nom; opt.textContent = m.nom; sel.appendChild(opt); }); sel.value = val; sel.disabled = false; }
+function remplirSelectMilitants() { const sel = $('loginNom'); const val = sel.value; // Si token actif, ne pas écraser le select filtré
+  if (tokenMilitantNom && sel.value === tokenMilitantNom) return;
+  sel.innerHTML = '<option value="">-- Choisir --</option>'; let liste = listeMilitants; if (tokenMilitantNom) { liste = listeMilitants.filter(m => m.nom === tokenMilitantNom); } else if (nomTeleop) { liste = listeMilitants.filter(m => m.nom === nomTeleop); if (liste.length === 1) setTimeout(() => { sel.value = nomTeleop; }, 100); } liste.forEach(m => { const opt = document.createElement('option'); opt.value = m.nom; opt.textContent = m.nom; sel.appendChild(opt); }); if (tokenMilitantNom) { sel.value = tokenMilitantNom; sel.disabled = true; } else { sel.value = val; sel.disabled = false; } }
 function ajouterPin(c) { if (pinSaisi.length >= 4) return; pinSaisi += c; majDots(); if (pinSaisi.length === 4) setTimeout(seConnecter, 150); }
 function effacerPin() { pinSaisi = pinSaisi.slice(0, -1); majDots(); }
 function resetPin() { pinSaisi = ''; majDots(); $('loginErreur').textContent = ''; }
@@ -777,6 +779,8 @@ function initBackButton() {
     if (currentMilitant) { e.preventDefault(); e.returnValue = ''; return ''; }
   });
 }
+let tokenMilitantNom = null;
+let tokenMilitantRole = null;
 async function verifierTokenURL() {
   const params = new URLSearchParams(window.location.search);
   const token = params.get('t');
@@ -785,30 +789,60 @@ async function verifierTokenURL() {
     const resp = await fetchRapide(SCRIPT_URL + '?action=getLoginParToken&token=' + encodeURIComponent(token), {}, 15000);
     const data = await resp.json();
     if (data.ok && data.nom) {
+      tokenMilitantRole = data.role || 'militant';
+      // Admin = liste complète, autres = que leur nom
+      if (tokenMilitantRole === 'admin') {
+        tokenMilitantNom = null;
+      } else {
+        tokenMilitantNom = data.nom;
+      }
       // Attendre que les militants soient chargés
       let tentatives = 0;
-      while (!listeMilitants.length && tentatives < 20) { await new Promise(r => setTimeout(r, 250)); tentatives++; }
-      const militant = listeMilitants.find(m => m.nom === data.nom);
-      if (militant) {
-        $('loginNom').value = data.nom;
-        pinSaisi = String(data.pin);
-        majDots();
-        passerSplash();
-        setTimeout(() => seConnecter(), 300);
-        // Nettoyer le token de l'URL
-        window.history.replaceState({}, '', window.location.pathname);
-        return true;
+      while (!listeMilitants.length && tentatives < 30) { await new Promise(r => setTimeout(r, 300)); tentatives++; }
+      // Ajouter le militant s'il n'est pas dans la liste locale
+      if (!listeMilitants.find(m => m.nom === data.nom)) {
+        listeMilitants.push({ nom: data.nom, pin: String(data.pin), role: data.role || 'militant', actif: true });
       }
+      const sel = $('loginNom');
+      if (tokenMilitantRole === 'admin') {
+        // Admin : liste complète, pré-sélectionner son nom
+        remplirSelectMilitants();
+        sel.value = data.nom;
+      } else {
+        // Autres : que leur nom, select verrouillé
+        sel.innerHTML = '<option value="">-- Choisir --</option>';
+        const opt = document.createElement('option');
+        opt.value = data.nom;
+        opt.textContent = data.nom;
+        sel.appendChild(opt);
+        sel.value = data.nom;
+        sel.disabled = true;
+      }
+      passerSplash();
+      window.history.replaceState({}, '', window.location.pathname);
+      return true;
     } else if (data.msg) {
       passerSplash();
-      setTimeout(() => { $('loginErreur').textContent = '🚫 ' + data.msg; }, 500);
+      setTimeout(() => { $('loginErreur').textContent = '🚫 ' + data.msg; }, 300);
       window.history.replaceState({}, '', window.location.pathname);
       return true;
     }
-  } catch(e) {}
+  } catch(e) {
+    passerSplash();
+    setTimeout(() => { $('loginErreur').textContent = '⚠️ Erreur de connexion, réessayez'; }, 300);
+    window.history.replaceState({}, '', window.location.pathname);
+  }
   return false;
 }
-document.addEventListener('DOMContentLoaded', () => { chargerMentionsLegales(); chargerMilitants(); prechargerDonnees(); initTabs(); initRecherche(); initBackButton(); fetch(SCRIPT_URL + '?action=ping').catch(() => {}); setTimeout(async () => { const autoLogin = await verifierTokenURL(); if (!autoLogin) passerSplash(); }, 2000); });
+document.addEventListener('DOMContentLoaded', () => {
+  chargerMentionsLegales(); chargerMilitants(); prechargerDonnees(); initTabs(); initRecherche(); initBackButton(); fetch(SCRIPT_URL + '?action=ping').catch(() => {});
+  const hasToken = new URLSearchParams(window.location.search).has('t');
+  if (hasToken) {
+    setTimeout(async () => { const ok = await verifierTokenURL(); if (!ok) passerSplash(); }, 500);
+  } else {
+    setTimeout(() => passerSplash(), 2000);
+  }
+});
 </script>
 </body>
 </html>
