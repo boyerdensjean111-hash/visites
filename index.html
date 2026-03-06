@@ -170,7 +170,7 @@
 </div>
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v179</span></div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v180</span></div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -271,6 +271,11 @@
       <div class="cpt-item"><div class="cpt-num" id="cptTotal">-</div><div class="cpt-label">INSCRITS</div></div>
       <div class="cpt-item"><div class="cpt-num" id="cptVisites">-</div><div class="cpt-label">VISITÉS</div></div>
       <div class="cpt-item"><div class="cpt-num" id="cptPct">-</div><div class="cpt-label">PROGRESSION</div></div>
+    </div>
+    <div class="compteur" id="compteur2" style="display:none;margin-top:-8px;background:linear-gradient(135deg,#2755a8,#3498db);">
+      <div class="cpt-item"><div class="cpt-num" id="cptVotants2020">-</div><div class="cpt-label">VOTANTS 2020</div></div>
+      <div class="cpt-item"><div class="cpt-num" id="cptFoyers">-</div><div class="cpt-label">FOYERS</div></div>
+      <div class="cpt-item"><div class="cpt-num" id="cptPctFoyers">-</div><div class="cpt-label">% FOYERS</div></div>
     </div>
     <div id="statsContenu"></div>
     <div id="statsGraphiques" style="display:none;">
@@ -457,7 +462,7 @@
 </div>
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyMBmHPmGCSGZLQLC1CzDxDHmLlWK3nxvsLcjq2GQ51hmqkHSjBeRXAxi1xEGWUUc4H/exec';
-const APP_VERSION = 'v179';
+const APP_VERSION = 'v180';
 const MAX_RESULTATS = 50;
 const SYNC_INTERVAL = 15000;
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
@@ -659,16 +664,27 @@ async function chargerComparaison() {
     const candidats = ['Johnny Payet', 'Sophie Arzal'];
     const voix2020 = [];
     const intentions2026 = [];
-    
+    const foyersData = [];
+
+    const foyersJohnny = parseNum(data.foyersJohnny);
+
+    // Remplir la 2ème ligne du compteur (votants 2020, foyers, % foyers)
+    const pctFoyers = totalInscrits > 0 ? Math.round(foyersJohnny / totalInscrits * 100) : 0;
+    $('cptVotants2020').textContent = votants2020.toLocaleString('fr-FR');
+    $('cptFoyers').textContent = foyersJohnny.toLocaleString('fr-FR');
+    $('cptPctFoyers').textContent = pctFoyers + '%' + (pctFoyers >= 50 ? ' 📯🚀' : '');
+    $('compteur2').style.display = 'flex';
+
     candidats.forEach(nom => {
       const r2020 = (data.resultats2020 || []).find(r => r.candidat && r.candidat.trim() === nom);
       const i2026 = (data.intentions2026 || []).find(i => i.candidat && i.candidat.trim() === nom);
       voix2020.push(r2020 ? parseNum(r2020.voix) : 0);
       intentions2026.push(i2026 ? parseNum(i2026.visites) : 0);
+      foyersData.push(nom === 'Johnny Payet' ? foyersJohnny : 0);
     });
-    
+
     const objectif = parseNum(data.objectifGagner) || 1362;
-    const maxY = Math.max(objectif * 1.3, Math.max(...voix2020, ...intentions2026) * 1.2);
+    const maxY = Math.max(objectif * 1.3, Math.max(...voix2020, ...intentions2026, ...foyersData) * 1.2);
     
     // Créer le graphique
     if (chartComparaison) chartComparaison.destroy();
@@ -678,7 +694,8 @@ async function chargerComparaison() {
         labels: candidats,
         datasets: [
           { label: '2020 (voix)', data: voix2020, backgroundColor: 'rgba(52,152,219,0.7)', borderColor: '#3498db', borderWidth: 2 },
-          { label: '2026 (intentions)', data: intentions2026, backgroundColor: 'rgba(39,174,96,0.7)', borderColor: '#27ae60', borderWidth: 2 }
+          { label: '2026 (intentions)', data: intentions2026, backgroundColor: 'rgba(39,174,96,0.7)', borderColor: '#27ae60', borderWidth: 2 },
+          { label: '2026 (par foyer)', data: foyersData, backgroundColor: 'rgba(243,156,18,0.7)', borderColor: '#f39c12', borderWidth: 2 }
         ]
       },
       options: {
