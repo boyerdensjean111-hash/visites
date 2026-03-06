@@ -667,12 +667,18 @@ async function chargerComparaison() {
     const foyersData = [];
 
     const foyersJohnny = parseNum(data.foyersJohnny);
+    const objectif = parseNum(data.objectifGagner) || 1362;
 
     // Remplir la 2ème ligne du compteur (votants 2020, foyers, % foyers)
-    const pctFoyers = totalInscrits > 0 ? Math.round(foyersJohnny / totalInscrits * 100) : 0;
+    const pctFoyers = votants2020 > 0 ? (foyersJohnny / votants2020 * 100) : 0;
+    const pctFoyersArrondi = Math.round(pctFoyers);
+    const ecartFoyers = foyersJohnny - objectif;
+    const johnny2020 = (data.resultats2020 || []).find(r => r.candidat && r.candidat.trim() === 'Johnny Payet');
+    const pct2020 = johnny2020 ? parseFloat(johnny2020.pct) || 0 : 0;
+    const ecartPct = pctFoyers - pct2020;
     $('cptVotants2020').textContent = votants2020.toLocaleString('fr-FR');
-    $('cptFoyers').textContent = foyersJohnny.toLocaleString('fr-FR');
-    $('cptPctFoyers').textContent = pctFoyers + '%' + (pctFoyers >= 50 ? ' 📯🚀' : '');
+    $('cptFoyers').innerHTML = foyersJohnny.toLocaleString('fr-FR') + (ecartFoyers > 0 ? ' <span style="color:#2ecc71;font-size:14px;">(+' + ecartFoyers + ' 🚀)</span>' : '');
+    $('cptPctFoyers').innerHTML = pctFoyersArrondi + '%' + (ecartPct > 0 ? ' <span style="color:#2ecc71;font-size:14px;">(+' + ecartPct.toFixed(2) + '% 🚀)</span>' : '') + (pctFoyersArrondi >= 50 ? ' 📯' : '');
     $('compteur2').style.display = 'flex';
 
     candidats.forEach(nom => {
@@ -682,8 +688,6 @@ async function chargerComparaison() {
       intentions2026.push(i2026 ? parseNum(i2026.visites) : 0);
       foyersData.push(nom === 'Johnny Payet' ? foyersJohnny : 0);
     });
-
-    const objectif = parseNum(data.objectifGagner) || 1362;
     const maxY = Math.max(objectif * 1.3, Math.max(...voix2020, ...intentions2026, ...foyersData) * 1.2);
     
     // Créer le graphique
