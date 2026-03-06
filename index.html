@@ -395,7 +395,7 @@
 </div>
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyMBmHPmGCSGZLQLC1CzDxDHmLlWK3nxvsLcjq2GQ51hmqkHSjBeRXAxi1xEGWUUc4H/exec';
-const APP_VERSION = 'v157';
+const APP_VERSION = 'v158';
 const MAX_RESULTATS = 50;
 const SYNC_INTERVAL = 15000;
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
@@ -644,34 +644,64 @@ function passerSplash() { const splash = document.getElementById('ecranSplash');
 function changerOngletLegal(onglet) { const tabs = ['Mentions', 'Conformite', 'Suppression']; const pages = ['pageMentions', 'pageConformite', 'pageSuppression']; tabs.forEach((tab, i) => { const tabEl = document.getElementById('tab' + tab); const pageEl = document.getElementById(pages[i]); const isActive = onglet === tab.toLowerCase(); if (tabEl) { tabEl.style.color = isActive ? '#1a3a6b' : '#888'; tabEl.style.borderBottomColor = isActive ? '#1a3a6b' : 'transparent'; } if (pageEl) pageEl.style.display = isActive ? 'block' : 'none'; }); }
 function afficherMentionsLegales() { ouvrirModal('modalLegal'); }
 let tokenTeleop = null, nomTeleop = null;
-// === BLOCAGE TOUCHE RETOUR TÉLÉPHONE ===
+// === BLOCAGE TOUCHE RETOUR TÉLÉPHONE v158 ===
+// IMPORTANT: pushState au chargement est IGNORÉ par Chrome/Safari mobile
+// Il faut pushState APRÈS la première interaction utilisateur (touch/click)
+let backButtonProtege = false;
+function activerProtectionRetour() {
+  if (backButtonProtege) return;
+  backButtonProtege = true;
+  for (let i = 0; i < 5; i++) history.pushState({ page: 'app', idx: i }, '', window.location.href);
+}
+function gererRetour() {
+  // Toujours re-empiler pour ne jamais vider l'historique
+  history.pushState({ page: 'app' }, '', window.location.href);
+  // Si un modal est ouvert → le fermer
+  const modals = document.querySelectorAll('.modal-overlay.ouvert');
+  if (modals.length > 0) { modals.forEach(m => { m.classList.remove('ouvert'); m.style.display = 'none'; }); return; }
+  // Si modal gestion ouvert
+  const modalGestion = $('modalGestion');
+  if (modalGestion && modalGestion.style.display !== 'none') { fermerGestion(); return; }
+  // Si modal événement ouvert
+  const modalEvent = $('modalEvenement');
+  if (modalEvent && modalEvent.style.display !== 'none') { fermerModal('modalEvenement'); return; }
+  // Si on est sur la page saisie → retour recherche
+  const pageSaisie = $('page-saisie');
+  if (pageSaisie && pageSaisie.classList.contains('active')) { showPage('recherche'); return; }
+  // Si on est sur stats/observations/admin → retour recherche
+  const pageRecherche = $('page-recherche');
+  if (pageRecherche && !pageRecherche.classList.contains('active')) { showPage('recherche'); return; }
+  // Sinon on est déjà sur recherche → ne rien faire (pas de sortie)
+}
 function initBackButton() {
-  // Empiler plusieurs états pour créer un mur anti-sortie
-  for (let i = 0; i < 3; i++) history.pushState({ page: 'app', idx: i }, '');
-  // Intercepter CHAQUE appui sur retour
+  // 1) Écouter la PREMIÈRE interaction utilisateur pour activer pushState
+  const activerAuTouch = () => { activerProtectionRetour(); };
+  document.addEventListener('touchstart', activerAuTouch, { once: true });
+  document.addEventListener('touchend', activerAuTouch, { once: true });
+  document.addEventListener('click', activerAuTouch, { once: true });
+  // 2) Aussi activer après le login (moment clé d'interaction)
+  const origConnexion = typeof window.connexion === 'function' ? window.connexion : null;
+  // 3) Intercepter popstate (bouton retour)
   window.addEventListener('popstate', function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    // Toujours re-empiler pour ne jamais vider l'historique
-    history.pushState({ page: 'app' }, '');
-    // Si un modal est ouvert → le fermer
-    const modals = document.querySelectorAll('.modal-overlay.ouvert');
-    if (modals.length > 0) { modals.forEach(m => { m.classList.remove('ouvert'); m.style.display = 'none'; }); return; }
-    // Si modal gestion ouvert
-    const modalGestion = $('modalGestion');
-    if (modalGestion && modalGestion.style.display !== 'none') { fermerGestion(); return; }
-    // Si modal événement ouvert
-    const modalEvent = $('modalEvenement');
-    if (modalEvent && modalEvent.style.display !== 'none') { fermerModal('modalEvenement'); return; }
-    // Si on est sur la page saisie avec une fiche → retour recherche
-    const pageSaisie = $('page-saisie');
-    if (pageSaisie && pageSaisie.classList.contains('active')) { showPage('recherche'); return; }
-    // Si on est sur stats/observations/admin → retour recherche
-    const pageRecherche = $('page-recherche');
-    if (pageRecherche && !pageRecherche.classList.contains('active')) { showPage('recherche'); return; }
-    // Sinon on est déjà sur recherche → ne rien faire (pas de sortie)
+    if (!backButtonProtege) activerProtectionRetour();
+    gererRetour();
   });
-  // Bloquer aussi la fermeture onglet/navigateur
+  // 4) CloseWatcher API (Chrome 120+ Android) - couche supplémentaire
+  if (typeof CloseWatcher !== 'undefined') {
+    try {
+      function creerCloseWatcher() {
+        const watcher = new CloseWatcher();
+        watcher.onclose = function() {
+          gererRetour();
+          try { creerCloseWatcher(); } catch(e) {}
+        };
+      }
+      document.addEventListener('click', function() {
+        try { creerCloseWatcher(); } catch(e) {}
+      }, { once: true });
+    } catch(e) {}
+  }
+  // 5) Bloquer fermeture onglet/navigateur
   window.addEventListener('beforeunload', function(e) {
     if (currentMilitant) { e.preventDefault(); e.returnValue = ''; return ''; }
   });
