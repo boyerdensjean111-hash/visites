@@ -235,7 +235,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v3</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v5</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;">📜</button>
@@ -379,6 +379,36 @@
       </li>
     </ul>
     <div style="background:white;border-radius:12px;padding:16px;margin-top:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+      <div style="font-size:12px;font-weight:700;color:var(--texte2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">📊 Configuration Comparaison 2020</div>
+      <div style="font-size:12px;color:var(--texte2);margin-bottom:10px;">Données élection 2020 pour le graphique comparaison</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;gap:8px;align-items:center;">
+          <label style="font-size:11px;min-width:100px;">Objectif voix :</label>
+          <input type="number" id="cfgObjectif" value="1362" style="flex:1;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:12px;">
+        </div>
+        <div style="font-size:11px;font-weight:600;color:#333;margin-top:6px;">Johnny Payet (2020) :</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <label style="font-size:11px;min-width:100px;">Voix 2020 :</label>
+          <input type="number" id="cfgJohnnyVoix" value="0" style="flex:1;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:12px;">
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <label style="font-size:11px;min-width:100px;">% 2020 :</label>
+          <input type="number" id="cfgJohnnyPct" value="0" step="0.1" style="flex:1;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:12px;">
+        </div>
+        <div style="font-size:11px;font-weight:600;color:#333;margin-top:6px;">Sophie Arzal (2020) :</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <label style="font-size:11px;min-width:100px;">Voix 2020 :</label>
+          <input type="number" id="cfgSophieVoix" value="0" style="flex:1;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:12px;">
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <label style="font-size:11px;min-width:100px;">% 2020 :</label>
+          <input type="number" id="cfgSophiePct" value="0" step="0.1" style="flex:1;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:12px;">
+        </div>
+        <button onclick="sauverConfigComparaison()" style="background:#27ae60;color:white;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;margin-top:6px;">💾 Sauvegarder config 2020</button>
+        <div id="cfgComparaisonStatus" style="font-size:11px;color:#27ae60;text-align:center;"></div>
+      </div>
+    </div>
+    <div style="background:white;border-radius:12px;padding:16px;margin-top:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
       <div style="font-size:12px;font-weight:700;color:var(--texte2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">💡 Comment exporter depuis Google Sheets</div>
       <ol style="font-size:13px;color:var(--texte2);line-height:1.8;padding-left:20px;margin:0;">
         <li>Ouvrir la Google Sheets</li>
@@ -485,6 +515,16 @@
   </div>
 </div>
 
+<!-- Popup mise à jour -->
+<div id="popupMiseAJour" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:9998;align-items:center;justify-content:center;">
+  <div style="background:linear-gradient(135deg,#e67e22,#d35400);color:white;padding:24px 30px;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,0.4);text-align:center;max-width:320px;animation:toastIn .3s ease;">
+    <div style="font-size:50px;margin-bottom:12px;">🆕</div>
+    <div style="font-weight:700;font-size:18px;margin-bottom:10px;">Nouvelle version disponible !</div>
+    <div style="font-size:14px;opacity:.9;margin-bottom:20px;">Une mise à jour est prête.<br>Rafraîchissez pour l'obtenir.</div>
+    <button onclick="rafraichirPage()" style="background:white;color:#d35400;border:none;padding:12px 24px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.2);">🔄 Rafraîchir</button>
+  </div>
+</div>
+
 <script>
 // =====================================================
 // 🔥 FIREBASE CONFIG — REMPLACEZ PAR VOS VALEURS
@@ -506,8 +546,10 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v3';
+const APP_VERSION = 'Firebase v5';
 const MAX_RESULTATS = 50;
+const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
+const VERSION_CHECK_INTERVAL = 60000;
 // 🔗 URL du Google Apps Script pour sync vers Google Sheets (laisser vide si pas de sync)
 const SYNC_SHEET_URL = 'https://script.google.com/macros/s/AKfycbyMBmHPmGCSGZLQLC1CzDxDHmLlWK3nxvsLcjq2GQ51hmqkHSjBeRXAxi1xEGWUUc4H/exec';
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
@@ -522,6 +564,7 @@ let statsCache = null, adminCache = null, chartCamembert = null, chartBureau = n
 let isProcessing = false, fichePrincipaleId = null, isFicheSecondaire = false;
 let militantASupprimer = null, currentObsId = null;
 let firebaseListenersActive = false;
+let updateCheckTimer = null, updateDismissed = false;
 
 // =====================================================
 // UTILITAIRES
@@ -533,6 +576,14 @@ function setSyncIndicator(syncing) { const ind = $('syncIndicator'); if (ind) in
 function updateLastSync() { const el = $('lastSync'); if (el) { const now = new Date(); el.textContent = '🔥 ' + now.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}); } }
 function passerSplash() { const splash = $('ecranSplash'); if (splash && splash.style.display !== 'none') { splash.style.transition = 'opacity 0.3s'; splash.style.opacity = '0'; splash.style.pointerEvents = 'none'; setTimeout(() => { splash.remove(); $('ecranLogin').style.display = 'flex'; }, 300); } }
 function afficherMentionsLegales() { ouvrirModal('modalLegal'); }
+
+// =====================================================
+// VÉRIFICATION MISE À JOUR
+// =====================================================
+async function verifierMiseAJour() { if (updateDismissed) return; try { const resp = await fetch(VERSION_CHECK_URL + '?t=' + Date.now(), { cache: 'no-store' }); const html = await resp.text(); const match = html.match(/APP_VERSION\s*=\s*['"]([^'"]+)['"]/); if (match && match[1] && match[1] !== APP_VERSION) afficherPopupMaj(match[1]); } catch(e) {} }
+function afficherPopupMaj(v) { const popup = $('popupMiseAJour'); if (popup) { popup.querySelector('div > div:nth-child(2)').textContent = 'Nouvelle version ' + v + ' disponible !'; popup.style.display = 'flex'; } }
+function rafraichirPage() { try { if (currentPersonne && currentPersonne.id) { localStorage.setItem('visites_fiche_encours', JSON.stringify({ id: currentPersonne.id, nom: currentPersonne.nom, prenom: currentPersonne.prenom })); } } catch(e) {} location.reload(true); }
+function demarrerVerificationMaj() { setTimeout(verifierMiseAJour, 10000); updateCheckTimer = setInterval(verifierMiseAJour, VERSION_CHECK_INTERVAL); }
 
 // =====================================================
 // FIREBASE : LISTENERS TEMPS RÉEL
@@ -737,6 +788,7 @@ function seConnecter() {
 
   chargerToutesPersonnes();
   demarrerListenersFirebase();
+  demarrerVerificationMaj();
 }
 
 function mettreAJourOnglets() {
@@ -761,7 +813,7 @@ function ajouterOnglet(page, label) {
     if (page === 'stats') chargerStats();
     if (page === 'admin') chargerAdmin();
     if (page === 'observations') chargerObservations();
-    if (page === 'csv') verifierStatutsCSV();
+    if (page === 'csv') { verifierStatutsCSV(); chargerConfigComparaison(); }
   };
   $('tabsBar').appendChild(tab);
 }
@@ -1041,7 +1093,7 @@ async function confirmerReinitialisation() {
 // =====================================================
 // NAVIGATION
 // =====================================================
-function initTabs() { document.querySelectorAll('.tab').forEach(tab => { tab.onclick = () => { const page = tab.dataset.page; if (!page) return; document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); tab.classList.add('active'); $('page-' + page).classList.add('active'); if (page === 'stats') chargerStats(); if (page === 'admin') chargerAdmin(); }; }); }
+function initTabs() { document.querySelectorAll('.tab').forEach(tab => { tab.onclick = () => { const page = tab.dataset.page; if (!page) return; document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); tab.classList.add('active'); $('page-' + page).classList.add('active'); if (page === 'stats') chargerStats(); if (page === 'admin') chargerAdmin(); if (page === 'csv') { verifierStatutsCSV(); chargerConfigComparaison(); } }; }); }
 function showPage(page) { const tab = document.querySelector('.tab[data-page="' + page + '"]'); if (tab) tab.click(); }
 function retourRecherche() { isFicheSecondaire = false; fichePrincipaleId = null; showPage('recherche'); setTimeout(() => rechercher(), 50); }
 function voirCoResident(id) { fichePrincipaleId = currentPersonne ? currentPersonne.id : null; isFicheSecondaire = true; selectionnerPersonne(id); }
@@ -1117,51 +1169,141 @@ async function chargerComparaison() {
   const statsDiv = $('comparaisonStats');
   const detailDiv = $('comparaisonDetail');
   statsDiv.innerHTML = '<div style="text-align:center;color:#888;font-size:12px;">Chargement...</div>';
+  detailDiv.innerHTML = '';
+
+  const parseNum = (val) => {
+    if (typeof val === 'number') return val;
+    if (!val) return 0;
+    return parseInt(String(val).replace(/\s/g, '').replace(',', '.')) || 0;
+  };
 
   try {
-    const snapshot = await db.ref('config/comparaison').once('value');
-    const data = snapshot.val();
-    if (!data) { statsDiv.innerHTML = '<div style="color:#888;font-size:12px;">Pas de données de comparaison</div>'; return; }
+    // Lire données bureaux + config depuis Firebase
+    const snapBureaux = await db.ref('config/comparaison').once('value');
+    const snapConfig = await db.ref('config/comparaisonConfig').once('value');
+    const bureaux = snapBureaux.val();
+    const config = snapConfig.val() || {};
 
-    const totalInscrits = data.totalInscrits || 0;
-    const votants2020 = data.votants2020 || 0;
+    if (!bureaux && !config.votants2020) {
+      statsDiv.innerHTML = '<div style="color:#888;font-size:12px;">Pas de données comparaison. Importez le CSV dans l\'onglet CSV.</div>';
+      return;
+    }
+
+    // Calculer totaux depuis données bureau
+    let totalVotants2020 = 0, totalInscrits2026 = 0, totalFoyersJohnny = 0;
+    if (bureaux) {
+      Object.keys(bureaux).forEach(key => {
+        const b = bureaux[key];
+        totalVotants2020 += parseNum(b.votants2020);
+        totalInscrits2026 += parseNum(b.inscrits2026);
+        totalFoyersJohnny += parseNum(b.foyersJohnny);
+      });
+    }
+
+    const totalInscrits = toutesPersonnes.length || totalInscrits2026;
+    const votants2020 = totalVotants2020 || parseNum(config.votants2020) || 3438;
     const totalVisites = toutesPersonnes.filter(p => p[3] === 'Visité').length;
-    const objectif = data.objectifGagner || 1362;
-    const foyersJohnny = data.foyersJohnny || 0;
-    const reserveVoix = data.reserveVoix || 0;
+    const foyersJohnny = totalFoyersJohnny || parseNum(config.foyersJohnny);
+    const objectif = parseNum(config.objectifGagner) || 1362;
+    const reserveVoix = totalVisites;
 
+    // Calculer intentions 2026 par candidat depuis toutesPersonnes
+    const intentionsParCandidat = {};
+    CANDIDATS.forEach(c => { if (c) intentionsParCandidat[c] = 0; });
+    toutesPersonnes.forEach(p => {
+      if (p[3] === 'Visité' && p[10]) {
+        const c = p[10];
+        if (!intentionsParCandidat[c]) intentionsParCandidat[c] = 0;
+        intentionsParCandidat[c]++;
+      }
+    });
+
+    // Résultats 2020 depuis config Firebase
+    const resultats2020 = config.resultats2020 || [];
+
+    // 2ème ligne compteur (votants 2020, foyers, % foyers)
+    const pctFoyers = votants2020 > 0 ? (foyersJohnny / votants2020 * 100) : 0;
+    const pctFoyersArrondi = Math.round(pctFoyers);
+    const ecartFoyers = foyersJohnny - objectif;
+    const johnny2020 = resultats2020.find(r => r.candidat && r.candidat.trim() === 'Johnny Payet');
+    const pct2020 = johnny2020 ? parseFloat(johnny2020.pct) || 0 : 0;
+    const ecartPct = pctFoyers - pct2020;
     $('cptVotants2020').textContent = votants2020.toLocaleString('fr-FR');
-    $('cptFoyers').textContent = foyersJohnny.toLocaleString('fr-FR');
-    const pctFoyers = votants2020 > 0 ? Math.round(foyersJohnny / votants2020 * 100) : 0;
-    $('cptPctFoyers').textContent = pctFoyers + '%';
+    $('cptFoyers').innerHTML = foyersJohnny.toLocaleString('fr-FR') + (ecartFoyers > 0 ? ' <span style="color:#f39c12;font-size:14px;">(+' + ecartFoyers + ' \u{1F680})</span>' : '');
+    $('cptPctFoyers').innerHTML = pctFoyersArrondi + '%' + (ecartPct > 0 ? ' <span style="color:#f39c12;font-size:14px;">(+' + ecartPct.toFixed(2) + '% \u{1F680})</span>' : '') + (pctFoyersArrondi >= 50 ? ' \u{1F4EF}' : '');
     $('compteur2').style.display = 'flex';
 
-    statsDiv.innerHTML = '<div style="display:flex;justify-content:space-around;background:linear-gradient(135deg,#1a3a6b,#2755a8);border-radius:10px;padding:12px;color:white;text-align:center;margin-bottom:10px;"><div><div style="font-size:20px;font-weight:bold;">' + totalInscrits.toLocaleString('fr-FR') + '</div><div style="font-size:10px;opacity:.7;">INSCRITS</div></div><div><div style="font-size:20px;font-weight:bold;">' + votants2020.toLocaleString('fr-FR') + '</div><div style="font-size:10px;opacity:.7;">VOTANTS 2020</div></div><div><div style="font-size:20px;font-weight:bold;">' + totalVisites.toLocaleString('fr-FR') + '</div><div style="font-size:10px;opacity:.7;">VISITÉS 2026</div></div></div>';
+    // Bannière stats
+    statsDiv.innerHTML = '<div style="display:flex;justify-content:space-around;background:linear-gradient(135deg,#1a3a6b,#2755a8);border-radius:10px;padding:12px;color:white;text-align:center;margin-bottom:10px;"><div><div style="font-size:20px;font-weight:bold;">' + totalInscrits.toLocaleString('fr-FR') + '</div><div style="font-size:10px;opacity:.7;">INSCRITS</div></div><div><div style="font-size:20px;font-weight:bold;">' + votants2020.toLocaleString('fr-FR') + '</div><div style="font-size:10px;opacity:.7;">VOTANTS 2020</div></div><div><div style="font-size:20px;font-weight:bold;">' + totalVisites.toLocaleString('fr-FR') + '</div><div style="font-size:10px;opacity:.7;">VISITÉS 2026</div></div></div><div style="background:linear-gradient(135deg,#27ae60,#2ecc71);border-radius:10px;padding:10px;color:white;text-align:center;"><div style="font-size:18px;font-weight:bold;">\u{1F3AF} ' + reserveVoix.toLocaleString('fr-FR') + '</div><div style="font-size:10px;opacity:.8;">RÉSERVE DE VOIX POTENTIELLE</div></div>';
 
-    // Graphique comparaison
+    // Graphique comparaison avec 3 barres + ligne objectif
     const candidats = ['Johnny Payet', 'Sophie Arzal'];
     const voix2020 = [];
     const intentions2026 = [];
+    const foyersData = [];
+
     candidats.forEach(nom => {
-      const r = (data.resultats2020 || []).find(r => r.candidat === nom);
-      const i = (data.intentions2026 || []).find(i => i.candidat === nom);
-      voix2020.push(r ? r.voix : 0);
-      intentions2026.push(i ? i.visites : 0);
+      const r2020 = resultats2020.find(r => r.candidat && r.candidat.trim() === nom);
+      voix2020.push(r2020 ? parseNum(r2020.voix) : 0);
+      intentions2026.push(intentionsParCandidat[nom] || 0);
+      foyersData.push(nom === 'Johnny Payet' ? foyersJohnny : 0);
     });
+    const maxY = Math.max(objectif * 1.3, Math.max(...voix2020, ...intentions2026, ...foyersData) * 1.2);
 
     if (chartComparaison) chartComparaison.destroy();
     chartComparaison = new Chart($('chartComparaison'), {
       type: 'bar',
-      data: { labels: candidats, datasets: [
-        { label: '2020 (voix)', data: voix2020, backgroundColor: 'rgba(52,152,219,0.7)', borderColor: '#3498db', borderWidth: 2 },
-        { label: '2026 (intentions)', data: intentions2026, backgroundColor: 'rgba(39,174,96,0.7)', borderColor: '#27ae60', borderWidth: 2 }
-      ] },
-      options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } }, plugins: { legend: { position: 'bottom' } } }
+      data: {
+        labels: candidats,
+        datasets: [
+          { label: '2020 (voix)', data: voix2020, backgroundColor: 'rgba(52,152,219,0.7)', borderColor: '#3498db', borderWidth: 2 },
+          { label: '2026 (intentions)', data: intentions2026, backgroundColor: 'rgba(39,174,96,0.7)', borderColor: '#27ae60', borderWidth: 2 },
+          { label: '2026 (par foyer)', data: foyersData, backgroundColor: 'rgba(243,156,18,0.7)', borderColor: '#f39c12', borderWidth: 2 }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: { y: { beginAtZero: true, max: maxY > 0 ? maxY : 2000 } },
+        plugins: { legend: { position: 'bottom' } }
+      },
+      plugins: [{
+        afterDraw: function(chart) {
+          const ctx = chart.ctx;
+          const yAxis = chart.scales.y;
+          const xAxis = chart.scales.x;
+          const y = yAxis.getPixelForValue(objectif);
+          ctx.save();
+          ctx.beginPath();
+          ctx.setLineDash([5, 5]);
+          ctx.strokeStyle = '#e74c3c';
+          ctx.lineWidth = 2;
+          ctx.moveTo(xAxis.left, y);
+          ctx.lineTo(xAxis.right, y);
+          ctx.stroke();
+          ctx.fillStyle = '#e74c3c';
+          ctx.font = 'bold 11px sans-serif';
+          ctx.fillText('\u{1F3AF} ' + objectif.toLocaleString('fr-FR') + ' voix', xAxis.left + 8, y - 7);
+          ctx.restore();
+        }
+      }]
     });
 
-    detailDiv.innerHTML = '';
+    // Progression vers objectif
+    var detailHtml = '<div style="font-size:11px;color:#888;margin-bottom:8px;">\u{1F4C8} Progression vers l\'objectif (' + objectif.toLocaleString('fr-FR') + ' voix)</div>';
+    candidats.forEach(function(nom, i) {
+      var v2020 = voix2020[i];
+      var i2026 = intentions2026[i];
+      var pct = objectif > 0 ? Math.round(i2026 / objectif * 100) : 0;
+      var ecart = i2026 - v2020;
+      var ecartColor = ecart >= 0 ? '#27ae60' : '#e74c3c';
+      var ecartText = ecart >= 0 ? '+' + ecart.toLocaleString('fr-FR') : ecart.toLocaleString('fr-FR');
+      detailHtml += '<div style="margin-bottom:10px;"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;"><span><strong>' + nom + '</strong></span><span>' + i2026.toLocaleString('fr-FR') + ' / ' + objectif.toLocaleString('fr-FR') + ' (' + pct + '%) <span style="color:' + ecartColor + ';font-weight:bold;">' + ecartText + '</span></span></div><div style="background:#e0e4ea;border-radius:6px;height:12px;overflow:hidden;"><div style="background:' + (i === 0 ? '#27ae60' : '#3498db') + ';width:' + Math.min(pct, 100) + '%;height:100%;border-radius:6px;"></div></div></div>';
+    });
+    detailDiv.innerHTML = detailHtml;
+
   } catch(e) {
-    statsDiv.innerHTML = '';
+    statsDiv.innerHTML = '<div style="color:#e74c3c;font-size:12px;">\u26A0\uFE0F Erreur: ' + e.message + '</div>';
   }
 }
 
@@ -1355,6 +1497,40 @@ async function toggleMilitant(nom, actif) {
 function ouvrirImport() { ouvrirModal('modalImport'); }
 
 // =====================================================
+// ONGLET CSV — CONFIG COMPARAISON 2020
+// =====================================================
+async function chargerConfigComparaison() {
+  try {
+    const snap = await db.ref('config/comparaisonConfig').once('value');
+    const config = snap.val();
+    if (!config) return;
+    if (config.objectifGagner) $('cfgObjectif').value = config.objectifGagner;
+    const r = config.resultats2020 || [];
+    const johnny = r.find(x => x.candidat === 'Johnny Payet');
+    const sophie = r.find(x => x.candidat === 'Sophie Arzal');
+    if (johnny) { $('cfgJohnnyVoix').value = johnny.voix || 0; $('cfgJohnnyPct').value = johnny.pct || 0; }
+    if (sophie) { $('cfgSophieVoix').value = sophie.voix || 0; $('cfgSophiePct').value = sophie.pct || 0; }
+    $('cfgComparaisonStatus').textContent = '✅ Config chargée';
+  } catch(e) {}
+}
+
+async function sauverConfigComparaison() {
+  const config = {
+    objectifGagner: parseInt($('cfgObjectif').value) || 1362,
+    resultats2020: [
+      { candidat: 'Johnny Payet', voix: parseInt($('cfgJohnnyVoix').value) || 0, pct: parseFloat($('cfgJohnnyPct').value) || 0 },
+      { candidat: 'Sophie Arzal', voix: parseInt($('cfgSophieVoix').value) || 0, pct: parseFloat($('cfgSophiePct').value) || 0 }
+    ]
+  };
+  try {
+    await db.ref('config/comparaisonConfig').set(config);
+    $('cfgComparaisonStatus').textContent = '✅ Config 2020 sauvegardée !';
+    showToast('✅ Config comparaison sauvegardée !', 'succes');
+  } catch(e) {
+    showToast('❌ Erreur: ' + e.message, 'erreur');
+  }
+}
+
 // ONGLET CSV — IMPORT DÉDIÉ
 // =====================================================
 function verifierStatutsCSV() {
