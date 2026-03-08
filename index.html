@@ -3,17 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Visites Électorales</title>
+<title>Visites Électorales - Firebase</title>
 <meta name="theme-color" content="#1a3a6b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Visites">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%231a3a6b'/><text x='50' y='70' font-size='60' text-anchor='middle'>🗳️</text></svg>">
 <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='40' fill='%231a3a6b'/><text x='90' y='120' font-size='100' text-anchor='middle'>🗳️</text></svg>">
-<link rel="manifest" href="manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root { --bleu:#1a3a6b; --bleu-clair:#2755a8; --rouge:#c0392b; --vert:#27ae60; --gris:#f0f2f5; --texte:#1a1a2e; --texte2:#5a6070; --orange:#e67e22; 
+  :root { --bleu:#1a3a6b; --bleu-clair:#2755a8; --rouge:#c0392b; --vert:#27ae60; --gris:#f0f2f5; --texte:#1a1a2e; --texte2:#5a6070; --orange:#e67e22;
     --role-admin:#8e44ad; --role-superviseur:#2c3e50; --role-responsable:#16a085; --role-manager:#d35400; --role-militant:#2755a8; --role-teleop:#c0392b;
   }
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -148,29 +147,46 @@
   .splash-legal h3 { color:white; font-size:14px; margin:0 0 12px 0; text-align:center; }
   .splash-legal-content { color:rgba(255,255,255,0.85); font-size:11px; line-height:1.6; white-space:pre-line; }
   .splash-loader { margin-top:20px; width:100px; height:4px; background:rgba(255,255,255,0.2); border-radius:2px; overflow:hidden; }
-  .splash-loader-bar { height:100%; width:0%; background:white; border-radius:2px; animation:splashLoad 10s linear forwards; }
+  .splash-loader-bar { height:100%; width:0%; background:white; border-radius:2px; animation:splashLoad 3s linear forwards; }
   @keyframes splashLoad { 0%{width:0%} 100%{width:100%} }
   .btn-legal { position:absolute; bottom:20px; right:20px; background:rgba(255,255,255,0.15); color:rgba(255,255,255,0.7); border:none; padding:8px 14px; border-radius:20px; font-size:11px; cursor:pointer; }
-  .btn-legal:hover { background:rgba(255,255,255,0.25); color:white; }
+  .firebase-badge { background:linear-gradient(135deg,#FF9800,#F44336); color:white; font-size:9px; font-weight:700; padding:2px 6px; border-radius:4px; margin-left:4px; letter-spacing:.5px; }
+  .csv-list { list-style:none; padding:0; }
+  .csv-item { background:white; border-radius:12px; padding:16px; margin-bottom:10px; box-shadow:0 2px 8px rgba(0,0,0,0.06); display:flex; align-items:center; gap:12px; }
+  .csv-icon { font-size:28px; flex-shrink:0; }
+  .csv-info { flex:1; }
+  .csv-name { font-weight:700; font-size:15px; color:var(--texte); }
+  .csv-desc { font-size:12px; color:var(--texte2); margin-top:2px; }
+  .csv-status { font-size:24px; flex-shrink:0; width:36px; text-align:center; }
+  .csv-btn { background:var(--bleu-clair); color:white; border:none; border-radius:8px; padding:8px 14px; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; flex-shrink:0; }
+  .csv-btn:active { transform:scale(0.95); }
+  .csv-btn.imported { background:var(--vert); pointer-events:none; }
+  .csv-file-input { display:none; }
+  .csv-progress { height:4px; background:#e0e4ea; border-radius:2px; margin-top:8px; overflow:hidden; display:none; }
+  .csv-progress-fill { height:100%; background:var(--vert); border-radius:2px; transition:width .3s; width:0%; }
+  .csv-count { font-size:11px; color:var(--vert); font-weight:600; margin-top:4px; display:none; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 </head>
 <body>
 <div id="ecranSplash">
-  <div class="splash-logo">🗳️</div>
+  <div class="splash-logo">🔥</div>
   <div class="splash-title">VISITES ÉLECTORALES</div>
-  <div class="splash-subtitle">Application Campagne Interne</div>
+  <div class="splash-subtitle">Firebase Edition · Temps réel</div>
   <div class="splash-legal">
     <h3>📜 Mentions Légales</h3>
     <div id="splashMentionsContenu" class="splash-legal-content">Chargement...</div>
   </div>
   <div class="splash-loader"><div class="splash-loader-bar"></div></div>
-  <button onclick="passerSplash()" style="margin-top:20px;background:rgba(255,255,255,0.2);border:none;padding:10px 24px;border-radius:20px;color:white;font-size:13px;cursor:pointer;transition:background 0.2s;">Passer ➔</button>
+  <button onclick="passerSplash()" style="margin-top:20px;background:rgba(255,255,255,0.2);border:none;padding:10px 24px;border-radius:20px;color:white;font-size:13px;cursor:pointer;">Passer ➔</button>
 </div>
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v182</span></div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v2</span> 🔥</div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -204,33 +220,25 @@
   <button class="btn-legal" onclick="afficherMentionsLegales()">📜 Mentions légales</button>
   <button onclick="confirmerDeconnexion()" style="background:none;border:none;color:rgba(255,255,255,0.45);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;margin-top:8px;padding:6px 16px;text-decoration:underline;">Déconnexion</button>
 </div>
+<!-- Modal Mentions légales -->
 <div id="modalLegal" class="modal-overlay" style="z-index:600;display:none;">
   <div style="background:white;border-radius:16px;max-width:500px;width:95%;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 10px 40px rgba(0,0,0,0.3);">
     <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid #f0f2f5;">
       <h3 style="font-size:16px;font-weight:700;color:#1a3a6b;margin:0;">📜 Informations Légales</h3>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <button onclick="rafraichirMentions()" style="background:#2755a8;border:none;width:32px;height:32px;border-radius:8px;color:white;font-size:16px;cursor:pointer;" title="Rafraîchir">🔁</button>
-        <button onclick="fermerModal('modalLegal')" style="background:none;border:none;font-size:22px;cursor:pointer;color:#888;">✕</button>
-      </div>
-    </div>
-    <div style="display:flex;border-bottom:2px solid #f0f2f5;">
-      <button id="tabMentions" onclick="changerOngletLegal('mentions')" style="flex:1;padding:10px;background:none;border:none;font-size:11px;font-weight:600;color:#1a3a6b;cursor:pointer;border-bottom:3px solid #1a3a6b;">📄 Mentions</button>
-      <button id="tabConformite" onclick="changerOngletLegal('conformite')" style="flex:1;padding:10px;background:none;border:none;font-size:11px;font-weight:600;color:#888;cursor:pointer;border-bottom:3px solid transparent;">✅ Conformité</button>
-      <button id="tabSuppression" onclick="changerOngletLegal('suppression')" style="flex:1;padding:10px;background:none;border:none;font-size:11px;font-weight:600;color:#888;cursor:pointer;border-bottom:3px solid transparent;">🗑️ Suppression</button>
+      <button onclick="fermerModal('modalLegal')" style="background:none;border:none;font-size:22px;cursor:pointer;color:#888;">✕</button>
     </div>
     <div id="pageMentions" style="overflow-y:auto;padding:20px;font-size:13px;line-height:1.7;color:#333;white-space:pre-line;">Chargement...</div>
-    <div id="pageConformite" style="display:none;overflow-y:auto;padding:20px;font-size:12px;line-height:1.6;color:#333;">Chargement...</div>
-    <div id="pageSuppression" style="display:none;overflow-y:auto;padding:20px;font-size:12px;line-height:1.5;color:#333;">Chargement...</div>
   </div>
 </div>
+<!-- App principale -->
 <div id="appPrincipale">
   <div class="header" id="mainHeader">
     <div class="header-left">
-      <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites</h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">v182</span></p>
+      <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v2</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
-      <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;" title="Mentions légales">📜</button>
+      <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;">📜</button>
       <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
     </div>
   </div>
@@ -265,7 +273,7 @@
   </div>
   <div class="page" id="page-stats">
     <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
-      <button onclick="statsCache=null;localStorage.removeItem(CACHE_KEY_STATS);rafraichirStatsServeur();" style="background:#2755a8;color:white;border:none;border-radius:8px;width:40px;height:40px;font-size:20px;cursor:pointer;" title="Rafraîchir">🔄</button>
+      <button onclick="chargerStats()" style="background:#2755a8;color:white;border:none;border-radius:8px;width:40px;height:40px;font-size:20px;cursor:pointer;" title="Rafraîchir">🔄</button>
     </div>
     <div class="compteur" id="compteur" style="display:none;">
       <div class="cpt-item"><div class="cpt-num" id="cptTotal">-</div><div class="cpt-label">INSCRITS</div></div>
@@ -302,87 +310,88 @@
   </div>
   <div class="page" id="page-observations">
     <div style="display:flex;gap:10px;margin-bottom:12px;">
-      <button class="btn-refresh" onclick="localStorage.removeItem(CACHE_KEY_OBS);actualiserObservations();">🔄 Actualiser</button>
+      <button class="btn-refresh" onclick="chargerObservations()">🔄 Actualiser</button>
     </div>
     <div id="obsContenu"></div>
   </div>
   <div class="page" id="page-admin">
     <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
-      <button class="btn-refresh" onclick="forceChargerAdmin()">🔄 Actualiser</button>
+      <button class="btn-refresh" onclick="chargerAdmin()">🔄 Actualiser</button>
       <button class="btn-refresh" style="background:#e67e22;" onclick="ouvrirGestion()">⚙️ Gestion</button>
-      <button class="btn-refresh" style="background:#8e44ad;" onclick="ouvrirEvenement()">📅 Événement</button>
+      <button class="btn-refresh" style="background:#27ae60;" onclick="ouvrirImport()">📥 Import CSV</button>
     </div>
     <div id="adminContenu"></div>
+  </div>
+  <div class="page" id="page-csv">
+    <div style="background:linear-gradient(135deg,#27ae60,#2ecc71);border-radius:12px;padding:16px;color:white;margin-bottom:16px;text-align:center;">
+      <div style="font-size:28px;margin-bottom:4px;">📥</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;">Import des données</div>
+      <div style="font-size:12px;opacity:.8;">Exportez vos Google Sheets en CSV puis importez ici</div>
+    </div>
+    <ul class="csv-list">
+      <li class="csv-item" id="csvItem-personnes">
+        <div class="csv-icon">👥</div>
+        <div class="csv-info">
+          <div class="csv-name">Personnes (électeurs)</div>
+          <div class="csv-desc">Liste des ~6000 électeurs inscrits</div>
+          <div class="csv-progress" id="csvProgress-personnes"><div class="csv-progress-fill" id="csvProgressFill-personnes"></div></div>
+          <div class="csv-count" id="csvCount-personnes"></div>
+        </div>
+        <input type="file" class="csv-file-input" id="csvFile-personnes" accept=".csv" onchange="importerCSV('personnes')">
+        <button class="csv-btn" id="csvBtn-personnes" onclick="document.getElementById('csvFile-personnes').click()">📥 Importer</button>
+        <div class="csv-status" id="csvStatus-personnes">⬜</div>
+      </li>
+      <li class="csv-item" id="csvItem-militants">
+        <div class="csv-icon">🎖️</div>
+        <div class="csv-info">
+          <div class="csv-name">Militants</div>
+          <div class="csv-desc">Équipe de campagne (nom, PIN, rôle)</div>
+          <div class="csv-progress" id="csvProgress-militants"><div class="csv-progress-fill" id="csvProgressFill-militants"></div></div>
+          <div class="csv-count" id="csvCount-militants"></div>
+        </div>
+        <input type="file" class="csv-file-input" id="csvFile-militants" accept=".csv" onchange="importerCSV('militants')">
+        <button class="csv-btn" id="csvBtn-militants" onclick="document.getElementById('csvFile-militants').click()">📥 Importer</button>
+        <div class="csv-status" id="csvStatus-militants">⬜</div>
+      </li>
+      <li class="csv-item" id="csvItem-comparaison">
+        <div class="csv-icon">📊</div>
+        <div class="csv-info">
+          <div class="csv-name">Comparaison 2020 vs 2026</div>
+          <div class="csv-desc">Données statistiques par bureau de vote</div>
+          <div class="csv-progress" id="csvProgress-comparaison"><div class="csv-progress-fill" id="csvProgressFill-comparaison"></div></div>
+          <div class="csv-count" id="csvCount-comparaison"></div>
+        </div>
+        <input type="file" class="csv-file-input" id="csvFile-comparaison" accept=".csv" onchange="importerCSV('comparaison')">
+        <button class="csv-btn" id="csvBtn-comparaison" onclick="document.getElementById('csvFile-comparaison').click()">📥 Importer</button>
+        <div class="csv-status" id="csvStatus-comparaison">⬜</div>
+      </li>
+      <li class="csv-item" id="csvItem-mentions">
+        <div class="csv-icon">📜</div>
+        <div class="csv-info">
+          <div class="csv-name">Mentions légales</div>
+          <div class="csv-desc">Texte RGPD et informations légales</div>
+          <div class="csv-progress" id="csvProgress-mentions"><div class="csv-progress-fill" id="csvProgressFill-mentions"></div></div>
+          <div class="csv-count" id="csvCount-mentions"></div>
+        </div>
+        <input type="file" class="csv-file-input" id="csvFile-mentions" accept=".csv,.txt" onchange="importerCSV('mentions')">
+        <button class="csv-btn" id="csvBtn-mentions" onclick="document.getElementById('csvFile-mentions').click()">📥 Importer</button>
+        <div class="csv-status" id="csvStatus-mentions">⬜</div>
+      </li>
+    </ul>
+    <div style="background:white;border-radius:12px;padding:16px;margin-top:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+      <div style="font-size:12px;font-weight:700;color:var(--texte2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">💡 Comment exporter depuis Google Sheets</div>
+      <ol style="font-size:13px;color:var(--texte2);line-height:1.8;padding-left:20px;margin:0;">
+        <li>Ouvrir la Google Sheets</li>
+        <li>Sélectionner la bonne feuille (onglet)</li>
+        <li><strong>Fichier → Télécharger → CSV (.csv)</strong></li>
+        <li>Cliquer sur <strong>📥 Importer</strong> ci-dessus</li>
+      </ol>
+    </div>
   </div>
   <div class="page" id="page-contact"><div id="contactContenu"></div></div>
   <div class="page" id="page-agenda"><div id="agendaContenu"></div></div>
 </div>
-<div id="modalAjoutMilitant" class="modal-overlay" style="z-index:600;display:none;">
-  <div class="modal-box" style="max-width:420px;max-height:85vh;overflow-y:auto;">
-    <h3>➕ Ajouter un militant</h3>
-    <div class="field" style="margin-bottom:10px;">
-      <label><span id="indExp">❌</span> Email expéditeur <span style="font-weight:400;color:#888;font-size:11px;">(votre adresse)</span></label>
-      <input type="email" id="emailExpediteur" placeholder="votre@email.com" oninput="majIndicateurs()">
-    </div>
-    <div style="border-top:2px solid #e0e4ea;margin:12px 0;"></div>
-    <div class="field" style="margin-bottom:10px;">
-      <label><span id="indNom">❌</span> Nom complet</label>
-      <input type="text" id="nouveauNom" placeholder="Ex: Dupont Marie" oninput="majIndicateurs()">
-    </div>
-    <div class="field" style="margin-bottom:10px;">
-      <label><span id="indPin">❌</span> PIN (4 chiffres)</label>
-      <input type="text" id="nouveauPin" placeholder="1234" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" style="font-family:monospace;font-size:18px;letter-spacing:4px;text-align:center;" oninput="majIndicateurs()">
-    </div>
-    <div class="field" style="margin-bottom:10px;">
-      <label><span id="indRole">✅</span> Rôle</label>
-      <select id="nouveauRole"><option value="militant">militant</option><option value="manager">manager</option><option value="responsable bureaux">responsable bureaux</option><option value="superviseur">superviseur</option><option value="admin">admin</option></select>
-    </div>
-    <div class="field" style="margin-bottom:10px;">
-      <label><span id="indEmail">❌</span> Email du militant <span style="font-weight:400;color:#888;font-size:11px;">(pour envoi auto)</span></label>
-      <input type="email" id="nouveauEmail" placeholder="militant@mail.com" oninput="majIndicateurs()">
-      <div id="alerteEmail" style="display:none;margin-top:4px;padding:6px 10px;border-radius:8px;font-size:12px;font-weight:600;"></div>
-    </div>
-    <div class="field" style="margin-bottom:10px;">
-      <label><span id="indObjet">❌</span> Objet du mail <span style="font-weight:400;color:#888;font-size:11px;">(chargement auto C5)</span></label>
-      <input type="text" id="nouveauObjet" placeholder="Chargement automatique..." oninput="majIndicateurs()">
-    </div>
-    <div class="field" style="margin-bottom:10px;">
-      <label><span id="indScript">❌</span> Script d'instructions <span style="font-weight:400;color:#888;font-size:11px;">(chargement auto C6)</span></label>
-      <textarea id="nouveauScript" rows="3" placeholder="Chargement automatique..." style="font-size:13px;" oninput="majIndicateurs()"></textarea>
-    </div>
-    <div class="field" style="margin-bottom:10px;">
-      <label><span id="indLien">❌</span> Lien application <span style="font-weight:400;color:#888;font-size:11px;">(avec token unique)</span></label>
-      <div style="display:flex;gap:6px;align-items:center;">
-        <input type="text" id="nouveauLien" readonly style="font-size:11px;background:#f0f4f8;flex:1;color:#2755a8;" placeholder="Entrez un nom pour générer...">
-        <button onclick="copierLienMilitant()" style="background:#2755a8;color:white;border:none;border-radius:8px;padding:8px 10px;font-size:13px;cursor:pointer;" title="Copier le lien">📋</button>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px;margin-top:8px;">
-        <span style="font-size:12px;color:#666;">Lien actif :</span>
-        <label class="toggle" style="margin:0;">
-          <input type="checkbox" id="toggleLienMilitant" checked onchange="majStatutLien()">
-          <span class="toggle-slider"></span>
-        </label>
-        <span id="statutLien" style="font-size:12px;font-weight:600;color:#27ae60;">✅ Activé</span>
-      </div>
-    </div>
-    <div class="modal-actions" style="flex-direction:column;gap:8px;">
-      <div id="btnEnvoyerMailZone" style="display:none;width:100%;">
-        <button onclick="ajouterEtEnvoyerMail()" style="width:100%;background:#2755a8;color:white;border:none;border-radius:10px;padding:12px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;">📧 Ajouter + Envoyer par Gmail</button>
-      </div>
-      <div style="display:flex;gap:8px;width:100%;">
-        <button class="modal-btn-cancel" onclick="annulerAjoutMilitant()">Annuler</button>
-        <button class="modal-btn-ok" style="background:#e67e22;" onclick="sauvegarderBrouillon()">📝 Créer un brouillon</button>
-      </div>
-    </div>
-  </div>
-</div>
-<div id="modalSupprimerMilitant" class="modal-overlay" style="z-index:600;display:none;">
-  <div class="modal-box" style="max-width:340px;">
-    <h3 style="color:#c0392b;">🗑️ Supprimer le militant ?</h3>
-    <p style="margin:16px 0;text-align:center;font-size:15px;">Voulez-vous vraiment supprimer<br><strong id="confirmSuppNom"></strong> ?</p>
-    <div class="modal-actions"><button class="modal-btn-cancel" onclick="fermerModal('modalSupprimerMilitant')">Annuler</button><button class="modal-btn-ok" style="background:#c0392b;" onclick="executerSuppressionMilitant()">🗑️ Supprimer</button></div>
-  </div>
-</div>
+<!-- Modals -->
 <div id="modalGestion" class="modal-overlay" style="display:none;">
   <div style="background:white;border-radius:16px;max-width:500px;width:95%;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 10px 40px rgba(0,0,0,0.3);">
     <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px 12px;border-bottom:1px solid #f0f2f5;flex-shrink:0;">
@@ -396,43 +405,39 @@
     <div id="gestionContenu" style="overflow-y:auto;padding:16px;flex:1;"></div>
   </div>
 </div>
-<div id="modalConfirmAppel" class="modal-overlay" style="z-index:600;display:none;">
-  <div class="modal-box" style="max-width:340px;">
-    <h3 style="color:#27ae60;">📞 Appeler ?</h3>
-    <p style="margin:16px 0;text-align:center;font-size:15px;">Voulez-vous appeler<br><strong id="confirmAppelNom"></strong> ?</p>
-    <div class="modal-actions"><button class="modal-btn-cancel" onclick="fermerModal('modalConfirmAppel')">Annuler</button><button class="modal-btn-ok" style="background:#27ae60;" onclick="executerAppel()">📞 Appeler</button></div>
-  </div>
-</div>
-<div id="modalConfirmMail" class="modal-overlay" style="z-index:600;display:none;">
-  <div class="modal-box" style="max-width:340px;">
-    <h3 style="color:#3498db;">📧 Envoyer un mail ?</h3>
-    <p style="margin:16px 0;text-align:center;font-size:15px;">Voulez-vous envoyer un mail à<br><strong id="confirmMailNom"></strong> ?</p>
-    <div class="modal-actions"><button class="modal-btn-cancel" onclick="fermerModal('modalConfirmMail')">Annuler</button><button class="modal-btn-ok" style="background:#3498db;" onclick="executerMail()">📧 Envoyer</button></div>
-  </div>
-</div>
-<div id="modalRappeler" class="modal-overlay" style="z-index:600;display:none;">
-  <div class="modal-box" style="max-width:360px;">
-    <h3 style="color:#e67e22;">🔄 Programmer un rappel</h3>
-    <p style="margin:12px 0;text-align:center;font-size:14px;"><strong id="confirmRappelNom"></strong></p>
-    <div class="field" style="margin-bottom:12px;"><label>Date de rappel</label><input type="date" id="rappelDate" style="width:100%;"></div>
-    <div class="field" style="margin-bottom:12px;"><label>Disponibilité</label><select id="rappelDispo" style="width:100%;"><option value="Matin">🌅 Matin (8h-12h)</option><option value="Après-midi">☀️ Après-midi (12h-18h)</option><option value="Soir">🌙 Soir (18h-21h)</option></select></div>
-    <div class="modal-actions"><button class="modal-btn-cancel" onclick="fermerModal('modalRappeler')">Annuler</button><button class="modal-btn-ok" style="background:#e67e22;" onclick="executerRappeler()">🔄 Programmer</button></div>
-  </div>
-</div>
-<div id="modalEvenement" class="modal-overlay" style="z-index:500;display:none;">
-  <div style="background:white;border-radius:16px;max-width:550px;width:95%;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 10px 40px rgba(0,0,0,0.3);">
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px 12px;border-bottom:1px solid #f0f2f5;flex-shrink:0;">
-      <div style="display:flex;align-items:center;gap:10px;">
-        <button id="eventBtnRetour" onclick="retourMenuEvenement()" style="display:none;background:none;border:none;font-size:18px;cursor:pointer;color:#8e44ad;padding:0;">←</button>
-        <h3 id="eventTitre" style="font-size:16px;font-weight:700;color:#1a3a6b;">📅 Événement</h3>
-      </div>
-      <button onclick="fermerOuRetourEvenement()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#888;line-height:1;">✕</button>
+<div id="modalAjoutMilitant" class="modal-overlay" style="z-index:600;display:none;">
+  <div class="modal-box" style="max-width:420px;max-height:85vh;overflow-y:auto;">
+    <h3>➕ Ajouter un militant</h3>
+    <div class="field" style="margin-bottom:10px;">
+      <label>Nom complet</label>
+      <input type="text" id="nouveauNom" placeholder="Ex: Dupont Marie">
     </div>
-    <div id="eventContenu" style="overflow-y:auto;padding:16px;flex:1;"></div>
+    <div class="field" style="margin-bottom:10px;">
+      <label>PIN (4 chiffres)</label>
+      <input type="text" id="nouveauPin" placeholder="1234" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" style="font-family:monospace;font-size:18px;letter-spacing:4px;text-align:center;">
+    </div>
+    <div class="field" style="margin-bottom:10px;">
+      <label>Rôle</label>
+      <select id="nouveauRole"><option value="militant">militant</option><option value="manager">manager</option><option value="responsable bureaux">responsable bureaux</option><option value="superviseur">superviseur</option><option value="admin">admin</option></select>
+    </div>
+    <div class="field" style="margin-bottom:10px;">
+      <label>Email</label>
+      <input type="email" id="nouveauEmail" placeholder="militant@mail.com">
+    </div>
+    <div class="modal-actions" style="flex-direction:column;gap:8px;">
+      <div style="display:flex;gap:8px;width:100%;">
+        <button class="modal-btn-cancel" onclick="fermerModal('modalAjoutMilitant')">Annuler</button>
+        <button class="modal-btn-ok" style="background:#27ae60;" onclick="ajouterMilitantFirebase()">✅ Ajouter</button>
+      </div>
+    </div>
   </div>
 </div>
-<div class="modal-overlay" id="modalFicheEnCours" style="display:none;">
-  <div class="modal-box"><h3>📋 Fiche en cours</h3><p id="ficheEnCoursMessage">Vous aviez une fiche ouverte avant la mise à jour.</p><div class="modal-actions"><button class="modal-btn-cancel" onclick="fermerModal('modalFicheEnCours');localStorage.removeItem('visites_fiche_encours');">Non merci</button><button class="modal-btn-ok" onclick="ouvrirFicheEnCours()">Oui, y retourner</button></div></div>
+<div id="modalSupprimerMilitant" class="modal-overlay" style="z-index:600;display:none;">
+  <div class="modal-box" style="max-width:340px;">
+    <h3 style="color:#c0392b;">🗑️ Supprimer le militant ?</h3>
+    <p style="margin:16px 0;text-align:center;font-size:15px;">Voulez-vous vraiment supprimer<br><strong id="confirmSuppNom"></strong> ?</p>
+    <div class="modal-actions"><button class="modal-btn-cancel" onclick="fermerModal('modalSupprimerMilitant')">Annuler</button><button class="modal-btn-ok" style="background:#c0392b;" onclick="executerSuppressionMilitant()">🗑️ Supprimer</button></div>
+  </div>
 </div>
 <div class="modal-overlay" id="modalDeconnexion" style="display:none;">
   <div class="modal-box"><h3>👋 Déconnexion</h3><p>Voulez-vous vous déconnecter ?</p><div class="modal-actions"><button class="modal-btn-cancel" onclick="fermerModal('modalDeconnexion')">Non</button><button class="modal-btn-ok" onclick="confirmerDeconnexion()">Oui, quitter</button></div></div>
@@ -446,6 +451,32 @@
 <div class="modal-overlay" id="modalObservation" style="display:none;">
   <div class="modal-box" style="max-width:400px;"><h3 id="obsModalTitre">📝 Observation</h3><div id="obsModalContenu" style="background:#f8f9fa;border-radius:8px;padding:14px;margin-bottom:16px;font-size:14px;line-height:1.6;max-height:300px;overflow-y:auto;"></div><div class="modal-actions"><button class="modal-btn-cancel" style="flex:1;" onclick="fermerModal('modalObservation')">Fermer</button><button class="modal-btn-ok" style="flex:1;background:#2755a8;" onclick="ouvrirFicheDepuisObs()">Voir fiche</button></div></div>
 </div>
+<!-- Modal Import CSV -->
+<div id="modalImport" class="modal-overlay" style="display:none;">
+  <div class="modal-box" style="max-width:450px;">
+    <h3>📥 Import CSV depuis Google Sheets</h3>
+    <p style="font-size:13px;margin-bottom:16px;">Exportez votre Google Sheets en CSV, puis importez-le ici.</p>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:12px;font-weight:600;color:#5a6070;">Type de données</label>
+      <select id="importType" style="margin-top:4px;">
+        <option value="personnes">👥 Personnes (électeurs)</option>
+        <option value="militants">🎖️ Militants</option>
+      </select>
+    </div>
+    <input type="file" id="importFile" accept=".csv,.xlsx" style="margin-bottom:12px;">
+    <div id="importProgress" style="display:none;margin-bottom:12px;">
+      <div style="background:#e0e4ea;border-radius:4px;height:8px;overflow:hidden;">
+        <div id="importProgressBar" style="height:100%;background:var(--vert);width:0%;transition:width .3s;"></div>
+      </div>
+      <div id="importProgressText" style="font-size:12px;color:#888;margin-top:4px;text-align:center;">0%</div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn-cancel" onclick="fermerModal('modalImport')">Annuler</button>
+      <button class="modal-btn-ok" style="background:#27ae60;" onclick="lancerImport()">📥 Importer</button>
+    </div>
+  </div>
+</div>
+<!-- Overlay chargement -->
 <div id="overlayChargement" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center;flex-direction:column;">
   <div style="background:white;border-radius:16px;padding:30px 40px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.3);">
     <div style="width:50px;height:50px;border:4px solid #e0e4ea;border-top-color:#2755a8;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 16px;"></div>
@@ -453,438 +484,1184 @@
     <div style="margin-top:12px;width:200px;height:6px;background:#e0e4ea;border-radius:3px;overflow:hidden;"><div id="overlayProgress" style="height:100%;width:0%;background:linear-gradient(90deg,#2755a8,#27ae60);border-radius:3px;transition:width 0.3s;"></div></div>
   </div>
 </div>
-<div id="popupMiseAJour" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:9998;align-items:center;justify-content:center;">
-  <div style="background:linear-gradient(135deg,#e67e22,#d35400);color:white;padding:24px 30px;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,0.4);text-align:center;max-width:320px;animation:toastIn .3s ease;">
-    <div style="font-size:50px;margin-bottom:12px;">🆕</div>
-    <div style="font-weight:700;font-size:18px;margin-bottom:10px;">Nouvelle version disponible !</div>
-    <div style="font-size:14px;opacity:.9;margin-bottom:20px;">Une mise à jour est prête.<br>Rafraîchissez pour l'obtenir.</div>
-    <button onclick="rafraichirPage()" style="background:white;color:#d35400;border:none;padding:12px 24px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.2);">🔄 Rafraîchir</button>
-  </div>
-</div>
+
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyMBmHPmGCSGZLQLC1CzDxDHmLlWK3nxvsLcjq2GQ51hmqkHSjBeRXAxi1xEGWUUc4H/exec';
-const APP_VERSION = 'v182';
+// =====================================================
+// 🔥 FIREBASE CONFIG — REMPLACEZ PAR VOS VALEURS
+// =====================================================
+const firebaseConfig = {
+  apiKey: "AIzaSyCpE5_r21x-YhTF01ZickJESC3wp3Ji8mk",
+  authDomain: "app-visites.firebaseapp.com",
+  databaseURL: "https://app-visites-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "app-visites",
+  storageBucket: "app-visites.firebasestorage.app",
+  messagingSenderId: "1026532733278",
+  appId: "1:1026532733278:web:b3c7ce931d067422959fcf"
+};
+
+// Initialisation Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// =====================================================
+// CONSTANTES
+// =====================================================
+const APP_VERSION = 'Firebase v2';
 const MAX_RESULTATS = 50;
-const SYNC_INTERVAL = 15000;
+// 🔗 URL du Google Apps Script pour sync vers Google Sheets (laisser vide si pas de sync)
+const SYNC_SHEET_URL = 'https://script.google.com/macros/s/AKfycbyMBmHPmGCSGZLQLC1CzDxDHmLlWK3nxvsLcjq2GQ51hmqkHSjBeRXAxi1xEGWUUc4H/exec';
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
-const CACHE_KEY_PERSONNES = 'visites_personnes_v3';
-const CACHE_KEY_MILITANTS = 'visites_militants_v3';
-const CACHE_KEY_STATS = 'visites_stats_v1';
-const CACHE_KEY_OBS = 'visites_obs_v1';
-const CACHE_KEY_MENTIONS = 'visites_mentions_v1';
-const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
-const VERSION_CHECK_INTERVAL = 60000;
-let mentionsData = null;
-async function chargerMentionsLegales(forceRefresh = false) {
-  if (!forceRefresh) { try { const cached = localStorage.getItem(CACHE_KEY_MENTIONS); if (cached) { mentionsData = JSON.parse(cached); afficherMentionsDansUI(); return; } } catch(e) { localStorage.removeItem(CACHE_KEY_MENTIONS); } }
-  try { const resp = await fetch(SCRIPT_URL + '?action=getMentionsLegales', { cache: 'no-store' }); const data = await resp.json(); if (data.error) { afficherMentionsFallback(); return; } mentionsData = { mentions: data.mentions || '', dateSuppression: data.dateSuppression || '', conformite: data.conformite || '', suppression: data.suppression || '' }; try { localStorage.setItem(CACHE_KEY_MENTIONS, JSON.stringify(mentionsData)); } catch(e) {} afficherMentionsDansUI(); } catch(e) { afficherMentionsFallback(); }
-}
-function afficherMentionsDansUI() { if (!mentionsData) return; const splashEl = $('splashMentionsContenu'); if (splashEl) splashEl.textContent = mentionsData.mentions || 'Mentions légales non disponibles'; const pageMentions = $('pageMentions'); if (pageMentions) pageMentions.textContent = mentionsData.mentions || 'Mentions légales non disponibles'; const pageConformite = $('pageConformite'); if (pageConformite) pageConformite.innerHTML = `<div style="white-space:pre-line;">${mentionsData.conformite || 'Non disponible'}</div>`; const pageSuppression = $('pageSuppression'); if (pageSuppression) pageSuppression.innerHTML = `<div style="background:#c0392b;color:white;padding:14px;border-radius:10px;text-align:center;margin-bottom:16px;"><div style="font-size:24px;margin-bottom:6px;">🗑️</div><div style="font-weight:700;">SUPPRESSION OBLIGATOIRE</div><div style="font-size:18px;font-weight:700;margin-top:8px;">📅 ${mentionsData.dateSuppression || 'Date non définie'}</div></div><div style="white-space:pre-line;font-size:12px;line-height:1.6;">${mentionsData.suppression || 'Guide de suppression non disponible'}</div>`; }
-function afficherMentionsFallback() { const fallback = 'Impossible de charger les mentions légales.'; const splashEl = $('splashMentionsContenu'); if (splashEl) splashEl.textContent = fallback; const pageMentions = $('pageMentions'); if (pageMentions) pageMentions.textContent = fallback; }
-function rafraichirMentions() { showToast('🔄 Rafraîchissement...'); localStorage.removeItem(CACHE_KEY_MENTIONS); chargerMentionsLegales(true).then(() => showToast('✅ Mentions mises à jour !', 'succes')); }
-let updateCheckTimer = null, updateDismissed = false;
-async function verifierMiseAJour() { if (updateDismissed) return; try { const resp = await fetch(VERSION_CHECK_URL + '?t=' + Date.now(), { cache: 'no-store' }); const html = await resp.text(); const match = html.match(/APP_VERSION\s*=\s*['"]([^'"]+)['"]/); if (match && match[1] && match[1] !== APP_VERSION) afficherPopupMaj(match[1]); } catch(e) {} }
-function afficherPopupMaj(v) { const popup = $('popupMiseAJour'); if (popup) { popup.querySelector('div > div:nth-child(2)').textContent = `Nouvelle version ${v} disponible !`; popup.style.display = 'flex'; } }
-let skipBeforeUnload = false;
-function rafraichirPage() { skipBeforeUnload = true; try { if (currentPersonne && currentPersonne.id) { localStorage.setItem('visites_fiche_encours', JSON.stringify({ id: currentPersonne.id, nom: currentPersonne.nom, prenom: currentPersonne.prenom })); } localStorage.removeItem(CACHE_KEY_PERSONNES); localStorage.removeItem(CACHE_KEY_MILITANTS); localStorage.removeItem(CACHE_KEY_MENTIONS); } catch(e) {} location.reload(true); }
-function demarrerVerificationMaj() { setTimeout(verifierMiseAJour, 10000); updateCheckTimer = setInterval(verifierMiseAJour, VERSION_CHECK_INTERVAL); }
-function verifierFicheEnCours() { try { const saved = localStorage.getItem('visites_fiche_encours'); if (!saved) return; const fiche = JSON.parse(saved); if (!fiche || !fiche.id) { localStorage.removeItem('visites_fiche_encours'); return; } if (!toutesPersonnes.length) { setTimeout(verifierFicheEnCours, 2000); return; } const existe = toutesPersonnes.find(p => p[0] == fiche.id); if (!existe) { localStorage.removeItem('visites_fiche_encours'); return; } $('ficheEnCoursMessage').textContent = 'Vous étiez sur la fiche de ' + fiche.nom + ' ' + fiche.prenom + ' (ID ' + fiche.id + '). Voulez-vous y retourner ?'; ouvrirModal('modalFicheEnCours'); } catch(e) { localStorage.removeItem('visites_fiche_encours'); } }
-function ouvrirFicheEnCours() { fermerModal('modalFicheEnCours'); try { const saved = localStorage.getItem('visites_fiche_encours'); const fiche = JSON.parse(saved); localStorage.removeItem('visites_fiche_encours'); if (fiche && fiche.id) selectionnerPersonne(fiche.id); } catch(e) {} }
-let currentPersonne = null, currentPersonneServeur = null, currentMilitant = null, currentRole = 'militant', pinSaisi = '', searchTimeout = null, syncInterval = null, listeMilitants = [], toutesPersonnes = [], statsCache = null, adminCache = null, chartCamembert = null, chartBureau = null, chartComparaison = null, isSyncing = false, lastSyncTime = 0;
-const MILITANTS_FALLBACK = [{nom:'Boyer Denis',pin:'1234',role:'admin',actif:true},{nom:'Béatrice savigny',pin:'3456',role:'militant',actif:true},{nom:'Emilie Candassamy',pin:'7726',role:'militant',actif:true},{nom:'Wilfrid Rivière',pin:'1258',role:'militant',actif:true},{nom:'Emmanuelle probs',pin:'1426',role:'militant',actif:true},{nom:'Payet Johnny',pin:'1452',role:'superviseur',actif:true},{nom:'brice gigant',pin:'2030',role:'militant',actif:true},{nom:'Ludovic Métro',pin:'2112',role:'militant',actif:true},{nom:'Julien Doro',pin:'2350',role:'militant',actif:true}];
 const $ = id => document.getElementById(id);
-function fetchRapide(url, options = {}, timeout = 15000) { return new Promise((resolve, reject) => { const timer = setTimeout(() => reject(new Error('Timeout')), timeout); fetch(url, options).then(resp => { clearTimeout(timer); resolve(resp); }).catch(err => { clearTimeout(timer); reject(err); }); }); }
-async function fetchAvecRetry(url, options = {}, maxRetries = 3, timeout = 20000) { let dernErreur = null; for (let tentative = 1; tentative <= maxRetries; tentative++) { try { const resp = await fetchRapide(url, options, timeout); const data = await resp.json(); if (data.ok === false) { dernErreur = new Error(data.msg || 'Erreur serveur'); if (tentative < maxRetries) { await new Promise(r => setTimeout(r, 1000 * tentative)); continue; } throw dernErreur; } return data; } catch(e) { dernErreur = e; if (tentative < maxRetries) { await new Promise(r => setTimeout(r, 1000 * tentative)); $('overlayTexte').textContent = '🔄 Retry ' + tentative + '/' + (maxRetries - 1) + '...'; } else { throw new Error('Échec après ' + maxRetries + ' tentatives: ' + (dernErreur.message || 'Erreur réseau')); } } } throw dernErreur; }
-async function fetchEcriture(url, options = {}, timeout = 30000, maxRetries = 3) { for (let tentative = 1; tentative <= maxRetries; tentative++) { try { const resp = await fetchRapide(url, options, timeout); const text = await resp.text(); let data; try { data = JSON.parse(text); } catch(e) { if (tentative < maxRetries) { await new Promise(r => setTimeout(r, 2000 * tentative)); continue; } return { success: false, erreur: 'Réponse invalide du serveur' }; } if (data.ok === false && data.msg && data.msg.indexOf('occupé') !== -1 && tentative < maxRetries) { await new Promise(r => setTimeout(r, 2000 * tentative)); continue; } if (data.ok === false) return { success: false, erreur: data.msg || 'Erreur serveur' }; return { success: true, data: data }; } catch(e) { if (tentative < maxRetries) { await new Promise(r => setTimeout(r, 2000 * tentative)); continue; } return { success: false, erreur: e.message || 'Erreur réseau' }; } } return { success: false, erreur: 'Échec après plusieurs tentatives' }; }
-async function syncVerification(id) { try { const resp = await fetchRapide(SCRIPT_URL + '?action=getFiche&id=' + id, {}, 15000); const fiche = await resp.json(); return fiche; } catch(e) { return null; } }
+
+// =====================================================
+// VARIABLES GLOBALES
+// =====================================================
+let currentPersonne = null, currentPersonneServeur = null, currentMilitant = null, currentRole = 'militant';
+let pinSaisi = '', searchTimeout = null, listeMilitants = [], toutesPersonnes = [];
+let statsCache = null, adminCache = null, chartCamembert = null, chartBureau = null, chartComparaison = null;
+let isProcessing = false, fichePrincipaleId = null, isFicheSecondaire = false;
+let militantASupprimer = null, currentObsId = null;
+let firebaseListenersActive = false;
+
+// =====================================================
+// UTILITAIRES
+// =====================================================
 function showToast(msg, type = '') { const old = document.querySelector('.toast'); if (old) old.remove(); const t = document.createElement('div'); t.className = 'toast ' + type; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2500); }
 function ouvrirModal(id) { $(id).style.display = 'flex'; $(id).classList.add('ouvert'); }
 function fermerModal(id) { $(id).classList.remove('ouvert'); $(id).style.display = 'none'; }
 function setSyncIndicator(syncing) { const ind = $('syncIndicator'); if (ind) ind.classList.toggle('syncing', syncing); }
-function updateLastSync() { const el = $('lastSync'); if (el) { const now = new Date(); el.textContent = '🔄 ' + now.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}); } }
-function initTabs() { document.querySelectorAll('.tab').forEach(tab => { tab.onclick = () => { const page = tab.dataset.page; if (!page) return; document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); tab.classList.add('active'); $('page-' + page).classList.add('active'); if (page === 'stats') chargerStats(); if (page === 'admin') chargerAdmin(); }; }); }
-function showPage(page) { const tab = document.querySelector(`.tab[data-page="${page}"]`); if (tab) tab.click(); }
-function demarrerSync() { if (syncInterval) clearInterval(syncInterval); syncInterval = setInterval(syncAuto, SYNC_INTERVAL); }
-function arreterSync() { if (syncInterval) { clearInterval(syncInterval); syncInterval = null; } }
-async function syncAuto() { if (isSyncing) return; isSyncing = true; setSyncIndicator(true); try { const resp = await fetchRapide(SCRIPT_URL + '?action=getAllPersonnes', {}, 30000); const data = await resp.json(); if (data.personnes?.length) { const anciensVisites = toutesPersonnes.filter(p => p[3] === 'Visité').length; toutesPersonnes = data.personnes; try { localStorage.setItem(CACHE_KEY_PERSONNES, JSON.stringify(toutesPersonnes)); } catch(e) {} const nouveauxVisites = toutesPersonnes.filter(p => p[3] === 'Visité').length; if (nouveauxVisites !== anciensVisites) showToast(`🔄 Sync: ${nouveauxVisites} visités`, 'succes'); const qNom = $('searchNom')?.value; const qPrenom = $('searchPrenom')?.value; const qId = $('searchId')?.value; if (qNom || qPrenom || qId) rechercher(); if (currentPersonne) verifierConflitFiche(currentPersonne.id); if (statsCache) { statsCache.visites = nouveauxVisites; statsCache.pct = Math.round(nouveauxVisites / toutesPersonnes.length * 100); majCompteurStats(); } lastSyncTime = Date.now(); updateLastSync(); } // Sync militants (rôles, actifs, etc.)
-    await syncMilitants(); if (currentRole === 'admin' || currentRole === 'superviseur') await syncAdmin(); } catch(e) {} isSyncing = false; setSyncIndicator(false); }
-function mettreAJourOnglets() {
-  // Supprimer tous les onglets dynamiques
-  document.querySelectorAll('.tab[data-page="stats"], .tab[data-page="observations"], .tab[data-page="contact"], .tab[data-page="agenda"], .tab[data-page="admin"]').forEach(t => t.remove());
-  // Rétablir recherche/saisie (cachés si téléopérateur)
-  document.querySelectorAll('.tab').forEach(t => { if (t.dataset.page === 'recherche' || t.dataset.page === 'saisie') t.style.display = ''; });
-  if (currentRole === 'teleoperateur') {
-    document.querySelectorAll('.tab').forEach(t => { if (t.dataset.page === 'recherche' || t.dataset.page === 'saisie') t.style.display = 'none'; });
-    ajouterOnglet('contact', '📞 Contact'); ajouterOnglet('agenda', '📅 Agenda');
-    setTimeout(() => { document.querySelector('.tab[data-page="contact"]')?.click(); }, 100);
-  } else {
-    if (currentRole === 'superviseur' || currentRole === 'admin' || currentRole === 'responsable bureaux') ajouterOnglet('stats', '📊 Stats');
-    if (currentRole === 'superviseur' || currentRole === 'admin') ajouterOnglet('observations', '📝 Obs');
-    if (currentRole === 'admin') { ajouterOnglet('contact', '📞 Contact'); ajouterOnglet('agenda', '📅 Agenda'); ajouterOnglet('admin', '👁️ Admin'); }
-    // Revenir sur recherche si l'onglet actif a été supprimé
-    const actif = document.querySelector('.tab.active');
-    if (!actif || actif.style.display === 'none') { const tabRecherche = document.querySelector('.tab[data-page="recherche"]'); if (tabRecherche) tabRecherche.click(); }
+function updateLastSync() { const el = $('lastSync'); if (el) { const now = new Date(); el.textContent = '🔥 ' + now.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}); } }
+function passerSplash() { const splash = $('ecranSplash'); if (splash && splash.style.display !== 'none') { splash.style.transition = 'opacity 0.3s'; splash.style.opacity = '0'; splash.style.pointerEvents = 'none'; setTimeout(() => { splash.remove(); $('ecranLogin').style.display = 'flex'; }, 300); } }
+function afficherMentionsLegales() { ouvrirModal('modalLegal'); }
+
+// =====================================================
+// FIREBASE : LISTENERS TEMPS RÉEL
+// =====================================================
+function demarrerListenersFirebase() {
+  if (firebaseListenersActive) return;
+  firebaseListenersActive = true;
+
+  // 🔥 Écouter les personnes en TEMPS RÉEL
+  db.ref('personnes').on('value', function(snapshot) {
+    const data = snapshot.val();
+    if (!data) return;
+    const anciensVisites = toutesPersonnes.filter(p => p[3] === 'Visité').length;
+
+    // Convertir l'objet Firebase en tableau de tableaux
+    toutesPersonnes = Object.values(data).map(function(p) {
+      return [
+        p.id || 0, p.nom || '', p.prenom || '', p.statut || 'Non visité',
+        p.sexe || '', p.age || '', p.numVoie || '', p.libelleVoie || '',
+        p.nomUsage || '', p.codeBureau || '', p.candidat || '', p.dateVisite || '',
+        p.notes || '', p.secteur || '', p.militant || '', p.observation || '',
+        p.mail || '', p.tel || ''
+      ];
+    });
+
+    const nouveauxVisites = toutesPersonnes.filter(p => p[3] === 'Visité').length;
+    if (anciensVisites > 0 && nouveauxVisites !== anciensVisites) {
+      showToast('🔥 Sync temps réel : ' + nouveauxVisites + ' visités', 'succes');
+    }
+
+    activerRecherche();
+    updateLastSync();
+    setSyncIndicator(false);
+
+    // Rafraîchir la recherche en cours
+    const qNom = $('searchNom')?.value;
+    const qPrenom = $('searchPrenom')?.value;
+    const qId = $('searchId')?.value;
+    if (qNom || qPrenom || qId) rechercher();
+
+    // Rafraîchir la fiche ouverte
+    if (currentPersonne) {
+      const updated = toutesPersonnes.find(p => p[0] == currentPersonne.id);
+      if (updated && updated[14] && updated[14] !== currentMilitant && updated[3] === 'Visité' && currentPersonne.statut !== 'Visité') {
+        showToast('⚠️ Modifié par ' + updated[14], 'warning');
+      }
+    }
+  });
+
+  // 🔥 Écouter les militants en TEMPS RÉEL
+  db.ref('militants').on('value', function(snapshot) {
+    const data = snapshot.val();
+    if (!data) return;
+    listeMilitants = Object.values(data).filter(m => m.actif !== false);
+    if (currentMilitant) {
+      const monMilitant = listeMilitants.find(m => m.nom === currentMilitant);
+      if (monMilitant && monMilitant.role !== currentRole) {
+        currentRole = monMilitant.role;
+        mettreAJourOnglets();
+        showToast('🔄 Rôle mis à jour : ' + currentRole, 'succes');
+      }
+    }
+  });
+}
+
+function arreterListenersFirebase() {
+  db.ref('personnes').off();
+  db.ref('militants').off();
+  firebaseListenersActive = false;
+}
+
+// =====================================================
+// CHARGEMENT INITIAL DES DONNÉES
+// =====================================================
+async function chargerMilitants() {
+  const sel = $('loginNom');
+  if (!sel) return;
+  try {
+    const snapshot = await db.ref('militants').once('value');
+    const data = snapshot.val();
+    if (data) {
+      listeMilitants = Object.values(data);
+      remplirSelectMilitants();
+    }
+  } catch(e) {
+    console.error('Erreur chargement militants:', e);
   }
 }
-async function syncMilitants() { try { const resp = await fetchRapide(SCRIPT_URL + '?action=getMilitants', {}, 10000); const data = await resp.json(); if (data.militants?.length) { const ancienRole = currentRole; const monMilitant = data.militants.find(m => m.nom === currentMilitant); if (monMilitant) { // Rôle changé par l'admin → mise à jour instantanée
-        if (monMilitant.role !== currentRole) { currentRole = monMilitant.role; const prenom = currentMilitant.split(' ').pop(); $('btnUser').textContent = '👤 ' + prenom + (currentRole === 'admin' ? ' 👑' : currentRole === 'teleoperateur' ? ' 📞' : '') + ' — Quitter'; const couleursRole = {'admin':'var(--role-admin)','superviseur':'var(--role-superviseur)','responsable bureaux':'var(--role-responsable)','manager':'var(--role-manager)','militant':'var(--role-militant)','teleoperateur':'var(--role-teleop)'}; $('mainHeader').style.background = couleursRole[currentRole] || 'var(--bleu)'; mettreAJourOnglets(); // Re-rendre la fiche ouverte pour mettre à jour poubelle/observation/boutons
-          if (currentPersonne) afficherFiche(currentPersonne); showToast('🔄 Rôle mis à jour : ' + currentRole, 'succes'); } // Désactivé par l'admin → déconnexion forcée
-        if (!monMilitant.actif) { showToast('🚫 Votre compte a été désactivé', 'erreur'); setTimeout(() => confirmerDeconnexion(), 2000); return; } } listeMilitants = data.militants; localStorage.setItem(CACHE_KEY_MILITANTS, JSON.stringify(listeMilitants)); } } catch(e) {} }
-async function syncAdmin() { try { const resp = await fetchRapide(SCRIPT_URL + '?action=getLogs', {}, 10000); const data = await resp.json(); adminCache = buildAdminHtml(data); const pageAdmin = $('page-admin'); if (pageAdmin?.classList.contains('active')) $('adminContenu').innerHTML = adminCache; } catch(e) {} }
-function majCompteurStats() { if (!statsCache) return; $('cptTotal').textContent = toutesPersonnes.length; $('cptVisites').textContent = statsCache.visites; $('cptPct').textContent = statsCache.pct + '%'; }
-async function syncManuel() { showToast('🔄 Synchronisation...', ''); await syncAuto(); showToast('✅ Synchronisé !', 'succes'); }
-async function verifierConflitFiche(id) { const serveur = toutesPersonnes.find(p => p[0] == id); if (!serveur || !currentPersonne) return; const statutServeur = serveur[3]; const militantServeur = serveur[14]; if (statutServeur === 'Visité' && militantServeur && militantServeur !== currentMilitant && currentPersonne.statut !== 'Visité') { currentPersonneServeur = { statut: statutServeur, militant: militantServeur, candidat: serveur[10] }; afficherAlerteConflit(militantServeur, serveur[10]); } }
-function afficherAlerteConflit(militant, candidat) { const alerteHtml = `<div class="alerte-conflit"><div class="titre">⚠️ Modifié par ${militant}</div><div class="detail">Cette personne vient d'être enregistrée${candidat ? ' · ' + candidat : ''}</div></div>`; const saisie = $('saisieContenu'); if (saisie && !saisie.innerHTML.includes('alerte-conflit')) { const btnRetour = saisie.querySelector('.btn-retour'); if (btnRetour) btnRetour.insertAdjacentHTML('afterend', alerteHtml); } showToast('⚠️ Modifié par ' + militant, 'warning'); }
-async function chargerMilitants() { const sel = $('loginNom'); if (!sel) return; try { localStorage.removeItem(CACHE_KEY_MILITANTS); } catch(e) {} listeMilitants = MILITANTS_FALLBACK; remplirSelectMilitants(); try { const resp = await fetchRapide(SCRIPT_URL + '?action=getMilitants', {}, 15000); const data = await resp.json(); if (data.militants?.length) { listeMilitants = data.militants; localStorage.setItem(CACHE_KEY_MILITANTS, JSON.stringify(listeMilitants)); remplirSelectMilitants(); } } catch(e) {} }
-async function prechargerDonnees() { try { const cacheTime = localStorage.getItem(CACHE_KEY_PERSONNES + '_time'); if (cacheTime && (Date.now() - parseInt(cacheTime)) < 300000) return; const resp = await fetch(SCRIPT_URL + '?action=getAllPersonnes'); const data = await resp.json(); if (data.personnes?.length) { localStorage.setItem(CACHE_KEY_PERSONNES, JSON.stringify(data.personnes)); localStorage.setItem(CACHE_KEY_PERSONNES + '_time', Date.now().toString()); toutesPersonnes = data.personnes; } } catch(e) {} }
-function remplirSelectMilitants() { const sel = $('loginNom'); const val = sel.value; // Si token actif, ne pas écraser le select filtré
-  if (tokenMilitantNom && sel.value === tokenMilitantNom) return;
-  sel.innerHTML = '<option value="">-- Choisir --</option>'; let liste = listeMilitants; if (tokenMilitantNom) { liste = listeMilitants.filter(m => m.nom === tokenMilitantNom); } else if (nomTeleop) { liste = listeMilitants.filter(m => m.nom === nomTeleop); if (liste.length === 1) setTimeout(() => { sel.value = nomTeleop; }, 100); } liste.forEach(m => { const opt = document.createElement('option'); opt.value = m.nom; opt.textContent = m.nom; sel.appendChild(opt); }); if (tokenMilitantNom) { sel.value = tokenMilitantNom; sel.disabled = true; } else { sel.value = val; sel.disabled = false; } }
+
+function remplirSelectMilitants() {
+  const sel = $('loginNom');
+  const val = sel.value;
+  sel.innerHTML = '<option value="">-- Choisir --</option>';
+  listeMilitants.filter(m => m.actif !== false).forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m.nom;
+    opt.textContent = m.nom;
+    sel.appendChild(opt);
+  });
+  sel.value = val;
+}
+
+async function chargerToutesPersonnes() {
+  const div = $('resultatsRecherche');
+  const bar = $('progressBar');
+  const fill = $('progressFill');
+  bar.style.display = 'block';
+  div.innerHTML = '<div class="loading"><div class="spinner"></div>🔥 Chargement Firebase...</div>';
+  let pct = 0;
+  const timer = setInterval(() => { pct = Math.min(pct + 5, 90); fill.style.width = pct + '%'; }, 100);
+
+  try {
+    const snapshot = await db.ref('personnes').once('value');
+    const data = snapshot.val();
+    if (data) {
+      toutesPersonnes = Object.values(data).map(function(p) {
+        return [
+          p.id || 0, p.nom || '', p.prenom || '', p.statut || 'Non visité',
+          p.sexe || '', p.age || '', p.numVoie || '', p.libelleVoie || '',
+          p.nomUsage || '', p.codeBureau || '', p.candidat || '', p.dateVisite || '',
+          p.notes || '', p.secteur || '', p.militant || '', p.observation || '',
+          p.mail || '', p.tel || ''
+        ];
+      });
+    }
+    clearInterval(timer);
+    fill.style.width = '100%';
+    setTimeout(() => { bar.style.display = 'none'; }, 300);
+    activerRecherche();
+    updateLastSync();
+    div.innerHTML = '<div class="vide" style="color:var(--vert);">🔥 ' + toutesPersonnes.length + ' inscrits chargés</div>';
+    setTimeout(() => { if (div.innerHTML.includes('inscrits')) div.innerHTML = ''; }, 2000);
+  } catch(e) {
+    clearInterval(timer);
+    bar.style.display = 'none';
+    div.innerHTML = '<div class="vide" style="color:red;">⚠️ Erreur Firebase<br><small>' + e.message + '</small><br><button onclick="chargerToutesPersonnes()" style="margin-top:10px;padding:8px 16px;background:#2755a8;color:white;border:none;border-radius:8px;cursor:pointer;">🔄 Réessayer</button></div>';
+  }
+}
+
+async function chargerMentionsLegales() {
+  try {
+    const snapshot = await db.ref('config/mentions').once('value');
+    const data = snapshot.val();
+    if (data) {
+      const splashEl = $('splashMentionsContenu');
+      if (splashEl) splashEl.textContent = data.mentions || 'Mentions légales';
+      const pageMentions = $('pageMentions');
+      if (pageMentions) pageMentions.textContent = data.mentions || 'Mentions légales';
+    }
+  } catch(e) {
+    const splashEl = $('splashMentionsContenu');
+    if (splashEl) splashEl.textContent = 'Application Visites Électorales - La Plaine-des-Palmistes';
+  }
+}
+
+// =====================================================
+// LOGIN / LOGOUT
+// =====================================================
 function ajouterPin(c) { if (pinSaisi.length >= 4) return; pinSaisi += c; majDots(); if (pinSaisi.length === 4) setTimeout(seConnecter, 150); }
 function effacerPin() { pinSaisi = pinSaisi.slice(0, -1); majDots(); }
 function resetPin() { pinSaisi = ''; majDots(); $('loginErreur').textContent = ''; }
 function majDots() { for (let i = 0; i < 4; i++) $('dot' + i).classList.toggle('filled', i < pinSaisi.length); }
-function seConnecter() { const nom = $('loginNom').value; const errDiv = $('loginErreur'); if (!nom) { errDiv.textContent = '⚠️ Choisissez votre nom'; return; } if (pinSaisi.length < 4) { errDiv.textContent = '⚠️ Entrez votre PIN'; return; } const militant = listeMilitants.find(m => m.nom === nom && String(m.pin) === pinSaisi); if (!militant) { errDiv.textContent = '❌ PIN incorrect'; pinSaisi = ''; majDots(); return; } currentMilitant = militant.nom; currentRole = militant.role || 'militant'; const prenom = militant.nom.split(' ').pop(); $('btnUser').textContent = '👤 ' + prenom + (currentRole === 'admin' ? ' 👑' : currentRole === 'teleoperateur' ? ' 📞' : '') + ' — Quitter'; const couleursRole = {'admin': 'var(--role-admin)', 'superviseur': 'var(--role-superviseur)', 'responsable bureaux': 'var(--role-responsable)', 'manager': 'var(--role-manager)', 'militant': 'var(--role-militant)', 'teleoperateur': 'var(--role-teleop)'}; $('mainHeader').style.background = couleursRole[currentRole] || 'var(--bleu)'; if (currentRole === 'teleoperateur') { document.querySelectorAll('.tab').forEach(t => { if (t.dataset.page === 'recherche' || t.dataset.page === 'saisie') t.style.display = 'none'; }); ajouterOnglet('contact', '📞 Contact'); ajouterOnglet('agenda', '📅 Agenda'); setTimeout(() => { document.querySelector('.tab[data-page="contact"]')?.click(); chargerContact(); }, 100); } else { if (currentRole === 'superviseur' || currentRole === 'admin' || currentRole === 'responsable bureaux') ajouterOnglet('stats', '📊 Stats'); if (currentRole === 'superviseur' || currentRole === 'admin') ajouterOnglet('observations', '📝 Obs'); if (currentRole === 'admin') { ajouterOnglet('contact', '📞 Contact'); ajouterOnglet('agenda', '📅 Agenda'); ajouterOnglet('admin', '👁️ Admin'); } } $('ecranLogin').style.display = 'none'; $('appPrincipale').style.display = 'block'; fetch(SCRIPT_URL, { method: 'POST', body: new URLSearchParams({ action: 'logConnexion', militant: currentMilitant }) }).catch(() => {}); chargerToutesPersonnes(); demarrerSync(); demarrerVerificationMaj(); if (currentRole === 'responsable bureaux' || currentRole === 'superviseur' || currentRole === 'admin') setTimeout(() => prechargerStats(), 2000); if (currentRole === 'superviseur' || currentRole === 'admin') setTimeout(() => prechargerObs(), 3000); setTimeout(() => verifierFicheEnCours(), 4000); if (currentRole === 'admin') setTimeout(() => verifierBrouillon(), 5000); }
-function ajouterOnglet(page, label) { if (document.querySelector(`.tab[data-page="${page}"]`)) return; const tab = document.createElement('div'); tab.className = 'tab'; tab.dataset.page = page; tab.textContent = label; tab.onclick = () => { document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); tab.classList.add('active'); $('page-' + page).classList.add('active'); if (page === 'stats') chargerStats(); if (page === 'admin') chargerAdmin(); if (page === 'observations') chargerObservations(); if (page === 'contact') chargerContact(); if (page === 'agenda') chargerAgenda(); }; $('tabsBar').appendChild(tab); }
+
+function seConnecter() {
+  const nom = $('loginNom').value;
+  const errDiv = $('loginErreur');
+  if (!nom) { errDiv.textContent = '⚠️ Choisissez votre nom'; return; }
+  if (pinSaisi.length < 4) { errDiv.textContent = '⚠️ Entrez votre PIN'; return; }
+  const militant = listeMilitants.find(m => m.nom === nom && String(m.pin) === pinSaisi);
+  if (!militant) { errDiv.textContent = '❌ PIN incorrect'; pinSaisi = ''; majDots(); return; }
+
+  currentMilitant = militant.nom;
+  currentRole = militant.role || 'militant';
+  const prenom = militant.nom.split(' ').pop();
+  $('btnUser').textContent = '👤 ' + prenom + (currentRole === 'admin' ? ' 👑' : '') + ' — Quitter';
+
+  const couleursRole = {'admin': 'var(--role-admin)', 'superviseur': 'var(--role-superviseur)', 'responsable bureaux': 'var(--role-responsable)', 'manager': 'var(--role-manager)', 'militant': 'var(--role-militant)', 'teleoperateur': 'var(--role-teleop)'};
+  $('mainHeader').style.background = couleursRole[currentRole] || 'var(--bleu)';
+
+  // Ajouter les onglets selon le rôle
+  mettreAJourOnglets();
+
+  $('ecranLogin').style.display = 'none';
+  $('appPrincipale').style.display = 'block';
+
+  // Log connexion dans Firebase
+  var dateConnexion = new Date().toLocaleString('fr-FR');
+  db.ref('logs').push({
+    date: dateConnexion,
+    action: 'Connexion',
+    militant: currentMilitant,
+    id: '',
+    nom: ''
+  });
+  // 📊 Sync log vers Google Sheets
+  syncVersGoogleSheets({ action: 'log', date: dateConnexion, action_type: 'Connexion', militant: currentMilitant, id: '', nom: '' });
+
+  // Marquer comme connecté
+  const connRef = db.ref('connectes/' + sanitizeKey(currentMilitant));
+  connRef.set({ timestamp: firebase.database.ServerValue.TIMESTAMP, nom: currentMilitant });
+  connRef.onDisconnect().remove();
+
+  chargerToutesPersonnes();
+  demarrerListenersFirebase();
+}
+
+function mettreAJourOnglets() {
+  document.querySelectorAll('.tab[data-page="stats"], .tab[data-page="observations"], .tab[data-page="admin"], .tab[data-page="csv"]').forEach(t => t.remove());
+  if (currentRole === 'superviseur' || currentRole === 'admin' || currentRole === 'responsable bureaux') ajouterOnglet('stats', '📊 Stats');
+  if (currentRole === 'superviseur' || currentRole === 'admin') ajouterOnglet('observations', '📝 Obs');
+  if (currentRole === 'admin') ajouterOnglet('admin', '👁️ Admin');
+  if (currentRole === 'admin') ajouterOnglet('csv', '📥 CSV');
+}
+
+function ajouterOnglet(page, label) {
+  if (document.querySelector('.tab[data-page="' + page + '"]')) return;
+  const tab = document.createElement('div');
+  tab.className = 'tab';
+  tab.dataset.page = page;
+  tab.textContent = label;
+  tab.onclick = () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    $('page-' + page).classList.add('active');
+    if (page === 'stats') chargerStats();
+    if (page === 'admin') chargerAdmin();
+    if (page === 'observations') chargerObservations();
+    if (page === 'csv') verifierStatutsCSV();
+  };
+  $('tabsBar').appendChild(tab);
+}
+
 function seDeconnecter() { ouvrirModal('modalDeconnexion'); }
-function confirmerDeconnexion() { fermerModal('modalDeconnexion'); arreterSync(); document.querySelectorAll('.tab[data-page="stats"], .tab[data-page="admin"]').forEach(t => t.remove()); currentMilitant = null; currentRole = 'militant'; currentPersonne = null; currentPersonneServeur = null; pinSaisi = ''; statsCache = null; adminCache = null; majDots(); $('loginErreur').textContent = ''; if (tokenMilitantNom) { $('loginNom').value = tokenMilitantNom; $('loginNom').disabled = true; } else { $('loginNom').value = ''; $('loginNom').disabled = false; remplirSelectMilitants(); } $('ecranLogin').style.display = 'flex'; $('appPrincipale').style.display = 'none'; $('saisieContenu').innerHTML = '<div class="vide"><div style="font-size:40px;margin-bottom:10px;">🔍</div>Recherchez d\'abord une personne</div>'; showPage('recherche'); }
-async function chargerToutesPersonnes() { const div = $('resultatsRecherche'); const bar = $('progressBar'); const fill = $('progressFill'); try { const cache = localStorage.getItem(CACHE_KEY_PERSONNES); if (cache) { toutesPersonnes = JSON.parse(cache); activerRecherche(); div.innerHTML = ''; updateLastSync(); return; } } catch(e) { localStorage.removeItem(CACHE_KEY_PERSONNES); } bar.style.display = 'block'; div.innerHTML = '<div class="loading"><div class="spinner"></div>⏳ Chargement...</div>'; let pct = 0; const timer = setInterval(() => { pct = Math.min(pct + 3, 90); fill.style.width = pct + '%'; }, 150); try { const resp = await fetchRapide(SCRIPT_URL + '?action=getAllPersonnes', {}, 90000); const data = await resp.json(); toutesPersonnes = data.personnes || []; try { localStorage.setItem(CACHE_KEY_PERSONNES, JSON.stringify(toutesPersonnes)); } catch(e) {} clearInterval(timer); fill.style.width = '100%'; setTimeout(() => { bar.style.display = 'none'; }, 300); activerRecherche(); updateLastSync(); div.innerHTML = `<div class="vide" style="color:var(--vert);">✅ ${toutesPersonnes.length} inscrits</div>`; setTimeout(() => { if (div.innerHTML.includes('inscrits')) div.innerHTML = ''; }, 2000); } catch(e) { clearInterval(timer); bar.style.display = 'none'; activerRecherche(); div.innerHTML = '<div class="vide" style="color:orange;">⚠️ Erreur<br><button onclick="chargerToutesPersonnes()" style="margin-top:10px;padding:8px 16px;background:#2755a8;color:white;border:none;border-radius:8px;cursor:pointer;">🔄 Réessayer</button></div>'; } }
+function confirmerDeconnexion() {
+  fermerModal('modalDeconnexion');
+  arreterListenersFirebase();
+  if (currentMilitant) db.ref('connectes/' + sanitizeKey(currentMilitant)).remove();
+  document.querySelectorAll('.tab[data-page="stats"], .tab[data-page="admin"], .tab[data-page="observations"]').forEach(t => t.remove());
+  currentMilitant = null; currentRole = 'militant'; currentPersonne = null; pinSaisi = ''; statsCache = null; adminCache = null;
+  majDots(); $('loginErreur').textContent = '';
+  $('loginNom').value = ''; remplirSelectMilitants();
+  $('ecranLogin').style.display = 'flex'; $('appPrincipale').style.display = 'none';
+  $('saisieContenu').innerHTML = '<div class="vide"><div style="font-size:40px;margin-bottom:10px;">🔍</div>Recherchez d\'abord une personne</div>';
+  showPage('recherche');
+  try { window.close(); } catch(e) {}
+}
+
+// =====================================================
+// RECHERCHE
+// =====================================================
 function activerRecherche() { ['searchNom', 'searchNomUsage', 'searchPrenom', 'searchId', 'searchNumVoie', 'searchLibVoie'].forEach(id => { const el = $(id); if (el) el.disabled = false; }); }
 function initRecherche() { ['searchNom', 'searchNomUsage', 'searchPrenom', 'searchId', 'searchNumVoie', 'searchLibVoie'].forEach(id => { const el = $(id); if (el) el.oninput = () => { clearTimeout(searchTimeout); searchTimeout = setTimeout(rechercher, 100); }; }); $('btnReset').onclick = resetRecherche; }
-function retourRecherche() { isFicheSecondaire = false; fichePrincipaleId = null; showPage('recherche'); setTimeout(() => rechercher(), 50); }
 function resetRecherche() { ['searchNom', 'searchNomUsage', 'searchPrenom', 'searchId', 'searchNumVoie', 'searchLibVoie'].forEach(id => { const el = $(id); if (el) el.value = ''; }); $('resultatsRecherche').innerHTML = ''; }
-function rechercher() { const qNom = ($('searchNom')?.value || '').trim().toLowerCase(); const qNomUsage = ($('searchNomUsage')?.value || '').trim().toLowerCase(); const qPrenom = ($('searchPrenom')?.value || '').trim().toLowerCase(); const qId = ($('searchId')?.value || '').trim(); const qNumVoie = ($('searchNumVoie')?.value || '').trim().toLowerCase(); const qLibVoie = ($('searchLibVoie')?.value || '').trim().toLowerCase(); const div = $('resultatsRecherche'); if (!qNom && !qNomUsage && !qPrenom && !qId && !qNumVoie && !qLibVoie) { div.innerHTML = ''; return; } if (qId && !qNom && !qNomUsage && !qPrenom && !qNumVoie && !qLibVoie) { const exact = toutesPersonnes.find(p => String(p[0]) === qId); if (exact) { afficherResultats([exact]); return; } } const resultats = []; const len = toutesPersonnes.length; for (let i = 0; i < len && resultats.length < MAX_RESULTATS; i++) { const p = toutesPersonnes[i]; const id = String(p[0]); const nom = (p[1] || '').toLowerCase(); const prenom = (p[2] || '').toLowerCase(); const nomUsage = (p[8] || '').toLowerCase(); const numVoie = String(p[6] || '').toLowerCase(); const libVoie = (p[7] || '').toLowerCase(); let ok = true; if (qId && id !== qId && !id.startsWith(qId)) ok = false; if (qNom && ok && nom.indexOf(qNom) === -1) ok = false; if (qNomUsage && ok && nomUsage.indexOf(qNomUsage) === -1) ok = false; if (qPrenom && ok && prenom.indexOf(qPrenom) === -1) ok = false; if (qNumVoie && ok && numVoie !== qNumVoie && !numVoie.startsWith(qNumVoie)) ok = false; if (qLibVoie && ok && libVoie.indexOf(qLibVoie) === -1) ok = false; if (ok) resultats.push(p); } if (qId) resultats.sort((a, b) => { const aExact = String(a[0]) === qId ? 0 : 1; const bExact = String(b[0]) === qId ? 0 : 1; return aExact - bExact; }); afficherResultats(resultats); }
-function afficherResultats(resultats) { const div = $('resultatsRecherche'); if (!resultats.length) { div.innerHTML = '<div class="vide">Aucun résultat</div>'; return; } const html = [`<div style="font-size:12px;color:#999;text-align:center;padding:4px 0 8px;">${resultats.length >= MAX_RESULTATS ? MAX_RESULTATS + ' premiers' : resultats.length + ' résultat' + (resultats.length > 1 ? 's' : '')}</div>`]; for (const p of resultats) { const statut = p[3] || 'Non visité'; const statutClass = statut === 'Visité' ? 'visite' : statut === 'Absent' ? 'absent' : statut === 'Opposition' ? 'opposition' : 'non-visite'; const badgeClass = statut === 'Visité' ? 'badge-visite' : statut === 'Absent' ? 'badge-absent' : statut === 'Opposition' ? 'badge-opposition' : 'badge-non'; const badgeText = statut === 'Visité' ? '✓ Visité' : statut === 'Absent' ? '🚪 Absent' : statut === 'Opposition' ? '🚫 Opposé' : '—'; const sexeIcon = p[4] === 'M' ? '👨' : p[4] === 'F' ? '👩' : ''; const age = p[5] ? p[5] + ' ans' : ''; const adresse = [p[6], p[7]].filter(Boolean).join(' '); const nomUsage = p[8] || ''; const militant = p[14]; const militantInfo = statut === 'Visité' && militant ? ` · <span style="color:#27ae60;font-size:10px;">par ${militant.split(' ').pop()}</span>` : ''; const nomUsageInfo = nomUsage && nomUsage !== p[1] ? `<div style="font-size:11px;color:#8e44ad;font-style:italic;">Usage : ${nomUsage}</div>` : ''; html.push(`<div class="resultat-item ${statutClass}" onclick="selectionnerPersonne(${p[0]})" style="display:flex;align-items:center;gap:10px;"><div style="font-size:16px;font-weight:700;color:#1a1a1a;min-width:55px;">ID→${p[0]}</div><div class="ri-info" style="flex:1;"><div class="ri-nom">${p[1]} ${p[2]}</div><div class="ri-detail">${[sexeIcon + (age ? ' ' + age : ''), adresse].filter(Boolean).join(' · ')}${militantInfo}</div>${nomUsageInfo}</div><span class="ri-badge ${badgeClass}">${badgeText}</span></div>`); } div.innerHTML = html.join(''); }
-function selectionnerPersonne(id) { showPage('saisie'); currentPersonneServeur = null; const local = toutesPersonnes.find(p => p[0] == id); if (local) { currentPersonne = { id: local[0], nom: local[1], prenom: local[2], statut: local[3], sexe: local[4], age: local[5], nVoie: local[6], libelleVoie: local[7], nomUsage: local[8], bureau: local[9] || '', candidatActuel: local[10] || '', dateDerniereVisite: local[11] || '', notes: local[12] || '', secteur: local[13] || '', militant: local[14] || '', observation: local[15] || '', mail: local[16] || '', tel: local[17] || '' }; afficherFiche(currentPersonne); verifierFicheServeur(id); return; } $('saisieContenu').innerHTML = '<div class="loading"><div class="spinner"></div>Chargement...</div>'; fetch(SCRIPT_URL + '?action=getFiche&id=' + id).then(r => r.json()).then(p => { currentPersonne = p; afficherFiche(p); }).catch(() => { $('saisieContenu').innerHTML = '<div class="vide" style="color:red;">⚠️ Erreur</div>'; }); }
-async function verifierFicheServeur(id) { try { const resp = await fetch(SCRIPT_URL + '?action=getFiche&id=' + id); const p = await resp.json(); if (!currentPersonne || currentPersonne.id != id) return; if (p.statut === 'Visité' && p.militant && p.militant !== currentMilitant) { if (currentPersonne.statut !== 'Visité' || currentPersonne.militant !== p.militant) { currentPersonneServeur = p; afficherAlerteConflit(p.militant, p.candidatActuel); currentPersonne = p; afficherFiche(p); } } const idx = toutesPersonnes.findIndex(x => x[0] == id); if (idx !== -1) { toutesPersonnes[idx][3] = p.statut; toutesPersonnes[idx][10] = p.candidatActuel || ''; toutesPersonnes[idx][14] = p.militant || ''; } } catch(e) {} }
-function genererCoResidents(p) { if (!p.nVoie && !p.libelleVoie) return ''; const nv = String(p.nVoie || '').trim().toLowerCase(); const lv = (p.libelleVoie || '').trim().toLowerCase(); if (!nv && !lv) return ''; const coresidents = []; for (let i = 0; i < toutesPersonnes.length; i++) { const t = toutesPersonnes[i]; if (t[0] == p.id) continue; const tnv = String(t[6] || '').trim().toLowerCase(); const tlv = (t[7] || '').trim().toLowerCase(); if (tnv === nv && tlv === lv) coresidents.push(t); } if (!coresidents.length) return ''; let html = '<div style="background:white;border-radius:14px;padding:14px 16px;margin:10px 0;box-shadow:0 2px 8px rgba(0,0,0,0.06);"><div style="font-size:13px;font-weight:700;color:var(--bleu);margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--gris);">🏠 Résidants supplémentaires à cette adresse <span style="font-weight:400;color:#888;">(' + coresidents.length + ')</span></div>'; for (const c of coresidents) { const isVisite = c[3] === 'Visité'; const sexeIcon = c[4] === 'M' ? '👨' : c[4] === 'F' ? '👩' : ''; const age = c[5] ? c[5] + ' ans' : ''; const statut = c[3] || 'Non visité'; const statutBadge = statut === 'Visité' ? '<span style="background:#27ae60;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">✓ Visité</span>' : statut === 'Absent' ? '<span style="background:#e67e22;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">🚪 Absent</span>' : statut === 'Opposition' ? '<span style="background:#c0392b;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">🚫 Opposition</span>' : '<span style="background:#95a5a6;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">Non visité</span>'; html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f0f2f5;"><div style="flex:1;"><div style="font-size:14px;font-weight:600;color:#1a1a2e;">' + c[1] + ' ' + c[2] + '</div><div style="font-size:11px;color:#5a6070;">' + [sexeIcon, age].filter(Boolean).join(' · ') + ' · ID ' + c[0] + '</div><div style="margin-top:4px;">' + statutBadge + '</div></div><button onclick="voirCoResident(' + c[0] + ')" style="background:var(--bleu);color:white;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:DM Sans,sans-serif;white-space:nowrap;">👁️ Voir</button></div>'; } html += '</div>'; return html; }
-function afficherFiche(p) { const isVisite = p.statut === 'Visité'; const adresse = [p.nVoie, p.libelleVoie].filter(Boolean).join(' ') || '—'; const sexeIcon = p.sexe === 'M' ? '👨' : p.sexe === 'F' ? '👩' : ''; const cOpts = CANDIDATS.map(c => `<option value="${c}" ${p.candidatActuel === c ? 'selected' : ''}>${c || '-- Choisir --'}</option>`).join(''); const conflitInfo = isVisite && p.militant && p.militant !== currentMilitant ? `<div class="alerte-conflit"><div class="titre">⚠️ Déjà visité par ${p.militant}</div><div class="detail">${p.dateDerniereVisite || ''}${p.candidatActuel ? ' · ' + p.candidatActuel : ''}</div></div>` : ''; const headerBg = isFicheSecondaire ? '#e67e22' : 'var(--bleu)'; const btnRetourHtml = isFicheSecondaire ? '' : `<button class="btn-retour" onclick="retourRecherche()">← Retour</button>`; const btnRetourPrincipale = isFicheSecondaire ? `<button onclick="retourFichePrincipale()" style="display:block;width:100%;margin-top:10px;background:var(--bleu);color:white;border:none;border-radius:10px;padding:10px 16px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:0.3px;box-shadow:0 3px 10px rgba(0,0,0,0.2);">🏠 Retour fiche principale</button>` : ''; $('saisieContenu').innerHTML = `${btnRetourHtml}${conflitInfo}<div class="fiche"><div class="fiche-header" style="background:${headerBg};"><div style="display:flex;justify-content:space-between;align-items:flex-start;"><div class="nom">${p.nom}</div><div style="font-size:14px;color:white;font-weight:600;">ID — ${p.id}</div></div><div class="prenom">${p.prenom}</div>${p.nomUsage && p.nomUsage !== p.nom ? `<div class="nom-usage">Usage : ${p.nomUsage}</div>` : ''}${isVisite ? `<div class="badge-deja-visite">✅ Visité${p.militant ? ' par ' + p.militant.split(' ').pop() : ''}${p.candidatActuel ? ' · ' + p.candidatActuel : ''}</div>` : ''}${btnRetourPrincipale}</div><div class="fiche-body">${p.sexe ? `<div class="fiche-row"><span class="label">Sexe</span><span class="value">${sexeIcon} ${p.sexe === 'M' ? 'Masculin' : 'Féminin'}</span></div>` : ''}${p.age ? `<div class="fiche-row"><span class="label">Âge</span><span class="value">${p.age} ans</span></div>` : ''}<div class="fiche-row"><span class="label">Adresse</span><span class="value">${adresse}</span></div><div class="fiche-row"><span class="label">Bureau 🏢</span><span class="value">${p.bureau || '—'}</span></div><div class="fiche-row"><span class="label">Statut</span><span class="value"><span class="statut-badge ${p.statut === 'Visité' ? 'statut-visite' : 'statut-non'}">${p.statut === 'Visité' ? '✓ Visité' : p.statut === 'Absent' ? '🚪 Absent' : p.statut === 'Opposition' ? '🚫 Opposition' : 'Non visité'}</span></span></div>${p.dateDerniereVisite ? `<div class="fiche-row"><span class="label">Dernière visite</span><span class="value">${p.dateDerniereVisite}</span></div>` : ''}</div></div>${isFicheSecondaire ? '' : genererCoResidents(p)}<div class="form-section"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--gris);"><h3 style="font-size:13px;font-weight:700;color:var(--bleu);text-transform:uppercase;letter-spacing:.5px;margin:0;padding:0;border:none;">✏️ Enregistrer une visite</h3><div style="display:flex;gap:8px;"><button onclick="syncManuel()" style="background:#95a5a6;color:white;border:none;border-radius:8px;width:36px;height:36px;font-size:18px;cursor:pointer;" title="Rafraîchir">🔄</button>${(currentRole === 'admin' || currentRole === 'superviseur' || currentRole === 'responsable bureaux' || currentRole === 'manager') ? `<button onclick="demanderReinitialisation()" style="background:#c0392b;color:white;border:none;border-radius:8px;width:36px;height:36px;font-size:18px;cursor:pointer;" title="Réinitialiser">🗑️</button>` : ''}</div></div><div class="field"><label>Statut</label><select id="fStatut"><option value="Visité" ${p.statut === 'Visité' ? 'selected' : ''}>✅ Visité</option><option value="Non visité" ${p.statut === 'Non visité' || !p.statut ? 'selected' : ''}>❌ Non visité</option><option value="Absent" ${p.statut === 'Absent' ? 'selected' : ''}>🚪 Absent</option><option value="Opposition" ${p.statut === 'Opposition' ? 'selected' : ''}>🚫 Opposition</option></select></div><div class="field"><label>Candidat soutenu</label><select id="fCandidat">${cOpts}</select></div><div class="field"><label>Notes <span style="font-weight:400;color:#888;font-size:11px;">= (Nom / Prénom) du référent</span></label><textarea id="fNotes" placeholder="Remarques...">${p.notes || ''}</textarea></div><div class="field"><label>📇 Contact</label><div style="display:flex;gap:8px;"><div style="flex:1;"><input type="email" id="fMail" placeholder="📧 Adresse mail" value="${p.mail || ''}" style="width:100%;"></div><div style="flex:1;"><input type="tel" id="fTel" placeholder="📞 Téléphone" value="${p.tel || ''}" style="width:100%;"></div></div></div>${(currentRole === 'admin' || currentRole === 'superviseur') ? `<div class="field"><label>Observation</label><textarea id="fObservation" placeholder="Observation...">${p.observation || ''}</textarea></div>` : ''}${(p.statut === 'Non visité' || currentRole === 'admin' || currentRole === 'superviseur' || currentRole === 'responsable bureaux' || currentRole === 'manager' || currentRole === 'militant') ? `<button class="btn-vert" onclick="enregistrerVisite()">✅ Enregistrer</button>` : '<div style="background:#f8d7da;color:#721c24;padding:12px;border-radius:8px;text-align:center;margin-top:10px;font-size:13px;">🔒 Modification réservée aux responsables</div>'}</div>`; }
-let isProcessing = false;
-let fichePrincipaleId = null;
-let isFicheSecondaire = false;
+
+function rechercher() {
+  const qNom = ($('searchNom')?.value || '').trim().toLowerCase();
+  const qNomUsage = ($('searchNomUsage')?.value || '').trim().toLowerCase();
+  const qPrenom = ($('searchPrenom')?.value || '').trim().toLowerCase();
+  const qId = ($('searchId')?.value || '').trim();
+  const qNumVoie = ($('searchNumVoie')?.value || '').trim().toLowerCase();
+  const qLibVoie = ($('searchLibVoie')?.value || '').trim().toLowerCase();
+  const div = $('resultatsRecherche');
+  if (!qNom && !qNomUsage && !qPrenom && !qId && !qNumVoie && !qLibVoie) { div.innerHTML = ''; return; }
+  if (qId && !qNom && !qNomUsage && !qPrenom && !qNumVoie && !qLibVoie) {
+    const exact = toutesPersonnes.find(p => String(p[0]) === qId);
+    if (exact) { afficherResultats([exact]); return; }
+  }
+  const resultats = [];
+  for (let i = 0; i < toutesPersonnes.length && resultats.length < MAX_RESULTATS; i++) {
+    const p = toutesPersonnes[i];
+    const id = String(p[0]); const nom = (p[1] || '').toLowerCase(); const prenom = (p[2] || '').toLowerCase();
+    const nomUsage = (p[8] || '').toLowerCase(); const numVoie = String(p[6] || '').toLowerCase(); const libVoie = (p[7] || '').toLowerCase();
+    let ok = true;
+    if (qId && id !== qId && !id.startsWith(qId)) ok = false;
+    if (qNom && ok && nom.indexOf(qNom) === -1) ok = false;
+    if (qNomUsage && ok && nomUsage.indexOf(qNomUsage) === -1) ok = false;
+    if (qPrenom && ok && prenom.indexOf(qPrenom) === -1) ok = false;
+    if (qNumVoie && ok && numVoie !== qNumVoie && !numVoie.startsWith(qNumVoie)) ok = false;
+    if (qLibVoie && ok && libVoie.indexOf(qLibVoie) === -1) ok = false;
+    if (ok) resultats.push(p);
+  }
+  afficherResultats(resultats);
+}
+
+function afficherResultats(resultats) {
+  const div = $('resultatsRecherche');
+  if (!resultats.length) { div.innerHTML = '<div class="vide">Aucun résultat</div>'; return; }
+  const html = ['<div style="font-size:12px;color:#999;text-align:center;padding:4px 0 8px;">' + (resultats.length >= MAX_RESULTATS ? MAX_RESULTATS + ' premiers' : resultats.length + ' résultat' + (resultats.length > 1 ? 's' : '')) + '</div>'];
+  for (const p of resultats) {
+    const statut = p[3] || 'Non visité';
+    const statutClass = statut === 'Visité' ? 'visite' : statut === 'Absent' ? 'absent' : statut === 'Opposition' ? 'opposition' : 'non-visite';
+    const badgeClass = statut === 'Visité' ? 'badge-visite' : statut === 'Absent' ? 'badge-absent' : statut === 'Opposition' ? 'badge-opposition' : 'badge-non';
+    const badgeText = statut === 'Visité' ? '✓ Visité' : statut === 'Absent' ? '🚪 Absent' : statut === 'Opposition' ? '🚫 Opposé' : '—';
+    const sexeIcon = p[4] === 'M' ? '👨' : p[4] === 'F' ? '👩' : '';
+    const age = p[5] ? p[5] + ' ans' : '';
+    const adresse = [p[6], p[7]].filter(Boolean).join(' ');
+    const militant = p[14];
+    const militantInfo = statut === 'Visité' && militant ? ' · <span style="color:#27ae60;font-size:10px;">par ' + militant.split(' ').pop() + '</span>' : '';
+    const nomUsage = p[8] || '';
+    const nomUsageInfo = nomUsage && nomUsage !== p[1] ? '<div style="font-size:11px;color:#8e44ad;font-style:italic;">Usage : ' + nomUsage + '</div>' : '';
+    html.push('<div class="resultat-item ' + statutClass + '" onclick="selectionnerPersonne(' + p[0] + ')" style="display:flex;align-items:center;gap:10px;"><div style="font-size:16px;font-weight:700;color:#1a1a1a;min-width:55px;">ID→' + p[0] + '</div><div class="ri-info" style="flex:1;"><div class="ri-nom">' + p[1] + ' ' + p[2] + '</div><div class="ri-detail">' + [sexeIcon + (age ? ' ' + age : ''), adresse].filter(Boolean).join(' · ') + militantInfo + '</div>' + nomUsageInfo + '</div><span class="ri-badge ' + badgeClass + '">' + badgeText + '</span></div>');
+  }
+  div.innerHTML = html.join('');
+}
+
+// =====================================================
+// FICHE PERSONNE
+// =====================================================
+function selectionnerPersonne(id) {
+  showPage('saisie');
+  const local = toutesPersonnes.find(p => p[0] == id);
+  if (local) {
+    currentPersonne = { id: local[0], nom: local[1], prenom: local[2], statut: local[3], sexe: local[4], age: local[5], nVoie: local[6], libelleVoie: local[7], nomUsage: local[8], bureau: local[9] || '', candidatActuel: local[10] || '', dateDerniereVisite: local[11] || '', notes: local[12] || '', secteur: local[13] || '', militant: local[14] || '', observation: local[15] || '', mail: local[16] || '', tel: local[17] || '' };
+    // 📸 Sauvegarder l'état d'ouverture pour détecter les conflits
+    currentPersonneServeur = { statut: local[3] || '', militant: local[14] || '', dateVisite: local[11] || '' };
+    afficherFiche(currentPersonne);
+  }
+}
+
+function genererCoResidents(p) {
+  if (!p.nVoie && !p.libelleVoie) return '';
+  const nv = String(p.nVoie || '').trim().toLowerCase();
+  const lv = (p.libelleVoie || '').trim().toLowerCase();
+  if (!nv && !lv) return '';
+  const coresidents = [];
+  for (let i = 0; i < toutesPersonnes.length; i++) {
+    const t = toutesPersonnes[i];
+    if (t[0] == p.id) continue;
+    if (String(t[6] || '').trim().toLowerCase() === nv && (t[7] || '').trim().toLowerCase() === lv) coresidents.push(t);
+  }
+  if (!coresidents.length) return '';
+  let html = '<div style="background:white;border-radius:14px;padding:14px 16px;margin:10px 0;box-shadow:0 2px 8px rgba(0,0,0,0.06);"><div style="font-size:13px;font-weight:700;color:var(--bleu);margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--gris);">🏠 Résidants à cette adresse <span style="font-weight:400;color:#888;">(' + coresidents.length + ')</span></div>';
+  for (const c of coresidents) {
+    const statut = c[3] || 'Non visité';
+    const statutBadge = statut === 'Visité' ? '<span style="background:#27ae60;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">✓ Visité</span>' : statut === 'Absent' ? '<span style="background:#e67e22;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">🚪 Absent</span>' : statut === 'Opposition' ? '<span style="background:#c0392b;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">🚫 Opposition</span>' : '<span style="background:#95a5a6;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">Non visité</span>';
+    html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f0f2f5;"><div style="flex:1;"><div style="font-size:14px;font-weight:600;">' + c[1] + ' ' + c[2] + '</div><div style="font-size:11px;color:#5a6070;">ID ' + c[0] + '</div><div style="margin-top:4px;">' + statutBadge + '</div></div><button onclick="voirCoResident(' + c[0] + ')" style="background:var(--bleu);color:white;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;">👁️ Voir</button></div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function afficherFiche(p) {
+  const isVisite = p.statut === 'Visité';
+  const adresse = [p.nVoie, p.libelleVoie].filter(Boolean).join(' ') || '—';
+  const cOpts = CANDIDATS.map(c => '<option value="' + c + '" ' + (p.candidatActuel === c ? 'selected' : '') + '>' + (c || '-- Choisir --') + '</option>').join('');
+  const conflitInfo = isVisite && p.militant && p.militant !== currentMilitant ? '<div class="alerte-conflit"><div class="titre">⚠️ Déjà visité par ' + p.militant + '</div><div class="detail">' + (p.dateDerniereVisite || '') + (p.candidatActuel ? ' · ' + p.candidatActuel : '') + '</div></div>' : '';
+  const headerBg = isFicheSecondaire ? '#e67e22' : 'var(--bleu)';
+  const btnRetourHtml = isFicheSecondaire ? '' : '<button class="btn-retour" onclick="retourRecherche()">← Retour</button>';
+  const btnRetourPrincipale = isFicheSecondaire ? '<button onclick="retourFichePrincipale()" style="display:block;width:100%;margin-top:10px;background:var(--bleu);color:white;border:none;border-radius:10px;padding:10px 16px;font-size:14px;font-weight:700;cursor:pointer;">🏠 Retour fiche principale</button>' : '';
+  $('saisieContenu').innerHTML = btnRetourHtml + conflitInfo + '<div class="fiche"><div class="fiche-header" style="background:' + headerBg + ';"><div style="display:flex;justify-content:space-between;align-items:flex-start;"><div class="nom">' + p.nom + '</div><div style="font-size:14px;color:white;font-weight:600;">ID — ' + p.id + '</div></div><div class="prenom">' + p.prenom + '</div>' + (p.nomUsage && p.nomUsage !== p.nom ? '<div class="nom-usage">Usage : ' + p.nomUsage + '</div>' : '') + (isVisite ? '<div class="badge-deja-visite">✅ Visité' + (p.militant ? ' par ' + p.militant.split(' ').pop() : '') + (p.candidatActuel ? ' · ' + p.candidatActuel : '') + '</div>' : '') + btnRetourPrincipale + '</div><div class="fiche-body">' + (p.sexe ? '<div class="fiche-row"><span class="label">Sexe</span><span class="value">' + (p.sexe === 'M' ? '👨 Masculin' : '👩 Féminin') + '</span></div>' : '') + (p.age ? '<div class="fiche-row"><span class="label">Âge</span><span class="value">' + p.age + ' ans</span></div>' : '') + '<div class="fiche-row"><span class="label">Adresse</span><span class="value">' + adresse + '</span></div><div class="fiche-row"><span class="label">Bureau 🏢</span><span class="value">' + (p.bureau || '—') + '</span></div><div class="fiche-row"><span class="label">Statut</span><span class="value"><span class="statut-badge ' + (p.statut === 'Visité' ? 'statut-visite' : 'statut-non') + '">' + (p.statut === 'Visité' ? '✓ Visité' : p.statut === 'Absent' ? '🚪 Absent' : p.statut === 'Opposition' ? '🚫 Opposition' : 'Non visité') + '</span></span></div>' + (p.dateDerniereVisite ? '<div class="fiche-row"><span class="label">Dernière visite</span><span class="value">' + p.dateDerniereVisite + '</span></div>' : '') + '</div></div>' + (isFicheSecondaire ? '' : genererCoResidents(p)) + '<div class="form-section"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--gris);"><h3 style="font-size:13px;font-weight:700;color:var(--bleu);text-transform:uppercase;letter-spacing:.5px;margin:0;padding:0;border:none;">✏️ Enregistrer une visite</h3>' + ((currentRole === 'admin' || currentRole === 'superviseur' || currentRole === 'responsable bureaux' || currentRole === 'manager') ? '<button onclick="demanderReinitialisation()" style="background:#c0392b;color:white;border:none;border-radius:8px;width:36px;height:36px;font-size:18px;cursor:pointer;" title="Réinitialiser">🗑️</button>' : '') + '</div><div class="field"><label>Statut</label><select id="fStatut"><option value="Visité" ' + (p.statut === 'Visité' ? 'selected' : '') + '>✅ Visité</option><option value="Non visité" ' + (p.statut === 'Non visité' || !p.statut ? 'selected' : '') + '>❌ Non visité</option><option value="Absent" ' + (p.statut === 'Absent' ? 'selected' : '') + '>🚪 Absent</option><option value="Opposition" ' + (p.statut === 'Opposition' ? 'selected' : '') + '>🚫 Opposition</option></select></div><div class="field"><label>Candidat soutenu</label><select id="fCandidat">' + cOpts + '</select></div><div class="field"><label>Notes</label><textarea id="fNotes" placeholder="Remarques...">' + (p.notes || '') + '</textarea></div><div class="field"><label>📇 Contact</label><div style="display:flex;gap:8px;"><div style="flex:1;"><input type="email" id="fMail" placeholder="📧 Mail" value="' + (p.mail || '') + '"></div><div style="flex:1;"><input type="tel" id="fTel" placeholder="📞 Tél" value="' + (p.tel || '') + '"></div></div></div>' + ((currentRole === 'admin' || currentRole === 'superviseur') ? '<div class="field"><label>Observation</label><textarea id="fObservation" placeholder="Observation...">' + (p.observation || '') + '</textarea></div>' : '') + '<button class="btn-vert" onclick="enregistrerVisite()">✅ Enregistrer</button></div>';
+}
+
+// =====================================================
+// ENREGISTREMENT (ÉCRITURE FIREBASE) — ULTRA RAPIDE
+// =====================================================
+function afficherOverlay(texte) { if (isProcessing) return false; isProcessing = true; $('overlayTexte').textContent = texte; $('overlayProgress').style.width = '0%'; $('overlayChargement').style.display = 'flex'; setTimeout(() => $('overlayProgress').style.width = '50%', 50); return true; }
+function masquerOverlay() { $('overlayProgress').style.width = '100%'; setTimeout(() => { $('overlayChargement').style.display = 'none'; isProcessing = false; }, 300); }
+
+async function enregistrerVisite() {
+  if (!currentPersonne || isProcessing) return;
+
+  // 🔍 Vérifier si quelqu'un a modifié cette personne depuis qu'on l'a ouverte
+  try {
+    const snap = await db.ref('personnes/' + currentPersonne.id).once('value');
+    const actuel = snap.val();
+    if (actuel && currentPersonneServeur) {
+      const aChange = actuel.dateVisite !== currentPersonneServeur.dateVisite ||
+                       actuel.statut !== currentPersonneServeur.statut ||
+                       actuel.militant !== currentPersonneServeur.militant;
+      if (aChange && actuel.militant && actuel.militant !== currentMilitant) {
+        // ⚠️ Conflit ! Quelqu'un d'autre a modifié cette fiche
+        $('conflitMessage').innerHTML = '⚠️ <strong>' + actuel.militant + '</strong> a modifié cette fiche le <strong>' + (actuel.dateVisite || '?') + '</strong><br><br>Statut actuel : <strong>' + (actuel.statut || '?') + '</strong><br><br>Voulez-vous écraser ses modifications ?';
+        ouvrirModal('modalConflit');
+        return;
+      }
+    }
+  } catch(e) {
+    // Si erreur de vérification, on continue quand même (Firebase hors ligne par ex.)
+  }
+
+  executerEnregistrement();
+}
+function forcerEnregistrement() { fermerModal('modalConflit'); executerEnregistrement(); }
+
+async function executerEnregistrement() {
+  if (!afficherOverlay('🔥 Enregistrement...')) return;
+
+  const statut = $('fStatut').value;
+  const candidat = $('fCandidat').value;
+  const notes = $('fNotes').value;
+  const observation = $('fObservation')?.value || '';
+  const mail = $('fMail')?.value || '';
+  const tel = $('fTel')?.value || '';
+  const id = currentPersonne.id;
+  const dateNow = new Date().toLocaleString('fr-FR');
+
+  try {
+    // 🔥 Écriture Firebase — instantanée !
+    await db.ref('personnes/' + id).update({
+      statut: statut,
+      candidat: candidat,
+      notes: notes,
+      observation: observation,
+      mail: mail,
+      tel: tel,
+      militant: currentMilitant,
+      dateVisite: dateNow
+    });
+
+    // Log de l'action
+    db.ref('logs').push({
+      date: dateNow,
+      action: 'Enregistrement',
+      militant: currentMilitant,
+      id: String(id),
+      nom: currentPersonne.nom + ' ' + currentPersonne.prenom
+    });
+    syncVersGoogleSheets({ action: 'log', date: dateNow, action_type: 'Enregistrement', militant: currentMilitant, id: String(id), nom: currentPersonne.nom + ' ' + currentPersonne.prenom });
+
+    // 📊 Sync vers Google Sheets (arrière-plan, non bloquant)
+    syncVersGoogleSheets({
+      action: 'enregistrement',
+      id: id, statut: statut, candidat: candidat, notes: notes,
+      observation: observation, mail: mail, tel: tel,
+      militant: currentMilitant, dateVisite: dateNow
+    });
+
+    // Mise à jour locale
+    currentPersonne.statut = statut;
+    currentPersonne.candidatActuel = candidat;
+    currentPersonne.notes = notes;
+    currentPersonne.observation = observation;
+    currentPersonne.militant = currentMilitant;
+    currentPersonne.mail = mail;
+    currentPersonne.tel = tel;
+    currentPersonne.dateDerniereVisite = dateNow;
+
+    masquerOverlay();
+
+    if (isFicheSecondaire) {
+      showToast('🔥 ' + currentPersonne.nom + ' ' + currentPersonne.prenom + ' enregistré !', 'succes');
+      setTimeout(() => retourFichePrincipale(), 800);
+      return;
+    }
+    afficherFiche(currentPersonne);
+    showToast('🔥 Enregistré instantanément !', 'succes');
+
+  } catch(e) {
+    masquerOverlay();
+    showToast('❌ Erreur: ' + e.message, 'erreur');
+  }
+}
+
+function demanderReinitialisation() {
+  if (!currentPersonne) return;
+  $('reinitMessage').textContent = 'Réinitialiser la visite de ' + currentPersonne.nom + ' ' + currentPersonne.prenom + ' ?';
+  ouvrirModal('modalReinit');
+}
+
+async function confirmerReinitialisation() {
+  fermerModal('modalReinit');
+  if (!currentPersonne) return;
+  if (!afficherOverlay('🔥 Réinitialisation...')) return;
+
+  try {
+    await db.ref('personnes/' + currentPersonne.id).update({
+      statut: 'Non visité', candidat: '', notes: '', observation: '',
+      militant: '', dateVisite: '', mail: '', tel: ''
+    });
+
+    var dateReinit = new Date().toLocaleString('fr-FR');
+    db.ref('logs').push({
+      date: dateReinit,
+      action: 'Suppression',
+      militant: currentMilitant,
+      id: String(currentPersonne.id),
+      nom: currentPersonne.nom + ' ' + currentPersonne.prenom
+    });
+    syncVersGoogleSheets({ action: 'log', date: dateReinit, action_type: 'Suppression', militant: currentMilitant, id: String(currentPersonne.id), nom: currentPersonne.nom + ' ' + currentPersonne.prenom });
+
+    // 📊 Sync vers Google Sheets (arrière-plan)
+    syncVersGoogleSheets({
+      action: 'reinitialisation',
+      id: currentPersonne.id
+    });
+
+    currentPersonne.statut = 'Non visité';
+    currentPersonne.candidatActuel = '';
+    currentPersonne.notes = '';
+    currentPersonne.observation = '';
+    currentPersonne.militant = '';
+    currentPersonne.dateDerniereVisite = '';
+    currentPersonne.mail = '';
+    currentPersonne.tel = '';
+
+    masquerOverlay();
+    afficherFiche(currentPersonne);
+    showToast('🗑️ Réinitialisé !', 'succes');
+  } catch(e) {
+    masquerOverlay();
+    showToast('❌ Erreur: ' + e.message, 'erreur');
+  }
+}
+
+// =====================================================
+// NAVIGATION
+// =====================================================
+function initTabs() { document.querySelectorAll('.tab').forEach(tab => { tab.onclick = () => { const page = tab.dataset.page; if (!page) return; document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); tab.classList.add('active'); $('page-' + page).classList.add('active'); if (page === 'stats') chargerStats(); if (page === 'admin') chargerAdmin(); }; }); }
+function showPage(page) { const tab = document.querySelector('.tab[data-page="' + page + '"]'); if (tab) tab.click(); }
+function retourRecherche() { isFicheSecondaire = false; fichePrincipaleId = null; showPage('recherche'); setTimeout(() => rechercher(), 50); }
 function voirCoResident(id) { fichePrincipaleId = currentPersonne ? currentPersonne.id : null; isFicheSecondaire = true; selectionnerPersonne(id); }
 function retourFichePrincipale() { const id = fichePrincipaleId; isFicheSecondaire = false; fichePrincipaleId = null; if (id) selectionnerPersonne(id); else retourRecherche(); }
-function afficherOverlay(texte = 'Enregistrement...') { if (isProcessing) return false; isProcessing = true; $('overlayTexte').textContent = texte; $('overlayProgress').style.width = '0%'; $('overlayChargement').style.display = 'flex'; setTimeout(() => $('overlayProgress').style.width = '30%', 100); setTimeout(() => $('overlayProgress').style.width = '60%', 500); setTimeout(() => $('overlayProgress').style.width = '80%', 1000); return true; }
-function masquerOverlay(succes = true) { $('overlayProgress').style.width = '100%'; setTimeout(() => { $('overlayChargement').style.display = 'none'; isProcessing = false; }, 300); }
-function enregistrerVisite() { if (!currentPersonne) return; if (isProcessing) return; if (currentPersonneServeur && currentPersonneServeur.militant !== currentMilitant && currentPersonneServeur.statut === 'Visité') { $('conflitMessage').textContent = `${currentPersonneServeur.militant} a déjà enregistré cette personne. Voulez-vous écraser ?`; ouvrirModal('modalConflit'); return; } executerEnregistrement(); }
-function forcerEnregistrement() { fermerModal('modalConflit'); executerEnregistrement(); }
-async function executerEnregistrement() { if (!afficherOverlay('Enregistrement en cours...')) return; arreterSync(); const statut = $('fStatut').value; const candidat = $('fCandidat').value; const notes = $('fNotes').value; const observation = $('fObservation')?.value || ''; const mail = $('fMail')?.value || ''; const tel = $('fTel')?.value || ''; const id = currentPersonne.id; const params = new URLSearchParams({ action: 'enregistrer', id: String(id), statut, candidat, notes, observation, mail, tel, militant: currentMilitant, nom: currentPersonne.nom + ' ' + currentPersonne.prenom, secteur: currentPersonne.secteur || '' }); const result = await fetchEcriture(SCRIPT_URL, { method: 'POST', body: params }, 30000); if (result.success) { currentPersonne.statut = statut; currentPersonne.candidatActuel = candidat; currentPersonne.notes = notes; currentPersonne.observation = observation; currentPersonne.militant = currentMilitant; currentPersonne.mail = mail; currentPersonne.tel = tel; currentPersonneServeur = null; for (let i = 0; i < toutesPersonnes.length; i++) { if (String(toutesPersonnes[i][0]) === String(id)) { toutesPersonnes[i][3] = statut; toutesPersonnes[i][10] = candidat; toutesPersonnes[i][12] = notes; toutesPersonnes[i][14] = currentMilitant; toutesPersonnes[i][15] = observation; break; } } try { localStorage.setItem(CACHE_KEY_PERSONNES, JSON.stringify(toutesPersonnes)); } catch(e) {} masquerOverlay(true); if (isFicheSecondaire) { showToast('✅ ' + currentPersonne.nom + ' ' + currentPersonne.prenom + ' enregistré !', 'succes'); setTimeout(() => retourFichePrincipale(), 800); demarrerSync(); return; } afficherFiche(currentPersonne); showToast('✅ Enregistré — confirmé serveur !', 'succes'); demarrerSync(); } else { $('overlayTexte').textContent = '🔍 Vérification serveur...'; const fiche = await syncVerification(id); masquerOverlay(false); if (fiche && fiche.statut === statut && fiche.militant === currentMilitant) { currentPersonne.statut = fiche.statut; currentPersonne.candidatActuel = fiche.candidatActuel || ''; currentPersonne.notes = fiche.notes || ''; currentPersonne.observation = fiche.observation || ''; currentPersonne.militant = fiche.militant || ''; currentPersonne.mail = fiche.mail || ''; currentPersonne.tel = fiche.tel || ''; currentPersonneServeur = null; for (let i = 0; i < toutesPersonnes.length; i++) { if (String(toutesPersonnes[i][0]) === String(id)) { toutesPersonnes[i][3] = fiche.statut; toutesPersonnes[i][10] = fiche.candidatActuel || ''; toutesPersonnes[i][14] = fiche.militant || ''; break; } } try { localStorage.setItem(CACHE_KEY_PERSONNES, JSON.stringify(toutesPersonnes)); } catch(e) {} if (isFicheSecondaire) { showToast('✅ ' + currentPersonne.nom + ' ' + currentPersonne.prenom + ' enregistré !', 'succes'); setTimeout(() => retourFichePrincipale(), 800); demarrerSync(); return; } afficherFiche(currentPersonne); showToast('✅ Enregistré (vérifié serveur) !', 'succes'); } else if (fiche) { currentPersonne.statut = fiche.statut || 'Non visité'; currentPersonne.candidatActuel = fiche.candidatActuel || ''; currentPersonne.notes = fiche.notes || ''; currentPersonne.militant = fiche.militant || ''; afficherFiche(currentPersonne); showToast('⚠️ Réponse lente — vérifiez la fiche', 'warning'); } else { showToast('❌ Erreur réseau — réessayez', 'erreur'); } demarrerSync(); } }
-function demanderReinitialisation() { if (!currentPersonne) return; $('reinitMessage').textContent = `Réinitialiser la visite de ${currentPersonne.nom} ${currentPersonne.prenom} ?`; ouvrirModal('modalReinit'); }
-async function confirmerReinitialisation() { fermerModal('modalReinit'); if (!currentPersonne) return; if (!afficherOverlay('Réinitialisation...')) return; arreterSync(); const id = currentPersonne.id; const result = await fetchEcriture(SCRIPT_URL, { method: 'POST', body: new URLSearchParams({ action: 'reinitialiser', id: String(id), militant: currentMilitant }) }, 30000); if (result.success) { currentPersonne.statut = 'Non visité'; currentPersonne.candidatActuel = ''; currentPersonne.notes = ''; currentPersonne.observation = ''; currentPersonne.militant = ''; currentPersonne.dateDerniereVisite = ''; currentPersonne.mail = ''; currentPersonne.tel = ''; for (let i = 0; i < toutesPersonnes.length; i++) { if (String(toutesPersonnes[i][0]) === String(id)) { toutesPersonnes[i][3] = 'Non visité'; toutesPersonnes[i][10] = ''; toutesPersonnes[i][11] = ''; toutesPersonnes[i][12] = ''; toutesPersonnes[i][13] = ''; toutesPersonnes[i][14] = ''; toutesPersonnes[i][15] = ''; toutesPersonnes[i][16] = ''; toutesPersonnes[i][17] = ''; break; } } try { localStorage.setItem(CACHE_KEY_PERSONNES, JSON.stringify(toutesPersonnes)); } catch(e) {} masquerOverlay(true); if (isFicheSecondaire) { showToast('🗑️ ' + currentPersonne.nom + ' ' + currentPersonne.prenom + ' réinitialisé !', 'succes'); setTimeout(() => retourFichePrincipale(), 800); demarrerSync(); return; } afficherFiche(currentPersonne); showToast('🗑️ Réinitialisé — confirmé serveur !', 'succes'); demarrerSync(); } else { $('overlayTexte').textContent = '🔍 Vérification serveur...'; const fiche = await syncVerification(id); masquerOverlay(false); if (fiche && fiche.statut === 'Non visité') { currentPersonne.statut = 'Non visité'; currentPersonne.candidatActuel = ''; currentPersonne.notes = ''; currentPersonne.observation = ''; currentPersonne.militant = ''; currentPersonne.dateDerniereVisite = ''; currentPersonne.mail = ''; currentPersonne.tel = ''; for (let i = 0; i < toutesPersonnes.length; i++) { if (String(toutesPersonnes[i][0]) === String(id)) { toutesPersonnes[i][3] = 'Non visité'; toutesPersonnes[i][10] = ''; toutesPersonnes[i][11] = ''; toutesPersonnes[i][12] = ''; toutesPersonnes[i][13] = ''; toutesPersonnes[i][14] = ''; toutesPersonnes[i][15] = ''; toutesPersonnes[i][16] = ''; toutesPersonnes[i][17] = ''; break; } } try { localStorage.setItem(CACHE_KEY_PERSONNES, JSON.stringify(toutesPersonnes)); } catch(e) {} if (isFicheSecondaire) { showToast('🗑️ ' + currentPersonne.nom + ' ' + currentPersonne.prenom + ' réinitialisé !', 'succes'); setTimeout(() => retourFichePrincipale(), 800); demarrerSync(); return; } afficherFiche(currentPersonne); showToast('🗑️ Réinitialisé (vérifié serveur) !', 'succes'); } else if (fiche) { currentPersonne.statut = fiche.statut || 'Non visité'; currentPersonne.candidatActuel = fiche.candidatActuel || ''; currentPersonne.notes = fiche.notes || ''; currentPersonne.militant = fiche.militant || ''; afficherFiche(currentPersonne); showToast('⚠️ Réponse lente — vérifiez la fiche', 'warning'); } else { showToast('❌ Erreur réseau — réessayez', 'erreur'); } demarrerSync(); } }
-async function chargerStats() { if (!toutesPersonnes || toutesPersonnes.length === 0) { $('statsContenu').innerHTML = '<div class="loading"><div class="spinner"></div>Chargement des données...</div>'; await new Promise(resolve => { const check = setInterval(() => { if (toutesPersonnes && toutesPersonnes.length > 0) { clearInterval(check); resolve(); } }, 500); setTimeout(() => { clearInterval(check); resolve(); }, 10000); }); } if (statsCache) { afficherStats(statsCache); return; } try { const cached = localStorage.getItem(CACHE_KEY_STATS); if (cached) { statsCache = JSON.parse(cached); afficherStats(statsCache); return; } } catch(e) {} $('statsContenu').innerHTML = '<div class="loading"><div class="spinner"></div>Chargement...</div>'; await rafraichirStatsServeur(); }
-async function rafraichirStatsServeur() { $('statsContenu').innerHTML = '<div class="loading"><div class="spinner"></div>Chargement...</div>'; try { const resp = await fetchRapide(SCRIPT_URL + '?action=stats', {}, 30000); const data = await resp.json(); if (data.error) throw new Error(data.error); statsCache = data; localStorage.setItem(CACHE_KEY_STATS, JSON.stringify(data)); afficherStats(statsCache); } catch(e) { $('statsContenu').innerHTML = `<div class="vide" style="color:red;"><div style="font-size:30px;margin-bottom:10px;">⚠️</div>Erreur: ${e.message || 'Timeout'}<br><br><button class="btn-refresh" onclick="statsCache=null;localStorage.removeItem(CACHE_KEY_STATS);rafraichirStatsServeur();">🔄 Réessayer</button></div>`; } }
-async function prechargerStats() { if (localStorage.getItem(CACHE_KEY_STATS)) return; try { const resp = await fetchRapide(SCRIPT_URL + '?action=stats', {}, 30000); const data = await resp.json(); if (!data.error && data.total) { statsCache = data; localStorage.setItem(CACHE_KEY_STATS, JSON.stringify(data)); } } catch(e) {} }
-async function prechargerObs() { if (localStorage.getItem(CACHE_KEY_OBS)) return; try { const resp = await fetchRapide(SCRIPT_URL + '?action=getObservations', {}, 30000); const data = await resp.json(); if (!data.error && data.observations) localStorage.setItem(CACHE_KEY_OBS, JSON.stringify(data.observations)); } catch(e) {} }
-function afficherStats(data) { $('cptTotal').textContent = data.total || '?'; $('cptVisites').textContent = data.visites || '0'; $('cptPct').textContent = (data.pct || '0') + '%'; $('compteur').style.display = 'flex'; $('statsContenu').innerHTML = ''; $('statsGraphiques').style.display = 'block'; const visites = data.visites || 0; const nonVisites = (data.total || 0) - visites; const pctV = data.total > 0 ? Math.round(visites / data.total * 100) : 0; if (chartCamembert) chartCamembert.destroy(); Chart.register(ChartDataLabels); const statsBureau = {}; toutesPersonnes.forEach(p => { const bureau = p[9] || 'Inconnu'; if (!statsBureau[bureau]) statsBureau[bureau] = { visites: 0, total: 0 }; statsBureau[bureau].total++; if (p[3] === 'Visité') statsBureau[bureau].visites++; }); const bureaux = Object.keys(statsBureau).filter(b => b !== 'Inconnu').sort((a, b) => statsBureau[b].total - statsBureau[a].total).slice(0, 6); const rangs = ['1er', '2e', '3e', '4e', '5e', '6e']; const couleursBureau = ['#3498db', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c']; chartCamembert = new Chart($('chartCamembert'), { type: 'doughnut', data: { labels: bureaux.map((b, i) => rangs[i] + ' - ' + b + ' (' + statsBureau[b].total + ')'), datasets: [{ data: bureaux.map(b => statsBureau[b].visites), backgroundColor: couleursBureau, borderWidth: 2, borderColor: '#fff' }] }, options: { responsive: true, cutout: '35%', layout: { padding: { top: 30, left: 30, right: 30, bottom: 30 } }, plugins: { legend: { display: false }, datalabels: { display: true, color: '#000', font: { weight: 'bold', size: 10 }, anchor: 'end', align: 'end', offset: 6, formatter: function(value, context) { var total = context.dataset.data.reduce(function(a, b) { return a + b; }, 0); var pct = total > 0 ? Math.round(value / total * 100) : 0; return value + ' (' + pct + '%)'; } } } } }); var legendeHtml = ''; bureaux.forEach(function(b, i) { legendeHtml += '<div style="display:flex;align-items:center;gap:8px;padding:4px 0;"><span style="width:12px;height:12px;border-radius:50%;background:' + couleursBureau[i] + ';display:inline-block;flex-shrink:0;"></span><span style="font-size:12px;color:#333;">' + rangs[i] + ' - ' + b + ' <span style="color:#27ae60;font-weight:600;">(' + statsBureau[b].visites + ' visités)</span> <span style="color:#2755a8;font-weight:600;">(' + statsBureau[b].total + ' inscrits)</span></span></div>'; }); $('legendeCamembert').innerHTML = legendeHtml; if (chartBureau) chartBureau.destroy(); chartBureau = new Chart($('chartBureau'), { type: 'bar', data: { labels: bureaux.map(b => b.length > 20 ? b.substring(0, 20) + '…' : b), datasets: [ { label: 'Total', data: bureaux.map(b => statsBureau[b].total), backgroundColor: 'rgba(39,85,168,0.15)', borderColor: '#2755a8', borderWidth: 1, datalabels: { align: 'end', anchor: 'end', color: '#2755a8', font: { weight: 'bold', size: 10 } } }, { label: 'Visités', data: bureaux.map(b => statsBureau[b].visites), backgroundColor: '#27ae60', datalabels: { align: 'end', anchor: 'end', color: '#155724', font: { weight: 'bold', size: 10 } } } ] }, options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { position: 'bottom' }, datalabels: { display: true } } } }); let tableauBureau = '<table style="width:100%;font-size:11px;margin-top:10px;border-collapse:collapse;">'; tableauBureau += '<tr style="background:#f0f4f8;"><th style="text-align:left;padding:6px;border:1px solid #ddd;">Bureau</th><th style="padding:6px;border:1px solid #ddd;color:#27ae60;">Visités</th><th style="padding:6px;border:1px solid #ddd;color:#2755a8;">Total</th><th style="padding:6px;border:1px solid #ddd;">%</th></tr>'; bureaux.forEach(b => { const pct = statsBureau[b].total > 0 ? Math.round(statsBureau[b].visites / statsBureau[b].total * 100) : 0; tableauBureau += '<tr><td style="padding:5px;border:1px solid #ddd;">' + (b.length > 25 ? b.substring(0,25) + '…' : b) + '</td><td style="text-align:center;padding:5px;border:1px solid #ddd;font-weight:bold;color:#27ae60;">' + statsBureau[b].visites + '</td><td style="text-align:center;padding:5px;border:1px solid #ddd;font-weight:bold;color:#2755a8;">' + statsBureau[b].total + '</td><td style="text-align:center;padding:5px;border:1px solid #ddd;">' + pct + '%</td></tr>'; }); tableauBureau += '</table>'; const divTableau = document.getElementById('tableauBureau'); if (divTableau) divTableau.innerHTML = tableauBureau; chargerComparaison(); }
-async function chargerAdmin() { if (currentRole !== 'admin') return; if (adminCache) { $('adminContenu').innerHTML = adminCache; return; } $('adminContenu').innerHTML = '<div class="loading"><div class="spinner"></div>Chargement...</div>'; try { const resp = await fetchRapide(SCRIPT_URL + '?action=getLogs', {}, 15000); const data = await resp.json(); adminCache = buildAdminHtml(data); $('adminContenu').innerHTML = adminCache; } catch(e) { $('adminContenu').innerHTML = '<div class="vide" style="color:red;">⚠️ Erreur</div>'; } }
-function forceChargerAdmin() { adminCache = null; chargerAdmin(); }
-function buildAdminHtml(data) { const compteurs = data.compteurs || {}; const suppressions = data.suppressions || {}; const logs = data.logs || []; const connectes = data.connectes || {}; const nbEnLigne = Object.keys(connectes).length; const totalVisites = Object.values(compteurs).reduce((a, b) => a + b, 0); const totalSuppressions = Object.values(suppressions).reduce((a, b) => a + b, 0); let html = `<div style="background:linear-gradient(135deg,#1a3a6b,#2755a8);border-radius:12px;padding:14px;margin-bottom:12px;color:white;display:flex;justify-content:space-around;text-align:center;"><div><div style="font-family:'Bebas Neue';font-size:28px;">${nbEnLigne}</div><div style="font-size:11px;opacity:.7;">EN LIGNE</div></div><div><div style="font-family:'Bebas Neue';font-size:28px;">${listeMilitants.length}</div><div style="font-size:11px;opacity:.7;">MILITANTS</div></div><div><div style="font-family:'Bebas Neue';font-size:28px;">${totalVisites}</div><div style="font-size:11px;opacity:.7;">VISITES</div></div><div><div style="font-family:'Bebas Neue';font-size:28px;color:#ff6b6b;">${totalSuppressions}</div><div style="font-size:11px;opacity:.7;">SUPP.</div></div></div>`; html += '<div class="section-title">👥 Activité par militant</div>'; const militantsTries = [...listeMilitants].sort((a, b) => { const aEnLigne = connectes[a.nom] ? 1 : 0; const bEnLigne = connectes[b.nom] ? 1 : 0; if (aEnLigne !== bEnLigne) return bEnLigne - aEnLigne; return (compteurs[b.nom] || 0) - (compteurs[a.nom] || 0); }); militantsTries.forEach(m => { const nb = compteurs[m.nom] || 0; const nbSupp = suppressions[m.nom] || 0; const connecte = connectes[m.nom]; const badgeRole = m.role === 'admin' ? '<span class="role-badge">admin</span>' : m.role === 'superviseur' ? '<span class="role-badge" style="background:#d4edda;color:#155724;">superviseur</span>' : m.role === 'responsable bureaux' ? '<span class="role-badge" style="background:#d1ecf1;color:#0c5460;">resp. bureaux</span>' : m.role === 'manager' ? '<span class="role-badge" style="background:#e2d5f1;color:#5e3d8a;">manager</span>' : ''; const suppText = nbSupp > 0 ? ` <span style="color:#e74c3c;font-size:11px;">(-${nbSupp} supp.)</span>` : ''; html += `<div class="militant-card" style="${connecte ? 'border-left:4px solid #27ae60;' : ''}"><div style="flex:1"><div class="mc-nom">${m.nom}${badgeRole}${connecte ? '<span style="margin-left:8px;background:#27ae60;color:white;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;">🟢 EN LIGNE</span>' : ''}</div><div class="mc-detail">${nb} visite${nb > 1 ? 's' : ''} enregistrée${nb > 1 ? 's' : ''}${suppText}</div></div><div class="mc-badge">${nb}</div></div>`; }); html += '<div class="section-title" style="margin-top:16px;">📋 Dernières actions (temps réel)</div>'; if (!logs.length) html += '<div class="vide">Aucune activité</div>'; else logs.slice(0, 30).forEach((l, i) => { const isConnexion = l.action === 'Connexion'; const isSuppression = l.action === 'Suppression'; const bgColor = isConnexion ? 'background:#f0fff4;' : (isSuppression ? 'background:#fff0f0;' : ''); const icon = isConnexion ? '🔑' : (isSuppression ? '🗑️' : '✅'); const detail = isConnexion ? 'Connexion' : (isSuppression ? 'Suppression ID ' + l.id : (l.nom || 'ID ' + l.id)); html += `<div class="log-item" style="${bgColor}"><div class="log-icon">${icon}</div><div class="log-info"><div class="log-action">${l.militant}</div><div class="log-detail">${detail}</div></div><div class="log-date">${l.date}</div></div>`; }); return html; }
-let currentObsId = null;
-async function actualiserObservations() { const div = $('obsContenu'); div.innerHTML = '<div class="loading"><div class="spinner"></div>Chargement...</div>'; try { const resp = await fetchRapide(SCRIPT_URL + '?action=getObservations', {}, 30000); const data = await resp.json(); if (data.error || !data.observations) { await actualiserObservationsFallback(); return; } try { localStorage.setItem(CACHE_KEY_OBS, JSON.stringify(data.observations)); } catch(e) {} if (data.observations.length > 0) { afficherObservationsRapide(data.observations); showToast(`✅ ${data.observations.length} observation${data.observations.length > 1 ? 's' : ''}`, 'succes'); } else div.innerHTML = '<div class="vide"><div style="font-size:40px;margin-bottom:10px;">📝</div>Aucune observation</div>'; } catch(e) { await actualiserObservationsFallback(); } }
-async function actualiserObservationsFallback() { const div = $('obsContenu'); div.innerHTML = '<div class="loading"><div class="spinner"></div>Chargement complet...</div>'; try { localStorage.removeItem(CACHE_KEY_PERSONNES); const resp = await fetchRapide(SCRIPT_URL + '?action=getAllPersonnes', {}, 60000); const data = await resp.json(); if (data.personnes?.length) { toutesPersonnes = data.personnes; try { localStorage.setItem(CACHE_KEY_PERSONNES, JSON.stringify(toutesPersonnes)); } catch(e) {} const avecObs = toutesPersonnes.filter(p => p[15] && String(p[15]).trim() !== ''); if (avecObs.length > 0) { afficherObservationsDepuisCache(avecObs); showToast(`✅ ${avecObs.length} observation${avecObs.length > 1 ? 's' : ''}`, 'succes'); } else div.innerHTML = '<div class="vide"><div style="font-size:40px;margin-bottom:10px;">📝</div>Aucune observation</div>'; } else div.innerHTML = '<div class="vide" style="color:orange;">⚠️ Aucune donnée reçue</div>'; } catch(e) { div.innerHTML = '<div class="vide" style="color:red;">❌ Erreur: ' + e.message + '</div>'; } }
-function afficherObservationsDepuisCache(avecObs) { const div = $('obsContenu'); let html = `<div style="background:linear-gradient(135deg,#8e44ad,#9b59b6);border-radius:12px;padding:14px;margin-bottom:12px;color:white;text-align:center;"><div style="font-family:'Bebas Neue';font-size:32px;">${avecObs.length}</div><div style="font-size:12px;opacity:.8;">OBSERVATIONS</div></div>`; html += '<div class="section-title">📝 Personnes avec observations</div>'; avecObs.forEach(p => { const id = p[0]; const nom = p[1]; const prenom = p[2]; const statut = p[3]; const isVisite = statut === 'Visité'; const militant = p[14] || ''; const dateVisite = p[11] || ''; const observation = String(p[15] || ''); const obsPreview = observation.length > 50 ? observation.substring(0, 50) + '...' : observation; html += `<div class="militant-card" style="cursor:pointer;border-left:4px solid #8e44ad;" onclick="afficherObservation(${id})"><div style="flex:1;"><div class="mc-nom">${nom} ${prenom} <span style="color:#888;font-size:11px;">#${id}</span></div><div class="mc-detail" style="color:#8e44ad;font-style:italic;">"${obsPreview}"</div><div class="mc-detail">${isVisite ? '✅ ' : ''}${militant ? 'par ' + militant.split(' ').pop() : ''} ${dateVisite ? '· ' + dateVisite : ''}</div></div><div style="font-size:24px;">👁️</div></div>`; }); div.innerHTML = html; }
-function afficherObservationsRapide(observations) { const div = $('obsContenu'); if (!observations.length) { div.innerHTML = '<div class="vide"><div style="font-size:40px;margin-bottom:10px;">📝</div>Aucune observation enregistrée</div>'; return; } let html = `<div style="background:linear-gradient(135deg,#8e44ad,#9b59b6);border-radius:12px;padding:14px;margin-bottom:12px;color:white;text-align:center;"><div style="font-family:'Bebas Neue';font-size:32px;">${observations.length}</div><div style="font-size:12px;opacity:.8;">OBSERVATIONS</div></div>`; html += '<div class="section-title">📝 Personnes avec observations</div>'; observations.forEach(o => { const isVisite = o.statut === 'Visité'; const obsPreview = o.observation.length > 50 ? o.observation.substring(0, 50) + '...' : o.observation; html += `<div class="militant-card" style="cursor:pointer;border-left:4px solid #8e44ad;" onclick="afficherObservationRapide(${o.id}, '${encodeURIComponent(o.nom)}', '${encodeURIComponent(o.prenom)}', '${encodeURIComponent(o.observation)}', '${o.militant || ''}', '${o.dateVisite || ''}', '${o.candidat || ''}')"><div style="flex:1;"><div class="mc-nom">${o.nom} ${o.prenom} <span style="color:#888;font-size:11px;">#${o.id}</span></div><div class="mc-detail" style="color:#8e44ad;font-style:italic;">"${obsPreview}"</div><div class="mc-detail">${isVisite ? '✅ ' : ''}${o.militant ? 'par ' + o.militant.split(' ').pop() : ''} ${o.dateVisite ? '· ' + o.dateVisite : ''}</div></div><div style="font-size:24px;">👁️</div></div>`; }); div.innerHTML = html; }
-function afficherObservationRapide(id, nomEnc, prenomEnc, obsEnc, militant, dateVisite, candidat) { currentObsId = id; const nom = decodeURIComponent(nomEnc); const prenom = decodeURIComponent(prenomEnc); const observation = decodeURIComponent(obsEnc); $('obsModalTitre').textContent = `📝 ${nom} ${prenom}`; $('obsModalContenu').innerHTML = `<div style="margin-bottom:12px;">${observation}</div><div style="font-size:12px;color:#888;border-top:1px solid #ddd;padding-top:10px;">${militant ? '👤 ' + militant : ''}${dateVisite ? ' · 📅 ' + dateVisite : ''}${candidat ? ' · 🗳️ ' + candidat : ''}</div>`; ouvrirModal('modalObservation'); }
-function chargerObservations() { const div = $('obsContenu'); try { const cached = localStorage.getItem(CACHE_KEY_OBS); if (cached) { const observations = JSON.parse(cached); if (observations.length > 0) { afficherObservationsRapide(observations); return; } } } catch(e) {} const avecObs = toutesPersonnes.filter(p => p[15] && String(p[15]).trim() !== ''); if (avecObs.length) { afficherObservationsDepuisCache(avecObs); const obsData = avecObs.map(p => ({ id: p[0], nom: p[1], prenom: p[2], statut: p[3], dateVisite: p[11] || '', candidat: p[10] || '', militant: p[14] || '', observation: String(p[15] || '') })); try { localStorage.setItem(CACHE_KEY_OBS, JSON.stringify(obsData)); } catch(e) {} return; } actualiserObservations(); }
-function afficherObservation(id) { currentObsId = id; const p = toutesPersonnes.find(x => x[0] == id); if (!p) return; const nom = p[1]; const prenom = p[2]; const observation = String(p[15] || ''); const militant = p[14] || ''; const dateVisite = p[11] || ''; const candidat = p[10] || ''; $('obsModalTitre').textContent = `📝 ${nom} ${prenom}`; $('obsModalContenu').innerHTML = `<div style="margin-bottom:12px;">${observation}</div><div style="font-size:12px;color:#888;border-top:1px solid #ddd;padding-top:10px;">${militant ? '👤 ' + militant : ''}${dateVisite ? ' · 📅 ' + dateVisite : ''}${candidat ? ' · 🗳️ ' + candidat : ''}</div>`; ouvrirModal('modalObservation'); }
-function ouvrirFicheDepuisObs() { fermerModal('modalObservation'); if (currentObsId) selectionnerPersonne(currentObsId); }
-function genererPinAleatoire() { return String(Math.floor(1000 + Math.random() * 9000)); }
-function genererTokenAleatoire() { const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'; let token = ''; for (let i = 0; i < 16; i++) token += chars.charAt(Math.floor(Math.random() * chars.length)); return token; }
-function ouvrirAjoutMilitant() { ouvrirModal('modalAjoutMilitant'); setTimeout(() => { const nom = $('nouveauNom'); const pin = $('nouveauPin'); const role = $('nouveauRole'); const email = $('nouveauEmail'); const script = $('nouveauScript'); const objet = $('nouveauObjet'); const lien = $('nouveauLien'); const emailExp = $('emailExpediteur'); const toggle = $('toggleLienMilitant'); const alerte = $('alerteEmail'); if (nom) nom.value = ''; if (pin) pin.value = genererPinAleatoire(); if (role) role.value = 'militant'; if (email) email.value = ''; if (script) script.value = ''; if (objet) objet.value = ''; if (alerte) alerte.style.display = 'none'; const newToken = genererTokenAleatoire(); if (lien) { lien.dataset.nom = ''; lien.dataset.token = newToken; lien.value = 'https://boyerdensjean111-hash.github.io/visites/?t=' + newToken; } if (toggle) toggle.checked = true; majStatutLien(); const savedEmail = localStorage.getItem('visites_email_expediteur'); if (emailExp && savedEmail) emailExp.value = savedEmail; $('btnEnvoyerMailZone').style.display = 'none'; scriptModele = ''; objetModele = ''; majIndicateurs(); chargerScriptServeur(); }, 50); }
-function verifierEmailValide(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); }
-function majIndicateurs() { const nom = ($('nouveauNom')?.value || '').trim(); const pin = ($('nouveauPin')?.value || '').trim(); const email = ($('nouveauEmail')?.value || '').trim(); const emailExp = ($('emailExpediteur')?.value || '').trim(); if (scriptModele) majScriptAvecVariables(); if (objetModele) majObjetAvecVariables(); const script = ($('nouveauScript')?.value || '').trim(); const objet = ($('nouveauObjet')?.value || '').trim(); const indExp = $('indExp'); const indNom = $('indNom'); const indPin = $('indPin'); const indRole = $('indRole'); const indEmail = $('indEmail'); const indScript = $('indScript'); const indObjet = $('indObjet'); const indLien = $('indLien'); const alerteDiv = $('alerteEmail'); if (indExp) indExp.textContent = (emailExp && verifierEmailValide(emailExp)) ? '✅' : '❌'; if (indNom) indNom.textContent = nom ? '✅' : '❌'; if (indPin) indPin.textContent = /^\d{4}$/.test(pin) ? '✅' : '❌'; if (indRole) indRole.textContent = '✅'; if (indObjet) indObjet.textContent = objet ? '✅' : '❌'; if (indScript) indScript.textContent = script ? '✅' : '❌'; const lienInput = $('nouveauLien'); if (indLien) indLien.textContent = (lienInput && lienInput.dataset.token) ? '✅' : '❌'; let emailOk = false; if (alerteDiv) { alerteDiv.style.display = 'none'; if (email) { if (!verifierEmailValide(email)) { alerteDiv.style.display = 'block'; alerteDiv.style.background = '#fadbd8'; alerteDiv.style.color = '#c0392b'; alerteDiv.textContent = '❌ Format email invalide'; } else { const doublon = listeMilitants.find(m => m.mail && m.mail.toLowerCase() === email.toLowerCase()); if (doublon) { alerteDiv.style.display = 'block'; alerteDiv.style.background = '#fef3e2'; alerteDiv.style.color = '#e67e22'; alerteDiv.textContent = '⚠️ Email déjà utilisé par : ' + doublon.nom; } else { emailOk = true; } } } } if (indEmail) indEmail.textContent = (email && verifierEmailValide(email)) ? (emailOk ? '✅' : '⚠️') : '❌'; const btnZone = $('btnEnvoyerMailZone'); if (btnZone) btnZone.style.display = (nom && /^\d{4}$/.test(pin) && email && verifierEmailValide(email) && emailExp && verifierEmailValide(emailExp)) ? 'block' : 'none'; if (emailExp) localStorage.setItem('visites_email_expediteur', emailExp); }
-function majStatutLien() { const toggle = $('toggleLienMilitant'); const statut = $('statutLien'); if (toggle && statut) { if (toggle.checked) { statut.textContent = '✅ Activé'; statut.style.color = '#27ae60'; } else { statut.textContent = '❌ Désactivé'; statut.style.color = '#c0392b'; } } }
-function copierLienMilitant() { const lien = $('nouveauLien'); if (!lien || !lien.value) { showToast('❌ Aucun lien à copier', 'erreur'); return; } if (navigator.clipboard) { navigator.clipboard.writeText(lien.value).then(() => showToast('📋 Lien copié !', 'succes')).catch(() => { lien.select(); document.execCommand('copy'); showToast('📋 Lien copié !', 'succes'); }); } else { lien.select(); document.execCommand('copy'); showToast('📋 Lien copié !', 'succes'); } }
-let scriptModele = '';
-let objetModele = '';
-async function chargerScriptServeur() { try { const resp = await fetchRapide(SCRIPT_URL + '?action=getScriptAppel', {}, 15000); const data = await resp.json(); if (data.script) { scriptModele = data.script; } if (data.objet) { objetModele = data.objet; } majScriptAvecVariables(); majObjetAvecVariables(); majIndicateurs(); } catch(e) {} }
-function majObjetAvecVariables() { if (!objetModele) return; const nom = ($('nouveauNom')?.value || '').trim(); const pin = ($('nouveauPin')?.value || '').trim(); const lien = ($('nouveauLien')?.value || ''); let objet = objetModele; objet = objet.replace(/\{nom\}/gi, nom || '___'); objet = objet.replace(/\{pin\}/gi, pin || '____'); objet = objet.replace(/\{lien\}/gi, lien || '___'); objet = objet.replace(/\{role\}/gi, ($('nouveauRole')?.value || 'militant')); $('nouveauObjet').value = objet; }
-function majScriptAvecVariables() { if (!scriptModele) return; const nom = ($('nouveauNom')?.value || '').trim(); const pin = ($('nouveauPin')?.value || '').trim(); const lien = ($('nouveauLien')?.value || ''); let script = scriptModele; script = script.replace(/\{nom\}/gi, nom || '___'); script = script.replace(/\{pin\}/gi, pin || '____'); script = script.replace(/\{lien\}/gi, lien || '___'); script = script.replace(/\{role\}/gi, ($('nouveauRole')?.value || 'militant')); $('nouveauScript').value = script; }
-function ouvrirGmail() { const nom = $('nouveauNom').value.trim(); const pin = $('nouveauPin').value.trim(); const email = $('nouveauEmail').value.trim(); const script = $('nouveauScript').value.trim(); const objet = $('nouveauObjet').value.trim(); const lien = $('nouveauLien').value || 'https://boyerdensjean111-hash.github.io/visites/'; const sujet = encodeURIComponent(objet || 'Visites Électorales - Vos identifiants'); const corps = encodeURIComponent(script || ('Bonjour ' + nom + ',\n\nVoici vos identifiants :\n🔗 Lien : ' + lien + '\n👤 Nom : ' + nom + '\n🔑 PIN : ' + pin + '\n\nCordialement,\n' + currentMilitant)); const gmailUrl = 'https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent(email) + '&su=' + sujet + '&body=' + corps; window.open(gmailUrl, '_blank'); }
-function annulerAjoutMilitant() { const nom = ($('nouveauNom')?.value || '').trim(); const email = ($('nouveauEmail')?.value || '').trim(); if (nom || email) { if (!confirm('⚠️ Vous n\'avez pas terminé !\n\nLe militant n\'a pas été ajouté.\nVoulez-vous vraiment quitter ?')) return; } localStorage.removeItem('visites_brouillon_militant'); fermerModal('modalAjoutMilitant'); }
-function sauvegarderBrouillon() { const nom = ($('nouveauNom')?.value || '').trim(); const pin = ($('nouveauPin')?.value || '').trim(); const email = ($('nouveauEmail')?.value || '').trim(); const role = ($('nouveauRole')?.value || 'militant'); const token = ($('nouveauLien')?.dataset?.token || ''); const lien = ($('nouveauLien')?.value || ''); const emailExp = ($('emailExpediteur')?.value || '').trim(); if (!nom) { showToast('❌ Entrez au moins un nom', 'erreur'); return; } const brouillon = { nom, pin, role, email, token, lien, emailExp, date: new Date().toLocaleString('fr-FR') }; localStorage.setItem('visites_brouillon_militant', JSON.stringify(brouillon)); fermerModal('modalAjoutMilitant'); showToast('📝 Brouillon sauvegardé !', 'succes'); }
-function verifierBrouillon() { try { const raw = localStorage.getItem('visites_brouillon_militant'); if (!raw) return; const b = JSON.parse(raw); if (!b.nom) return; setTimeout(() => { if (confirm('📝 Brouillon en attente !\n\n' + '👤 ' + b.nom + '\n' + '🔑 PIN : ' + b.pin + '\n' + (b.email ? '📧 ' + b.email + '\n' : '') + '📅 Sauvegardé le ' + b.date + '\n\n' + 'Voulez-vous reprendre ce brouillon ?')) { restaurerBrouillon(b); } else { if (confirm('Supprimer ce brouillon ?')) { localStorage.removeItem('visites_brouillon_militant'); showToast('🗑️ Brouillon supprimé', 'succes'); } } }, 1000); } catch(e) {} }
-function restaurerBrouillon(b) { ouvrirGestion(); setTimeout(() => { ouvrirSectionGestion('militants'); setTimeout(() => { ouvrirAjoutMilitant(); setTimeout(() => { if (b.nom) $('nouveauNom').value = b.nom; if (b.pin) $('nouveauPin').value = b.pin; if (b.role) $('nouveauRole').value = b.role; if (b.email) $('nouveauEmail').value = b.email; if (b.emailExp) $('emailExpediteur').value = b.emailExp; if (b.token && $('nouveauLien')) { $('nouveauLien').dataset.token = b.token; $('nouveauLien').value = b.lien || ('https://boyerdensjean111-hash.github.io/visites/?t=' + b.token); } majIndicateurs(); showToast('📝 Brouillon restauré !', 'succes'); }, 500); }, 300); }, 300); }
-async function ajouterEtEnvoyerMail() { const nom = $('nouveauNom').value.trim(); const pin = $('nouveauPin').value.trim(); const role = $('nouveauRole').value; const email = $('nouveauEmail').value.trim(); const actif = $('toggleLienMilitant')?.checked !== false; const token = $('nouveauLien')?.dataset?.token || ''; const lien = $('nouveauLien')?.value || ''; if (!nom) { showToast('❌ Entrez un nom', 'erreur'); return; } if (!/^\d{4}$/.test(pin)) { showToast('❌ PIN doit être 4 chiffres', 'erreur'); return; } if (!email || !verifierEmailValide(email)) { showToast('❌ Email militant invalide', 'erreur'); return; } if (listeMilitants.some(m => m.nom.toLowerCase() === nom.toLowerCase())) { showToast('❌ Ce nom existe déjà', 'erreur'); return; } fermerModal('modalAjoutMilitant'); showToast('⏳ Ajout en cours...', ''); try { const resp = await fetch(SCRIPT_URL, { method: 'POST', body: new URLSearchParams({ action: 'ajouterMilitant', nom, pin, role, token, mail: email, lien }) }); const text = await resp.text(); let data; try { data = JSON.parse(text); } catch(e) { showToast('❌ Réponse invalide du serveur', 'erreur'); return; } if (data.ok) { listeMilitants.push({ nom, pin, role, actif: actif, token: token, mail: email, lien: lien }); localStorage.setItem(CACHE_KEY_MILITANTS, JSON.stringify(listeMilitants)); localStorage.removeItem('visites_brouillon_militant'); if (!actif) { try { await fetch(SCRIPT_URL, { method: 'POST', body: new URLSearchParams({ action: 'toggleMilitant', nom, actif: '0' }) }); } catch(e) {} } ouvrirGmail(); showToast('✅ Militant ajouté + Gmail ouvert !', 'succes'); afficherGestionMilitants(); } else showToast('❌ ' + (data.msg || data.error || 'Erreur inconnue'), 'erreur'); } catch(e) { showToast('❌ Erreur: ' + e.message, 'erreur'); } }
-function ouvrirGestion() { ouvrirModal('modalGestion'); afficherMenuGestion(); }
-function fermerGestion() { fermerModal('modalGestion'); }
-function afficherMenuGestion() { $('gestionTitre').textContent = '⚙️ Gestion'; $('gestionBtnRetour').style.display = 'none'; $('gestionBtnAjouter').style.display = 'none'; $('gestionContenu').innerHTML = `<div style="display:flex;flex-direction:column;gap:10px;"><button onclick="ouvrirSectionGestion('historique')" style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:14px;width:100%;"><span style="font-size:28px;">📋</span><div><div style="font-weight:700;font-size:14px;color:#1a3a6b;">Historique</div><div style="font-size:12px;color:#888;">Voir les modifications</div></div></button><button onclick="ouvrirSectionGestion('militants')" style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:14px;width:100%;"><span style="font-size:28px;">👥</span><div><div style="font-weight:700;font-size:14px;color:#1a3a6b;">Militants</div><div style="font-size:12px;color:#888;">Activer / désactiver</div></div></button><button onclick="ouvrirSectionGestion('export')" style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:14px;width:100%;"><span style="font-size:28px;">📊</span><div><div style="font-weight:700;font-size:14px;color:#1a3a6b;">Export / Stats</div><div style="font-size:12px;color:#888;">Statistiques avancées</div></div></button></div>`; }
-function retourMenuGestion() { afficherMenuGestion(); }
-function ouvrirSectionGestion(section) { $('gestionBtnRetour').style.display = 'inline-block'; $('gestionBtnAjouter').style.display = 'none'; if (section === 'historique') { $('gestionTitre').textContent = '📋 Historique'; chargerHistorique(); } else if (section === 'militants') { $('gestionTitre').textContent = '👥 Militants'; $('gestionBtnAjouter').style.display = 'inline-block'; afficherGestionMilitants(); } else if (section === 'export') { $('gestionTitre').textContent = '📊 Export'; afficherExport(); } }
-async function chargerHistorique() { const div = $('gestionContenu'); div.innerHTML = '<div class="loading"><div class="spinner"></div>Chargement...</div>'; try { const resp = await fetch(SCRIPT_URL + '?action=getHistorique'); const data = await resp.json(); const histo = data.historique || []; if (!histo.length) { div.innerHTML = '<div class="vide">Aucune modification</div>'; return; } div.innerHTML = histo.slice(0, 20).map(h => `<div style="background:#f9f9f9;border-radius:8px;padding:10px;margin-bottom:8px;border-left:3px solid #e67e22;"><div style="font-size:13px;font-weight:600;">👤 ${h.nomPersonne}</div><div style="font-size:11px;color:#888;">${h.date} · ${h.ancMilitant} → ${h.nouvMilitant}</div></div>`).join(''); } catch(e) { div.innerHTML = '<div class="vide" style="color:red;">⚠️ Erreur</div>'; } }
-function afficherGestionMilitants() { const div = $('gestionContenu'); const roles = ['militant', 'manager', 'responsable bureaux', 'superviseur', 'admin']; div.innerHTML = listeMilitants.map(m => { const roleOptions = roles.map(r => `<option value="${r}" ${m.role === r ? 'selected' : ''}>${r}</option>`).join(''); const isAdmin = m.role === 'admin'; return `<div style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:14px;margin-bottom:10px;"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;"><div><div style="font-weight:700;font-size:14px;">${m.nom}</div><div style="font-size:12px;color:${m.actif !== false ? '#27ae60' : '#e74c3c'};">${m.actif !== false ? '✅ Actif' : '🔴 Désactivé'}</div></div><div style="display:flex;align-items:center;gap:8px;">${!isAdmin ? `<button onclick="confirmerSupprimerMilitant('${m.nom}')" style="background:#c0392b;color:white;border:none;border-radius:6px;width:32px;height:32px;font-size:14px;cursor:pointer;" title="Supprimer">🗑️</button>` : ''}${!isAdmin ? `<label class="toggle"><input type="checkbox" ${m.actif !== false ? 'checked' : ''} onchange="toggleMilitant('${m.nom}', this.checked)"><span class="toggle-slider"></span></label>` : ''}</div></div><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;"><label style="font-size:12px;color:#666;white-space:nowrap;">Rôle :</label><select onchange="changerRole('${m.nom}', this.value)" style="flex:1;padding:8px 10px;border:1.5px solid #e0e4ea;border-radius:8px;font-size:13px;background:white;" ${isAdmin ? 'disabled' : ''}>${roleOptions}</select></div><div style="display:flex;align-items:center;gap:10px;background:#f8f9fa;padding:10px;border-radius:8px;"><label style="font-size:12px;color:#666;white-space:nowrap;">🔑 PIN :</label><input type="text" id="pin_${m.nom.replace(/\s/g, '_')}" value="${m.pin}" style="flex:1;padding:8px 10px;border:1.5px solid #e0e4ea;border-radius:8px;font-size:14px;font-family:monospace;font-weight:700;text-align:center;letter-spacing:4px;" maxlength="4" pattern="[0-9]*" inputmode="numeric"><button onclick="modifierPin('${m.nom}')" style="background:#2755a8;color:white;border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">💾 Sauver</button><button onclick="reinitialiserPin('${m.nom}')" style="background:#e67e22;color:white;border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">🔄</button></div></div>`; }).join(''); }
-async function modifierPin(nom) { const inputId = 'pin_' + nom.replace(/\s/g, '_'); const newPin = $(inputId).value.trim(); if (!newPin || newPin.length !== 4 || !/^\d{4}$/.test(newPin)) { showToast('❌ PIN invalide (4 chiffres)', 'erreur'); return; } const result = await fetchEcriture(SCRIPT_URL, { method: 'POST', body: new URLSearchParams({ action: 'changerPin', nom, pin: newPin }) }); if (result.success) { const m = listeMilitants.find(x => x.nom === nom); if (m) m.pin = newPin; localStorage.setItem(CACHE_KEY_MILITANTS, JSON.stringify(listeMilitants)); showToast('✅ PIN modifié !', 'succes'); } else { showToast('❌ ' + (result.erreur || 'Erreur'), 'erreur'); } }
-let militantASupprimer = null;
-function confirmerSupprimerMilitant(nom) { militantASupprimer = nom; $('confirmSuppNom').textContent = nom; ouvrirModal('modalSupprimerMilitant'); }
-async function executerSuppressionMilitant() { if (!militantASupprimer) return; fermerModal('modalSupprimerMilitant'); showToast('⏳ Suppression...', ''); const result = await fetchEcriture(SCRIPT_URL, { method: 'POST', body: new URLSearchParams({ action: 'supprimerMilitant', nom: militantASupprimer }) }); if (result.success) { listeMilitants = listeMilitants.filter(m => m.nom !== militantASupprimer); localStorage.setItem(CACHE_KEY_MILITANTS, JSON.stringify(listeMilitants)); showToast('✅ Militant supprimé !', 'succes'); afficherGestionMilitants(); } else { showToast('❌ ' + (result.erreur || 'Erreur'), 'erreur'); } militantASupprimer = null; }
-function reinitialiserPin(nom) { const newPin = String(Math.floor(1000 + Math.random() * 9000)); const inputId = 'pin_' + nom.replace(/\s/g, '_'); $(inputId).value = newPin; showToast('🔄 Nouveau PIN généré : ' + newPin + ' (cliquez Sauver)', 'warning'); }
-async function changerRole(nom, role) { const result = await fetchEcriture(SCRIPT_URL, { method: 'POST', body: new URLSearchParams({ action: 'changerRole', nom, role }) }); if (result.success) { const m = listeMilitants.find(x => x.nom === nom); if (m) m.role = role; localStorage.setItem(CACHE_KEY_MILITANTS, JSON.stringify(listeMilitants)); showToast('✅ Rôle modifié : ' + role, 'succes'); } else { showToast('❌ ' + (result.erreur || 'Erreur'), 'erreur'); } }
-async function toggleMilitant(nom, actif) { const result = await fetchEcriture(SCRIPT_URL, { method: 'POST', body: new URLSearchParams({ action: 'toggleMilitant', nom, actif: actif ? '1' : '0' }) }); if (result.success) { const m = listeMilitants.find(x => x.nom === nom); if (m) m.actif = actif; localStorage.setItem(CACHE_KEY_MILITANTS, JSON.stringify(listeMilitants)); showToast(actif ? '✅ Activé' : '🔴 Désactivé', 'succes'); } else { showToast('❌ ' + (result.erreur || 'Erreur'), 'erreur'); } }
-function afficherExport() { const div = $('gestionContenu'); const stats = {}; toutesPersonnes.forEach(p => { const m = p[14] || '—'; if (!stats[m]) stats[m] = 0; if (p[3] === 'Visité') stats[m]++; }); const sorted = Object.entries(stats).filter(([k]) => k !== '—').sort((a, b) => b[1] - a[1]); div.innerHTML = '<div style="font-weight:700;margin-bottom:10px;">👥 Visites par militant</div>' + sorted.map(([nom, nb]) => `<div style="background:white;border:1px solid #e0e4ea;border-radius:10px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;"><span style="font-weight:600;">${nom}</span><span style="font-family:'Bebas Neue';font-size:20px;color:#1a3a6b;">${nb}</span></div>`).join(''); }
+
+// =====================================================
+// STATISTIQUES
+// =====================================================
+function chargerStats() {
+  if (!toutesPersonnes.length) { $('statsContenu').innerHTML = '<div class="loading"><div class="spinner"></div>Chargement...</div>'; return; }
+  const visites = toutesPersonnes.filter(p => p[3] === 'Visité').length;
+  const total = toutesPersonnes.length;
+  const pct = total > 0 ? Math.round(visites / total * 100) : 0;
+  afficherStats({ total, visites, pct });
+}
+
+function afficherStats(data) {
+  $('cptTotal').textContent = data.total || '?';
+  $('cptVisites').textContent = data.visites || '0';
+  $('cptPct').textContent = (data.pct || '0') + '%';
+  $('compteur').style.display = 'flex';
+  $('statsContenu').innerHTML = '';
+  $('statsGraphiques').style.display = 'block';
+
+  Chart.register(ChartDataLabels);
+  const statsBureau = {};
+  toutesPersonnes.forEach(p => {
+    const bureau = p[9] || 'Inconnu';
+    if (!statsBureau[bureau]) statsBureau[bureau] = { visites: 0, total: 0 };
+    statsBureau[bureau].total++;
+    if (p[3] === 'Visité') statsBureau[bureau].visites++;
+  });
+  const bureaux = Object.keys(statsBureau).filter(b => b !== 'Inconnu').sort((a, b) => statsBureau[b].total - statsBureau[a].total).slice(0, 6);
+  const rangs = ['1er', '2e', '3e', '4e', '5e', '6e'];
+  const couleursBureau = ['#3498db', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c'];
+
+  // Camembert
+  if (chartCamembert) chartCamembert.destroy();
+  chartCamembert = new Chart($('chartCamembert'), {
+    type: 'doughnut',
+    data: { labels: bureaux.map((b, i) => rangs[i] + ' - ' + b), datasets: [{ data: bureaux.map(b => statsBureau[b].visites), backgroundColor: couleursBureau, borderWidth: 2, borderColor: '#fff' }] },
+    options: { responsive: true, cutout: '35%', layout: { padding: { top: 30, left: 30, right: 30, bottom: 30 } }, plugins: { legend: { display: false }, datalabels: { display: true, color: '#000', font: { weight: 'bold', size: 10 }, anchor: 'end', align: 'end', offset: 6, formatter: function(value, context) { var total = context.dataset.data.reduce(function(a, b) { return a + b; }, 0); var pct = total > 0 ? Math.round(value / total * 100) : 0; return value + ' (' + pct + '%)'; } } } }
+  });
+
+  // Légende HTML custom
+  var legendeHtml = '';
+  bureaux.forEach(function(b, i) { legendeHtml += '<div style="display:flex;align-items:center;gap:8px;padding:4px 0;"><span style="width:12px;height:12px;border-radius:50%;background:' + couleursBureau[i] + ';display:inline-block;flex-shrink:0;"></span><span style="font-size:12px;color:#333;">' + rangs[i] + ' - ' + b + ' <span style="color:#27ae60;font-weight:600;">(' + statsBureau[b].visites + ' visités)</span> <span style="color:#2755a8;font-weight:600;">(' + statsBureau[b].total + ' inscrits)</span></span></div>'; });
+  $('legendeCamembert').innerHTML = legendeHtml;
+
+  // Barres bureau
+  if (chartBureau) chartBureau.destroy();
+  chartBureau = new Chart($('chartBureau'), {
+    type: 'bar',
+    data: { labels: bureaux.map(b => b.length > 20 ? b.substring(0, 20) + '…' : b), datasets: [
+      { label: 'Total', data: bureaux.map(b => statsBureau[b].total), backgroundColor: 'rgba(39,85,168,0.15)', borderColor: '#2755a8', borderWidth: 1, datalabels: { align: 'end', anchor: 'end', color: '#2755a8', font: { weight: 'bold', size: 10 } } },
+      { label: 'Visités', data: bureaux.map(b => statsBureau[b].visites), backgroundColor: '#27ae60', datalabels: { align: 'end', anchor: 'end', color: '#155724', font: { weight: 'bold', size: 10 } } }
+    ] },
+    options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { position: 'bottom' }, datalabels: { display: true } } }
+  });
+
+  // Tableau
+  let tableauBureau = '<table style="width:100%;font-size:11px;margin-top:10px;border-collapse:collapse;"><tr style="background:#f0f4f8;"><th style="text-align:left;padding:6px;border:1px solid #ddd;">Bureau</th><th style="padding:6px;border:1px solid #ddd;color:#27ae60;">Visités</th><th style="padding:6px;border:1px solid #ddd;color:#2755a8;">Total</th><th style="padding:6px;border:1px solid #ddd;">%</th></tr>';
+  bureaux.forEach(b => { const pct = statsBureau[b].total > 0 ? Math.round(statsBureau[b].visites / statsBureau[b].total * 100) : 0; tableauBureau += '<tr><td style="padding:5px;border:1px solid #ddd;">' + b + '</td><td style="text-align:center;padding:5px;border:1px solid #ddd;font-weight:bold;color:#27ae60;">' + statsBureau[b].visites + '</td><td style="text-align:center;padding:5px;border:1px solid #ddd;font-weight:bold;color:#2755a8;">' + statsBureau[b].total + '</td><td style="text-align:center;padding:5px;border:1px solid #ddd;">' + pct + '%</td></tr>'; });
+  tableauBureau += '</table>';
+  const divTableau = $('tableauBureau');
+  if (divTableau) divTableau.innerHTML = tableauBureau;
+
+  // Comparaison 2020
+  chargerComparaison();
+}
+
 async function chargerComparaison() {
   const statsDiv = $('comparaisonStats');
   const detailDiv = $('comparaisonDetail');
   statsDiv.innerHTML = '<div style="text-align:center;color:#888;font-size:12px;">Chargement...</div>';
-  detailDiv.innerHTML = '';
-  
-  // Fonction pour nettoyer les nombres (enlever espaces, convertir)
-  const parseNum = (val) => {
-    if (typeof val === 'number') return val;
-    if (!val) return 0;
-    return parseInt(String(val).replace(/\s/g, '').replace(',', '.')) || 0;
-  };
-  
+
   try {
-    const resp = await fetchRapide(SCRIPT_URL + '?action=getStatsComparaison', {}, 15000);
-    const data = await resp.json();
-    
-    if (data.error) {
-      statsDiv.innerHTML = '<div style="color:#e74c3c;font-size:12px;">⚠️ Erreur: ' + data.error + '</div>';
-      return;
-    }
-    
-    const totalInscrits = parseNum(data.totalInscrits);
-    const votants2020 = parseNum(data.votants2020);
-    const totalVisites = parseNum(data.totalVisites);
-    const reserveVoix = parseNum(data.reserveVoix);
-    
-    // Afficher les stats générales
-    statsDiv.innerHTML = `
-      <div style="display:flex;justify-content:space-around;background:linear-gradient(135deg,#1a3a6b,#2755a8);border-radius:10px;padding:12px;color:white;text-align:center;margin-bottom:10px;">
-        <div><div style="font-size:20px;font-weight:bold;">${totalInscrits.toLocaleString('fr-FR')}</div><div style="font-size:10px;opacity:.7;">INSCRITS</div></div>
-        <div><div style="font-size:20px;font-weight:bold;">${votants2020.toLocaleString('fr-FR')}</div><div style="font-size:10px;opacity:.7;">VOTANTS 2020</div></div>
-        <div><div style="font-size:20px;font-weight:bold;">${totalVisites.toLocaleString('fr-FR')}</div><div style="font-size:10px;opacity:.7;">VISITÉS 2026</div></div>
-      </div>
-      <div style="background:linear-gradient(135deg,#27ae60,#2ecc71);border-radius:10px;padding:10px;color:white;text-align:center;">
-        <div style="font-size:18px;font-weight:bold;">🎯 ${reserveVoix.toLocaleString('fr-FR')}</div>
-        <div style="font-size:10px;opacity:.8;">RÉSERVE DE VOIX POTENTIELLE</div>
-      </div>
-    `;
-    
-    // Préparer les données pour le graphique (Johnny et Sophie uniquement)
+    const snapshot = await db.ref('config/comparaison').once('value');
+    const data = snapshot.val();
+    if (!data) { statsDiv.innerHTML = '<div style="color:#888;font-size:12px;">Pas de données de comparaison</div>'; return; }
+
+    const totalInscrits = data.totalInscrits || 0;
+    const votants2020 = data.votants2020 || 0;
+    const totalVisites = toutesPersonnes.filter(p => p[3] === 'Visité').length;
+    const objectif = data.objectifGagner || 1362;
+    const foyersJohnny = data.foyersJohnny || 0;
+    const reserveVoix = data.reserveVoix || 0;
+
+    $('cptVotants2020').textContent = votants2020.toLocaleString('fr-FR');
+    $('cptFoyers').textContent = foyersJohnny.toLocaleString('fr-FR');
+    const pctFoyers = votants2020 > 0 ? Math.round(foyersJohnny / votants2020 * 100) : 0;
+    $('cptPctFoyers').textContent = pctFoyers + '%';
+    $('compteur2').style.display = 'flex';
+
+    statsDiv.innerHTML = '<div style="display:flex;justify-content:space-around;background:linear-gradient(135deg,#1a3a6b,#2755a8);border-radius:10px;padding:12px;color:white;text-align:center;margin-bottom:10px;"><div><div style="font-size:20px;font-weight:bold;">' + totalInscrits.toLocaleString('fr-FR') + '</div><div style="font-size:10px;opacity:.7;">INSCRITS</div></div><div><div style="font-size:20px;font-weight:bold;">' + votants2020.toLocaleString('fr-FR') + '</div><div style="font-size:10px;opacity:.7;">VOTANTS 2020</div></div><div><div style="font-size:20px;font-weight:bold;">' + totalVisites.toLocaleString('fr-FR') + '</div><div style="font-size:10px;opacity:.7;">VISITÉS 2026</div></div></div>';
+
+    // Graphique comparaison
     const candidats = ['Johnny Payet', 'Sophie Arzal'];
     const voix2020 = [];
     const intentions2026 = [];
-    const foyersData = [];
-
-    const foyersJohnny = parseNum(data.foyersJohnny);
-    const objectif = parseNum(data.objectifGagner) || 1362;
-
-    // Remplir la 2ème ligne du compteur (votants 2020, foyers, % foyers)
-    const pctFoyers = votants2020 > 0 ? (foyersJohnny / votants2020 * 100) : 0;
-    const pctFoyersArrondi = Math.round(pctFoyers);
-    const ecartFoyers = foyersJohnny - objectif;
-    const johnny2020 = (data.resultats2020 || []).find(r => r.candidat && r.candidat.trim() === 'Johnny Payet');
-    const pct2020 = johnny2020 ? parseFloat(johnny2020.pct) || 0 : 0;
-    const ecartPct = pctFoyers - pct2020;
-    $('cptVotants2020').textContent = votants2020.toLocaleString('fr-FR');
-    $('cptFoyers').innerHTML = foyersJohnny.toLocaleString('fr-FR') + (ecartFoyers > 0 ? ' <span style="color:#f39c12;font-size:14px;">(+' + ecartFoyers + ' 🚀)</span>' : '');
-    $('cptPctFoyers').innerHTML = pctFoyersArrondi + '%' + (ecartPct > 0 ? ' <span style="color:#f39c12;font-size:14px;">(+' + ecartPct.toFixed(2) + '% 🚀)</span>' : '') + (pctFoyersArrondi >= 50 ? ' 📯' : '');
-    $('compteur2').style.display = 'flex';
-
     candidats.forEach(nom => {
-      const r2020 = (data.resultats2020 || []).find(r => r.candidat && r.candidat.trim() === nom);
-      const i2026 = (data.intentions2026 || []).find(i => i.candidat && i.candidat.trim() === nom);
-      voix2020.push(r2020 ? parseNum(r2020.voix) : 0);
-      intentions2026.push(i2026 ? parseNum(i2026.visites) : 0);
-      foyersData.push(nom === 'Johnny Payet' ? foyersJohnny : 0);
+      const r = (data.resultats2020 || []).find(r => r.candidat === nom);
+      const i = (data.intentions2026 || []).find(i => i.candidat === nom);
+      voix2020.push(r ? r.voix : 0);
+      intentions2026.push(i ? i.visites : 0);
     });
-    const maxY = Math.max(objectif * 1.3, Math.max(...voix2020, ...intentions2026, ...foyersData) * 1.2);
-    
-    // Créer le graphique
+
     if (chartComparaison) chartComparaison.destroy();
     chartComparaison = new Chart($('chartComparaison'), {
       type: 'bar',
-      data: {
-        labels: candidats,
-        datasets: [
-          { label: '2020 (voix)', data: voix2020, backgroundColor: 'rgba(52,152,219,0.7)', borderColor: '#3498db', borderWidth: 2 },
-          { label: '2026 (intentions)', data: intentions2026, backgroundColor: 'rgba(39,174,96,0.7)', borderColor: '#27ae60', borderWidth: 2 },
-          { label: '2026 (par foyer)', data: foyersData, backgroundColor: 'rgba(243,156,18,0.7)', borderColor: '#f39c12', borderWidth: 2 }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: { y: { beginAtZero: true, max: maxY > 0 ? maxY : 2000 } },
-        plugins: { legend: { position: 'bottom' } }
-      },
-      plugins: [{
-        afterDraw: function(chart) {
-          const ctx = chart.ctx;
-          const yAxis = chart.scales.y;
-          const xAxis = chart.scales.x;
-          const y = yAxis.getPixelForValue(objectif);
-          ctx.save();
-          ctx.beginPath();
-          ctx.setLineDash([5, 5]);
-          ctx.strokeStyle = '#e74c3c';
-          ctx.lineWidth = 2;
-          ctx.moveTo(xAxis.left, y);
-          ctx.lineTo(xAxis.right, y);
-          ctx.stroke();
-          ctx.fillStyle = '#e74c3c';
-          ctx.font = 'bold 11px sans-serif';
-          ctx.fillText('🎯 ' + objectif.toLocaleString('fr-FR') + ' voix', xAxis.left + 8, y - 7);
-          ctx.restore();
-        }
-      }]
+      data: { labels: candidats, datasets: [
+        { label: '2020 (voix)', data: voix2020, backgroundColor: 'rgba(52,152,219,0.7)', borderColor: '#3498db', borderWidth: 2 },
+        { label: '2026 (intentions)', data: intentions2026, backgroundColor: 'rgba(39,174,96,0.7)', borderColor: '#27ae60', borderWidth: 2 }
+      ] },
+      options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } }, plugins: { legend: { position: 'bottom' } } }
     });
-    
-    // Afficher le détail avec progression
-    let detailHtml = '<div style="font-size:11px;color:#888;margin-bottom:8px;">📈 Progression vers l\'objectif (' + objectif.toLocaleString('fr-FR') + ' voix)</div>';
-    candidats.forEach((nom, i) => {
-      const v2020 = voix2020[i];
-      const i2026 = intentions2026[i];
-      const pct = objectif > 0 ? Math.round(i2026 / objectif * 100) : 0;
-      const ecart = i2026 - v2020;
-      const ecartColor = ecart >= 0 ? '#27ae60' : '#e74c3c';
-      const ecartText = ecart >= 0 ? '+' + ecart.toLocaleString('fr-FR') : ecart.toLocaleString('fr-FR');
-      detailHtml += `
-        <div style="margin-bottom:10px;">
-          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;">
-            <span><strong>${nom}</strong></span>
-            <span>${i2026.toLocaleString('fr-FR')} / ${objectif.toLocaleString('fr-FR')} (${pct}%) <span style="color:${ecartColor};font-weight:bold;">${ecartText}</span></span>
-          </div>
-          <div style="background:#e0e4ea;border-radius:6px;height:12px;overflow:hidden;">
-            <div style="background:${i === 0 ? '#27ae60' : '#3498db'};width:${Math.min(pct, 100)}%;height:100%;border-radius:6px;"></div>
-          </div>
-        </div>
-      `;
-    });
-    detailDiv.innerHTML = detailHtml;
-    
+
+    detailDiv.innerHTML = '';
   } catch(e) {
-    statsDiv.innerHTML = '<div style="color:#e74c3c;font-size:12px;">⚠️ Erreur de chargement</div>';
+    statsDiv.innerHTML = '';
   }
 }
 
-async function chargerContact() { $('contactContenu').innerHTML = '<div class="vide">📞 Module téléopérateur</div>'; }
-async function chargerAgenda() { $('agendaContenu').innerHTML = '<div class="vide">📅 Agenda téléopérateur</div>'; }
-function ouvrirEvenement() { showToast('📅 Module événement', ''); }
-function fermerOuRetourEvenement() { fermerModal('modalEvenement'); }
-function retourMenuEvenement() { $('eventBtnRetour').style.display = 'none'; $('eventTitre').textContent = '📅 Événement'; $('eventContenu').innerHTML = '<div class="vide">Chargement...</div>'; }
-let currentAppelTel = null, currentAppelNom = null, currentMailAddr = null, currentMailNom = null, currentRappelId = null, currentRappelNom = null;
-function executerAppel() { fermerModal('modalConfirmAppel'); if (currentAppelTel) { window.location.href = 'tel:' + currentAppelTel; showToast('📞 Appel lancé', 'succes'); } }
-function executerMail() { fermerModal('modalConfirmMail'); if (currentMailAddr) { window.location.href = 'mailto:' + currentMailAddr; showToast('📧 Mail ouvert', 'succes'); } }
-function executerRappeler() { const dateRappel = $('rappelDate').value; const dispo = $('rappelDispo').value; if (!dateRappel) { showToast('❌ Choisissez une date', 'erreur'); return; } fermerModal('modalRappeler'); showToast('✅ Rappel programmé pour ' + dateRappel + ' (' + dispo + ')', 'succes'); }
-const DATE_SCRUTIN = new Date('2026-03-22T23:59:59');
-function verifierPostScrutin() { const maintenant = new Date(); if (maintenant > DATE_SCRUTIN) setTimeout(() => { afficherAlerteSupression(); }, 3500); }
-function afficherAlerteSupression() { }
-function passerSplash() { const splash = document.getElementById('ecranSplash'); if (splash && splash.style.display !== 'none') { splash.style.transition = 'opacity 0.3s'; splash.style.opacity = '0'; splash.style.pointerEvents = 'none'; setTimeout(() => { splash.remove(); document.getElementById('ecranLogin').style.display = 'flex'; }, 300); } }
-function changerOngletLegal(onglet) { const tabs = ['Mentions', 'Conformite', 'Suppression']; const pages = ['pageMentions', 'pageConformite', 'pageSuppression']; tabs.forEach((tab, i) => { const tabEl = document.getElementById('tab' + tab); const pageEl = document.getElementById(pages[i]); const isActive = onglet === tab.toLowerCase(); if (tabEl) { tabEl.style.color = isActive ? '#1a3a6b' : '#888'; tabEl.style.borderBottomColor = isActive ? '#1a3a6b' : 'transparent'; } if (pageEl) pageEl.style.display = isActive ? 'block' : 'none'; }); }
-function afficherMentionsLegales() { ouvrirModal('modalLegal'); }
-let tokenTeleop = null, nomTeleop = null;
-// === BLOCAGE TOUCHE RETOUR TÉLÉPHONE v175 ===
-// IMPORTANT: pushState au chargement est IGNORÉ par Chrome/Safari mobile
-// Il faut pushState APRÈS la première interaction utilisateur (touch/click)
-let backButtonProtege = false;
-function activerProtectionRetour() {
-  if (backButtonProtege) return;
-  backButtonProtege = true;
-  for (let i = 0; i < 5; i++) history.pushState({ page: 'app', idx: i }, '', window.location.href);
-}
-function gererRetour() {
-  // Bouton retour téléphone TOTALEMENT désactivé — ne fait rien
-  history.pushState({ page: 'app' }, '', window.location.href);
-}
-function initBackButton() {
-  // 1) Écouter la PREMIÈRE interaction utilisateur pour activer pushState
-  const activerAuTouch = () => { activerProtectionRetour(); };
-  document.addEventListener('touchstart', activerAuTouch, { once: true });
-  document.addEventListener('touchend', activerAuTouch, { once: true });
-  document.addEventListener('click', activerAuTouch, { once: true });
-  // 2) Aussi activer après le login (moment clé d'interaction)
-  const origConnexion = typeof window.connexion === 'function' ? window.connexion : null;
-  // 3) Intercepter popstate (bouton retour)
-  window.addEventListener('popstate', function(e) {
-    if (!backButtonProtege) activerProtectionRetour();
-    gererRetour();
+// =====================================================
+// OBSERVATIONS
+// =====================================================
+function chargerObservations() {
+  const div = $('obsContenu');
+  const avecObs = toutesPersonnes.filter(p => p[15] && String(p[15]).trim() !== '');
+  if (!avecObs.length) { div.innerHTML = '<div class="vide"><div style="font-size:40px;margin-bottom:10px;">📝</div>Aucune observation</div>'; return; }
+  let html = '<div style="background:linear-gradient(135deg,#8e44ad,#9b59b6);border-radius:12px;padding:14px;margin-bottom:12px;color:white;text-align:center;"><div style="font-family:\'Bebas Neue\';font-size:32px;">' + avecObs.length + '</div><div style="font-size:12px;opacity:.8;">OBSERVATIONS</div></div>';
+  html += '<div class="section-title">📝 Personnes avec observations</div>';
+  avecObs.forEach(p => {
+    const obs = String(p[15] || '');
+    const preview = obs.length > 50 ? obs.substring(0, 50) + '...' : obs;
+    html += '<div class="militant-card" style="cursor:pointer;border-left:4px solid #8e44ad;" onclick="afficherObservation(' + p[0] + ')"><div style="flex:1;"><div class="mc-nom">' + p[1] + ' ' + p[2] + ' <span style="color:#888;font-size:11px;">#' + p[0] + '</span></div><div class="mc-detail" style="color:#8e44ad;font-style:italic;">"' + preview + '"</div></div><div style="font-size:24px;">👁️</div></div>';
   });
-  // 4) CloseWatcher API (Chrome 120+ Android) - couche supplémentaire
-  if (typeof CloseWatcher !== 'undefined') {
-    try {
-      function creerCloseWatcher() {
-        const watcher = new CloseWatcher();
-        watcher.onclose = function() {
-          gererRetour();
-          try { creerCloseWatcher(); } catch(e) {}
-        };
-      }
-      document.addEventListener('click', function() {
-        try { creerCloseWatcher(); } catch(e) {}
-      }, { once: true });
-    } catch(e) {}
-  }
-  // 5) Bloquer fermeture onglet/navigateur
-  window.addEventListener('beforeunload', function(e) {
-    if (skipBeforeUnload) return;
-    if (currentMilitant) { e.preventDefault(); e.returnValue = ''; return ''; }
-  });
+  div.innerHTML = html;
 }
-let tokenMilitantNom = null;
-let tokenMilitantRole = null;
-async function verifierTokenURL() {
-  const params = new URLSearchParams(window.location.search);
-  const token = params.get('t');
-  if (!token) return false;
+
+function afficherObservation(id) {
+  currentObsId = id;
+  const p = toutesPersonnes.find(x => x[0] == id);
+  if (!p) return;
+  $('obsModalTitre').textContent = '📝 ' + p[1] + ' ' + p[2];
+  $('obsModalContenu').innerHTML = '<div style="margin-bottom:12px;">' + String(p[15] || '') + '</div><div style="font-size:12px;color:#888;border-top:1px solid #ddd;padding-top:10px;">' + (p[14] ? '👤 ' + p[14] : '') + (p[11] ? ' · 📅 ' + p[11] : '') + '</div>';
+  ouvrirModal('modalObservation');
+}
+function ouvrirFicheDepuisObs() { fermerModal('modalObservation'); if (currentObsId) selectionnerPersonne(currentObsId); }
+
+// =====================================================
+// ADMIN
+// =====================================================
+async function chargerAdmin() {
+  if (currentRole !== 'admin') return;
+  $('adminContenu').innerHTML = '<div class="loading"><div class="spinner"></div>Chargement...</div>';
+
   try {
-    const resp = await fetchRapide(SCRIPT_URL + '?action=getLoginParToken&token=' + encodeURIComponent(token), {}, 15000);
-    const data = await resp.json();
-    if (data.ok && data.nom) {
-      tokenMilitantRole = data.role || 'militant';
-      // Admin = liste complète, autres = que leur nom
-      if (tokenMilitantRole === 'admin') {
-        tokenMilitantNom = null;
-      } else {
-        tokenMilitantNom = data.nom;
+    const [logsSnap, connectesSnap] = await Promise.all([
+      db.ref('logs').orderByChild('date').limitToLast(30).once('value'),
+      db.ref('connectes').once('value')
+    ]);
+
+    const logs = logsSnap.val() ? Object.values(logsSnap.val()).reverse() : [];
+    const connectes = connectesSnap.val() || {};
+    const nbEnLigne = Object.keys(connectes).length;
+
+    // Compteurs par militant
+    const compteurs = {};
+    const suppressions = {};
+    toutesPersonnes.forEach(p => {
+      if (p[3] === 'Visité' && p[14]) {
+        compteurs[p[14]] = (compteurs[p[14]] || 0) + 1;
       }
-      // Attendre que les militants soient chargés
-      let tentatives = 0;
-      while (!listeMilitants.length && tentatives < 30) { await new Promise(r => setTimeout(r, 300)); tentatives++; }
-      // Ajouter le militant s'il n'est pas dans la liste locale
-      if (!listeMilitants.find(m => m.nom === data.nom)) {
-        listeMilitants.push({ nom: data.nom, pin: String(data.pin), role: data.role || 'militant', actif: true });
-      }
-      const sel = $('loginNom');
-      if (tokenMilitantRole === 'admin') {
-        // Admin : liste complète, pré-sélectionner son nom
-        remplirSelectMilitants();
-        sel.value = data.nom;
-      } else {
-        // Autres : que leur nom, select verrouillé
-        sel.innerHTML = '<option value="">-- Choisir --</option>';
-        const opt = document.createElement('option');
-        opt.value = data.nom;
-        opt.textContent = data.nom;
-        sel.appendChild(opt);
-        sel.value = data.nom;
-        sel.disabled = true;
-      }
-      passerSplash();
-      window.history.replaceState({}, '', window.location.pathname);
-      return true;
-    } else if (data.msg) {
-      passerSplash();
-      setTimeout(() => { $('loginErreur').textContent = '🚫 ' + data.msg; }, 300);
-      window.history.replaceState({}, '', window.location.pathname);
-      return true;
-    }
+    });
+
+    const totalVisites = Object.values(compteurs).reduce((a, b) => a + b, 0);
+
+    let html = '<div style="background:linear-gradient(135deg,#1a3a6b,#2755a8);border-radius:12px;padding:14px;margin-bottom:12px;color:white;display:flex;justify-content:space-around;text-align:center;"><div><div style="font-family:\'Bebas Neue\';font-size:28px;">' + nbEnLigne + '</div><div style="font-size:11px;opacity:.7;">EN LIGNE</div></div><div><div style="font-family:\'Bebas Neue\';font-size:28px;">' + listeMilitants.length + '</div><div style="font-size:11px;opacity:.7;">MILITANTS</div></div><div><div style="font-family:\'Bebas Neue\';font-size:28px;">' + totalVisites + '</div><div style="font-size:11px;opacity:.7;">VISITES</div></div></div>';
+
+    html += '<div class="section-title">👥 Activité par militant</div>';
+    listeMilitants.sort((a, b) => (compteurs[b.nom] || 0) - (compteurs[a.nom] || 0)).forEach(m => {
+      const nb = compteurs[m.nom] || 0;
+      const isOnline = connectes[sanitizeKey(m.nom)];
+      html += '<div class="militant-card" style="' + (isOnline ? 'border-left:4px solid #27ae60;' : '') + '"><div style="flex:1"><div class="mc-nom">' + m.nom + (isOnline ? '<span style="margin-left:8px;background:#27ae60;color:white;font-size:10px;padding:2px 8px;border-radius:10px;">🟢 EN LIGNE</span>' : '') + '</div><div class="mc-detail">' + nb + ' visite' + (nb > 1 ? 's' : '') + '</div></div><div class="mc-badge">' + nb + '</div></div>';
+    });
+
+    html += '<div class="section-title" style="margin-top:16px;">📋 Dernières actions</div>';
+    logs.slice(0, 20).forEach(l => {
+      const isConnexion = l.action === 'Connexion';
+      const icon = isConnexion ? '🔑' : l.action === 'Suppression' ? '🗑️' : '✅';
+      html += '<div class="log-item" style="' + (isConnexion ? 'background:#f0fff4;' : '') + '"><div>' + icon + '</div><div class="log-info"><div class="log-action">' + l.militant + '</div><div class="log-detail">' + (isConnexion ? 'Connexion' : (l.nom || 'ID ' + l.id)) + '</div></div><div class="log-date">' + l.date + '</div></div>';
+    });
+
+    $('adminContenu').innerHTML = html;
   } catch(e) {
-    passerSplash();
-    setTimeout(() => { $('loginErreur').textContent = '⚠️ Erreur de connexion, réessayez'; }, 300);
-    window.history.replaceState({}, '', window.location.pathname);
+    $('adminContenu').innerHTML = '<div class="vide" style="color:red;">⚠️ Erreur: ' + e.message + '</div>';
   }
-  return false;
 }
-document.addEventListener('DOMContentLoaded', () => {
-  chargerMentionsLegales(); chargerMilitants(); prechargerDonnees(); initTabs(); initRecherche(); initBackButton(); fetch(SCRIPT_URL + '?action=ping').catch(() => {});
-  const hasToken = new URLSearchParams(window.location.search).has('t');
-  if (hasToken) {
-    setTimeout(async () => { const ok = await verifierTokenURL(); if (!ok) passerSplash(); }, 500);
-  } else {
-    setTimeout(() => passerSplash(), 2000);
+
+// =====================================================
+// GESTION MILITANTS
+// =====================================================
+function ouvrirGestion() { ouvrirModal('modalGestion'); afficherMenuGestion(); }
+function fermerGestion() { fermerModal('modalGestion'); }
+function retourMenuGestion() { afficherMenuGestion(); }
+
+function afficherMenuGestion() {
+  $('gestionTitre').textContent = '⚙️ Gestion';
+  $('gestionBtnRetour').style.display = 'none';
+  $('gestionBtnAjouter').style.display = 'none';
+  $('gestionContenu').innerHTML = '<div style="display:flex;flex-direction:column;gap:10px;"><button onclick="ouvrirSectionGestion(\'militants\')" style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:14px;width:100%;"><span style="font-size:28px;">👥</span><div><div style="font-weight:700;font-size:14px;color:#1a3a6b;">Militants</div><div style="font-size:12px;color:#888;">Gérer les militants</div></div></button><button onclick="ouvrirSectionGestion(\'export\')" style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:14px;width:100%;"><span style="font-size:28px;">📊</span><div><div style="font-weight:700;font-size:14px;color:#1a3a6b;">Export / Stats</div><div style="font-size:12px;color:#888;">Statistiques avancées</div></div></button></div>';
+}
+
+function ouvrirSectionGestion(section) {
+  $('gestionBtnRetour').style.display = 'inline-block';
+  $('gestionBtnAjouter').style.display = 'none';
+  if (section === 'militants') {
+    $('gestionTitre').textContent = '👥 Militants';
+    $('gestionBtnAjouter').style.display = 'inline-block';
+    afficherGestionMilitants();
+  } else if (section === 'export') {
+    $('gestionTitre').textContent = '📊 Export';
+    afficherExport();
   }
+}
+
+function afficherGestionMilitants() {
+  const div = $('gestionContenu');
+  const roles = ['militant', 'manager', 'responsable bureaux', 'superviseur', 'admin'];
+  div.innerHTML = listeMilitants.map(m => {
+    const roleOptions = roles.map(r => '<option value="' + r + '" ' + (m.role === r ? 'selected' : '') + '>' + r + '</option>').join('');
+    const isAdmin = m.role === 'admin';
+    return '<div style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:14px;margin-bottom:10px;"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;"><div><div style="font-weight:700;font-size:14px;">' + m.nom + '</div><div style="font-size:12px;color:' + (m.actif !== false ? '#27ae60' : '#e74c3c') + ';">' + (m.actif !== false ? '✅ Actif' : '🔴 Désactivé') + '</div></div><div style="display:flex;align-items:center;gap:8px;">' + (!isAdmin ? '<button onclick="confirmerSupprimerMilitant(\'' + m.nom + '\')" style="background:#c0392b;color:white;border:none;border-radius:6px;width:32px;height:32px;font-size:14px;cursor:pointer;">🗑️</button>' : '') + (!isAdmin ? '<label class="toggle"><input type="checkbox" ' + (m.actif !== false ? 'checked' : '') + ' onchange="toggleMilitant(\'' + m.nom + '\', this.checked)"><span class="toggle-slider"></span></label>' : '') + '</div></div><div style="display:flex;align-items:center;gap:10px;"><label style="font-size:12px;color:#666;white-space:nowrap;">Rôle :</label><select onchange="changerRole(\'' + m.nom + '\', this.value)" style="flex:1;padding:8px 10px;border:1.5px solid #e0e4ea;border-radius:8px;font-size:13px;background:white;" ' + (isAdmin ? 'disabled' : '') + '>' + roleOptions + '</select></div></div>';
+  }).join('');
+}
+
+function afficherExport() {
+  const div = $('gestionContenu');
+  const stats = {};
+  toutesPersonnes.forEach(p => { const m = p[14] || '—'; if (!stats[m]) stats[m] = 0; if (p[3] === 'Visité') stats[m]++; });
+  const sorted = Object.entries(stats).filter(([k]) => k !== '—').sort((a, b) => b[1] - a[1]);
+  div.innerHTML = '<div style="font-weight:700;margin-bottom:10px;">👥 Visites par militant</div>' + sorted.map(([nom, nb]) => '<div style="background:white;border:1px solid #e0e4ea;border-radius:10px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;"><span style="font-weight:600;">' + nom + '</span><span style="font-family:\'Bebas Neue\';font-size:20px;color:#1a3a6b;">' + nb + '</span></div>').join('');
+}
+
+function ouvrirAjoutMilitant() { ouvrirModal('modalAjoutMilitant'); $('nouveauNom').value = ''; $('nouveauPin').value = String(Math.floor(1000 + Math.random() * 9000)); $('nouveauRole').value = 'militant'; $('nouveauEmail').value = ''; }
+
+async function ajouterMilitantFirebase() {
+  const nom = $('nouveauNom').value.trim();
+  const pin = $('nouveauPin').value.trim();
+  const role = $('nouveauRole').value;
+  const email = $('nouveauEmail').value.trim();
+
+  if (!nom) { showToast('❌ Entrez un nom', 'erreur'); return; }
+  if (!/^\d{4}$/.test(pin)) { showToast('❌ PIN doit être 4 chiffres', 'erreur'); return; }
+  if (listeMilitants.some(m => m.nom.toLowerCase() === nom.toLowerCase())) { showToast('❌ Ce nom existe déjà', 'erreur'); return; }
+
+  try {
+    await db.ref('militants/' + sanitizeKey(nom)).set({
+      nom: nom, pin: pin, role: role, actif: true, mail: email || '', token: '', lien: ''
+    });
+    // 📊 Sync vers Google Sheets
+    syncVersGoogleSheets({ action: 'ajout_militant', nom: nom, pin: pin, role: role, actif: true, mail: email || '' });
+    fermerModal('modalAjoutMilitant');
+    showToast('✅ Militant ajouté !', 'succes');
+    afficherGestionMilitants();
+  } catch(e) {
+    showToast('❌ Erreur: ' + e.message, 'erreur');
+  }
+}
+
+function confirmerSupprimerMilitant(nom) { militantASupprimer = nom; $('confirmSuppNom').textContent = nom; ouvrirModal('modalSupprimerMilitant'); }
+
+async function executerSuppressionMilitant() {
+  if (!militantASupprimer) return;
+  fermerModal('modalSupprimerMilitant');
+  try {
+    var nomSuppr = militantASupprimer;
+    await db.ref('militants/' + sanitizeKey(nomSuppr)).remove();
+    // 📊 Sync vers Google Sheets
+    syncVersGoogleSheets({ action: 'suppr_militant', nom: nomSuppr });
+    showToast('✅ Militant supprimé !', 'succes');
+    afficherGestionMilitants();
+  } catch(e) {
+    showToast('❌ Erreur: ' + e.message, 'erreur');
+  }
+  militantASupprimer = null;
+}
+
+async function changerRole(nom, role) {
+  try {
+    await db.ref('militants/' + sanitizeKey(nom)).update({ role: role });
+    // 📊 Sync vers Google Sheets
+    syncVersGoogleSheets({ action: 'modif_militant', nom: nom, role: role });
+    showToast('✅ Rôle modifié : ' + role, 'succes');
+  } catch(e) { showToast('❌ Erreur', 'erreur'); }
+}
+
+async function toggleMilitant(nom, actif) {
+  try {
+    await db.ref('militants/' + sanitizeKey(nom)).update({ actif: actif });
+    // 📊 Sync vers Google Sheets
+    syncVersGoogleSheets({ action: 'modif_militant', nom: nom, actif: actif });
+    showToast(actif ? '✅ Activé' : '🔴 Désactivé', 'succes');
+  } catch(e) { showToast('❌ Erreur', 'erreur'); }
+}
+
+// =====================================================
+// IMPORT CSV
+// =====================================================
+function ouvrirImport() { ouvrirModal('modalImport'); }
+
+// =====================================================
+// ONGLET CSV — IMPORT DÉDIÉ
+// =====================================================
+function verifierStatutsCSV() {
+  // Vérifier chaque type de données dans Firebase
+  const types = ['personnes', 'militants', 'comparaison', 'mentions'];
+  types.forEach(type => {
+    const refPath = type === 'mentions' ? 'config/mentions' : (type === 'comparaison' ? 'config/comparaison' : type);
+    db.ref(refPath).once('value').then(function(snap) {
+      const data = snap.val();
+      const statusEl = $('csvStatus-' + type);
+      const btnEl = $('csvBtn-' + type);
+      const countEl = $('csvCount-' + type);
+      if (data) {
+        let count = 0;
+        if (type === 'personnes' || type === 'militants') {
+          count = typeof data === 'object' ? Object.keys(data).length : 0;
+        }
+        statusEl.textContent = '✅';
+        btnEl.textContent = '🔄 Remplacer';
+        btnEl.classList.add('imported');
+        btnEl.style.background = '#e67e22';
+        btnEl.style.pointerEvents = 'auto';
+        if (count > 0) {
+          countEl.style.display = 'block';
+          countEl.textContent = '✅ ' + count + ' ' + (type === 'personnes' ? 'électeurs' : 'militants') + ' importés';
+        } else if (type === 'mentions') {
+          countEl.style.display = 'block';
+          countEl.textContent = '✅ Mentions légales chargées';
+        } else if (type === 'comparaison') {
+          countEl.style.display = 'block';
+          countEl.textContent = '✅ Données comparaison chargées';
+        }
+      } else {
+        statusEl.textContent = '⬜';
+        btnEl.textContent = '📥 Importer';
+        btnEl.classList.remove('imported');
+        btnEl.style.background = '';
+        countEl.style.display = 'none';
+      }
+    });
+  });
+}
+
+async function importerCSV(type) {
+  const fileInput = $('csvFile-' + type);
+  if (!fileInput.files.length) return;
+
+  const file = fileInput.files[0];
+  const text = await file.text();
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+
+  const progressEl = $('csvProgress-' + type);
+  const progressFill = $('csvProgressFill-' + type);
+  const statusEl = $('csvStatus-' + type);
+  const btnEl = $('csvBtn-' + type);
+  const countEl = $('csvCount-' + type);
+
+  progressEl.style.display = 'block';
+  statusEl.textContent = '⏳';
+  btnEl.disabled = true;
+  btnEl.textContent = '⏳ Import...';
+
+  try {
+    if (type === 'personnes') {
+      if (lines.length < 2) { showToast('❌ Fichier vide', 'erreur'); return; }
+      const dataLines = lines.slice(1);
+      const total = dataLines.length;
+      const updates = {};
+      dataLines.forEach((line, i) => {
+        const cols = parseCSVLine(line);
+        const id = cols[0];
+        if (!id) return;
+        updates['personnes/' + id] = {
+          id: parseInt(id) || id,
+          nom: cols[1] || '', prenom: cols[2] || '', statut: cols[3] || 'Non visité',
+          sexe: cols[4] || '', age: cols[5] || '', numVoie: cols[6] || '', libelleVoie: cols[7] || '',
+          nomUsage: cols[8] || '', codeBureau: cols[9] || '', candidat: cols[10] || '', dateVisite: cols[11] || '',
+          notes: cols[12] || '', secteur: cols[13] || '', militant: cols[14] || '', observation: cols[15] || '',
+          mail: cols[16] || '', tel: cols[17] || ''
+        };
+        progressFill.style.width = Math.round((i + 1) / total * 100) + '%';
+      });
+      await db.ref().update(updates);
+      countEl.style.display = 'block';
+      countEl.textContent = '✅ ' + total + ' électeurs importés';
+      showToast('🔥 ' + total + ' personnes importées !', 'succes');
+
+    } else if (type === 'militants') {
+      if (lines.length < 2) { showToast('❌ Fichier vide', 'erreur'); return; }
+      const dataLines = lines.slice(1);
+      const total = dataLines.length;
+      const updates = {};
+      dataLines.forEach((line, i) => {
+        const cols = parseCSVLine(line);
+        const nom = cols[0];
+        if (!nom) return;
+        updates['militants/' + sanitizeKey(nom)] = {
+          nom: nom, pin: cols[1] || '0000', role: cols[2] || 'militant',
+          actif: cols[3] !== '0' && cols[3] !== 'false', token: cols[4] || '', mail: cols[5] || '', lien: cols[6] || ''
+        };
+        progressFill.style.width = Math.round((i + 1) / total * 100) + '%';
+      });
+      await db.ref().update(updates);
+      countEl.style.display = 'block';
+      countEl.textContent = '✅ ' + total + ' militants importés';
+      showToast('🔥 ' + total + ' militants importés !', 'succes');
+      chargerMilitants();
+
+    } else if (type === 'comparaison') {
+      // CSV avec colonnes: bureau, inscrits2020, votants2020, inscrits2026, foyersJohnny
+      if (lines.length < 2) { showToast('❌ Fichier vide', 'erreur'); return; }
+      const dataLines = lines.slice(1);
+      const bureaux = {};
+      dataLines.forEach((line) => {
+        const cols = parseCSVLine(line);
+        if (!cols[0]) return;
+        bureaux[sanitizeKey(cols[0])] = {
+          bureau: cols[0],
+          inscrits2020: parseInt(cols[1]) || 0,
+          votants2020: parseInt(cols[2]) || 0,
+          inscrits2026: parseInt(cols[3]) || 0,
+          foyersJohnny: parseInt(cols[4]) || 0
+        };
+      });
+      await db.ref('config/comparaison').set(bureaux);
+      // 📊 Sync vers Google Sheets
+      syncVersGoogleSheets({ action: 'comparaison', bureaux: bureaux });
+      progressFill.style.width = '100%';
+      countEl.style.display = 'block';
+      countEl.textContent = '✅ Données comparaison chargées';
+      showToast('🔥 Comparaison 2020/2026 importée !', 'succes');
+
+    } else if (type === 'mentions') {
+      // Texte brut ou CSV avec une seule colonne = le texte
+      const contenu = lines.join('\n');
+      await db.ref('config/mentions').set(contenu);
+      // 📊 Sync vers Google Sheets
+      syncVersGoogleSheets({ action: 'mentions', contenu: contenu });
+      progressFill.style.width = '100%';
+      countEl.style.display = 'block';
+      countEl.textContent = '✅ Mentions légales chargées';
+      showToast('🔥 Mentions légales importées !', 'succes');
+    }
+
+    // Succès
+    statusEl.textContent = '✅';
+    progressFill.style.width = '100%';
+    btnEl.textContent = '🔄 Remplacer';
+    btnEl.style.background = '#e67e22';
+
+  } catch(e) {
+    statusEl.textContent = '❌';
+    showToast('❌ Erreur: ' + e.message, 'erreur');
+  }
+
+  btnEl.disabled = false;
+  fileInput.value = '';
+  setTimeout(() => { progressEl.style.display = 'none'; }, 3000);
+}
+
+async function lancerImport() {
+  const type = $('importType').value;
+  const fileInput = $('importFile');
+  if (!fileInput.files.length) { showToast('❌ Choisissez un fichier', 'erreur'); return; }
+
+  const file = fileInput.files[0];
+  const text = await file.text();
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+
+  if (lines.length < 2) { showToast('❌ Fichier vide', 'erreur'); return; }
+
+  $('importProgress').style.display = 'block';
+  const header = lines[0];
+  const dataLines = lines.slice(1);
+  const total = dataLines.length;
+
+  if (type === 'personnes') {
+    // Import des personnes
+    const updates = {};
+    dataLines.forEach((line, i) => {
+      const cols = parseCSVLine(line);
+      const id = cols[0];
+      if (!id) return;
+      updates['personnes/' + id] = {
+        id: parseInt(id) || id,
+        nom: cols[1] || '', prenom: cols[2] || '', statut: cols[3] || 'Non visité',
+        sexe: cols[4] || '', age: cols[5] || '', numVoie: cols[6] || '', libelleVoie: cols[7] || '',
+        nomUsage: cols[8] || '', codeBureau: cols[9] || '', candidat: cols[10] || '', dateVisite: cols[11] || '',
+        notes: cols[12] || '', secteur: cols[13] || '', militant: cols[14] || '', observation: cols[15] || '',
+        mail: cols[16] || '', tel: cols[17] || ''
+      };
+
+      const pct = Math.round((i + 1) / total * 100);
+      $('importProgressBar').style.width = pct + '%';
+      $('importProgressText').textContent = (i + 1) + ' / ' + total;
+    });
+
+    try {
+      await db.ref().update(updates);
+      $('importProgressBar').style.width = '100%';
+      $('importProgressText').textContent = '✅ ' + total + ' personnes importées !';
+      showToast('🔥 ' + total + ' personnes importées !', 'succes');
+      setTimeout(() => { fermerModal('modalImport'); $('importProgress').style.display = 'none'; }, 2000);
+    } catch(e) {
+      showToast('❌ Erreur import: ' + e.message, 'erreur');
+      $('importProgress').style.display = 'none';
+    }
+
+  } else if (type === 'militants') {
+    // Import des militants
+    const updates = {};
+    dataLines.forEach((line, i) => {
+      const cols = parseCSVLine(line);
+      const nom = cols[0];
+      if (!nom) return;
+      updates['militants/' + sanitizeKey(nom)] = {
+        nom: nom, pin: cols[1] || '0000', role: cols[2] || 'militant',
+        actif: cols[3] !== '0' && cols[3] !== 'false', token: cols[4] || '', mail: cols[5] || '', lien: cols[6] || ''
+      };
+    });
+
+    try {
+      await db.ref().update(updates);
+      showToast('✅ Militants importés !', 'succes');
+      setTimeout(() => { fermerModal('modalImport'); $('importProgress').style.display = 'none'; }, 1000);
+    } catch(e) {
+      showToast('❌ Erreur: ' + e.message, 'erreur');
+    }
+  }
+}
+
+function parseCSVLine(line) {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') { inQuotes = !inQuotes; }
+    else if ((c === ',' || c === ';') && !inQuotes) { result.push(current.trim()); current = ''; }
+    else { current += c; }
+  }
+  result.push(current.trim());
+  return result;
+}
+
+// =====================================================
+// SYNC → GOOGLE SHEETS (toutes les 2 minutes, par lot)
+// =====================================================
+let syncQueue = []; // File d'attente des changements
+let syncTimer = null;
+const SYNC_INTERVAL = 2 * 60 * 1000; // 2 minutes
+
+function syncVersGoogleSheets(data) {
+  if (!SYNC_SHEET_URL) return;
+  // Ajouter à la file d'attente
+  syncQueue.push(data);
+  // Démarrer le timer si pas encore actif
+  if (!syncTimer) {
+    syncTimer = setInterval(envoyerSyncQueue, SYNC_INTERVAL);
+    // Premier envoi après 30 secondes (pas attendre 2 min la 1ère fois)
+    setTimeout(envoyerSyncQueue, 30000);
+  }
+}
+
+function envoyerSyncQueue() {
+  if (!syncQueue.length || !SYNC_SHEET_URL) return;
+  // Prendre toute la file et la vider
+  var batch = syncQueue.slice();
+  syncQueue = [];
+  var nbActions = batch.length;
+  // Envoyer le lot en 1 seule requête
+  fetch(SYNC_SHEET_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'batch', items: batch })
+  }).then(function() {
+    // Alerte admin : sync réussie
+    if (currentRole === 'admin') {
+      showToast('📊 Google Sheets : ' + nbActions + ' action' + (nbActions > 1 ? 's' : '') + ' synchronisée' + (nbActions > 1 ? 's' : '') + ' ✅', 'succes');
+    }
+  }).catch(function() {
+    // Si erreur, remettre dans la file pour réessayer
+    syncQueue = batch.concat(syncQueue);
+    if (currentRole === 'admin') {
+      showToast('⚠️ Google Sheets : sync échouée — réessai dans 2 min (' + nbActions + ' en attente)', 'warning');
+    }
+  });
+}
+
+// =====================================================
+// UTILITAIRES FIREBASE
+// =====================================================
+function sanitizeKey(str) {
+  // Firebase n'accepte pas . # $ [ ] / dans les clés
+  return str.replace(/[.#$\[\]\/]/g, '_');
+}
+
+// =====================================================
+// INITIALISATION
+// =====================================================
+document.addEventListener('DOMContentLoaded', () => {
+  chargerMentionsLegales();
+  chargerMilitants();
+  initTabs();
+  initRecherche();
+  setTimeout(() => passerSplash(), 2000);
 });
 </script>
 </body>
