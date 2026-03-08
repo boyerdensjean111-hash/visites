@@ -186,7 +186,7 @@
 </div>
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v3</span> 🔥</div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v7</span> 🔥</div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -235,7 +235,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v5</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v7</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;">📜</button>
@@ -546,7 +546,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v5';
+const APP_VERSION = 'Firebase v7';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -554,6 +554,47 @@ const VERSION_CHECK_INTERVAL = 60000;
 const SYNC_SHEET_URL = 'https://script.google.com/macros/s/AKfycbyMBmHPmGCSGZLQLC1CzDxDHmLlWK3nxvsLcjq2GQ51hmqkHSjBeRXAxi1xEGWUUc4H/exec';
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
 const $ = id => document.getElementById(id);
+
+// Calculer l'âge à partir de la date de naissance (DD/MM/YYYY)
+function calculerAge(dateStr) {
+  if (!dateStr) return '';
+  const parts = String(dateStr).split('/');
+  if (parts.length !== 3) return '';
+  const b = new Date(parts[2], parts[1] - 1, parts[0]);
+  const today = new Date();
+  let age = today.getFullYear() - b.getFullYear();
+  const m = today.getMonth() - b.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < b.getDate())) age--;
+  return age > 0 && age < 150 ? String(age) : '';
+}
+
+// Mapper les colonnes CSV Google Sheets (26 cols) vers l'objet personne
+function mapperCSVPersonne(cols) {
+  return {
+    id: parseInt(cols[0]) || cols[0],
+    nom: cols[1] || '',
+    prenom: cols[3] || '',
+    statut: cols[13] || 'Non visité',
+    sexe: cols[4] || '',
+    age: calculerAge(cols[12]),
+    numVoie: cols[5] || '',
+    libelleVoie: cols[6] || '',
+    nomUsage: cols[2] || '',
+    codeBureau: cols[9] || '',
+    candidat: cols[15] || '',
+    dateVisite: cols[14] || '',
+    notes: cols[17] || '',
+    secteur: cols[16] || '',
+    militant: cols[18] || '',
+    observation: cols[19] || '',
+    mail: cols[20] || '',
+    tel: cols[21] || '',
+    dateNaissance: cols[12] || '',
+    libelleBureau: cols[11] || '',
+    complement1: cols[7] || '',
+    complement2: cols[8] || ''
+  };
+}
 
 // =====================================================
 // VARIABLES GLOBALES
@@ -605,7 +646,7 @@ function demarrerListenersFirebase() {
         p.sexe || '', p.age || '', p.numVoie || '', p.libelleVoie || '',
         p.nomUsage || '', p.codeBureau || '', p.candidat || '', p.dateVisite || '',
         p.notes || '', p.secteur || '', p.militant || '', p.observation || '',
-        p.mail || '', p.tel || ''
+        p.mail || '', p.tel || '', p.libelleBureau || '', p.complement1 || '', p.complement2 || ''
       ];
     });
 
@@ -705,7 +746,7 @@ async function chargerToutesPersonnes() {
           p.sexe || '', p.age || '', p.numVoie || '', p.libelleVoie || '',
           p.nomUsage || '', p.codeBureau || '', p.candidat || '', p.dateVisite || '',
           p.notes || '', p.secteur || '', p.militant || '', p.observation || '',
-          p.mail || '', p.tel || ''
+          p.mail || '', p.tel || '', p.libelleBureau || '', p.complement1 || '', p.complement2 || ''
         ];
       });
     }
@@ -898,7 +939,7 @@ function selectionnerPersonne(id) {
   showPage('saisie');
   const local = toutesPersonnes.find(p => p[0] == id);
   if (local) {
-    currentPersonne = { id: local[0], nom: local[1], prenom: local[2], statut: local[3], sexe: local[4], age: local[5], nVoie: local[6], libelleVoie: local[7], nomUsage: local[8], bureau: local[9] || '', candidatActuel: local[10] || '', dateDerniereVisite: local[11] || '', notes: local[12] || '', secteur: local[13] || '', militant: local[14] || '', observation: local[15] || '', mail: local[16] || '', tel: local[17] || '' };
+    currentPersonne = { id: local[0], nom: local[1], prenom: local[2], statut: local[3], sexe: local[4], age: local[5], nVoie: local[6], libelleVoie: local[7], nomUsage: local[8], codeBureau: local[9] || '', bureau: local[18] || local[9] || '', candidatActuel: local[10] || '', dateDerniereVisite: local[11] || '', notes: local[12] || '', secteur: local[13] || '', militant: local[14] || '', observation: local[15] || '', mail: local[16] || '', tel: local[17] || '', complement: [local[19], local[20]].filter(Boolean).join(' · ') };
     // 📸 Sauvegarder l'état d'ouverture pour détecter les conflits
     currentPersonneServeur = { statut: local[3] || '', militant: local[14] || '', dateVisite: local[11] || '' };
     afficherFiche(currentPersonne);
@@ -910,18 +951,24 @@ function genererCoResidents(p) {
   const nv = String(p.nVoie || '').trim().toLowerCase();
   const lv = (p.libelleVoie || '').trim().toLowerCase();
   if (!nv && !lv) return '';
+  const myComp = (p.complement || '').trim().toLowerCase();
   const coresidents = [];
   for (let i = 0; i < toutesPersonnes.length; i++) {
     const t = toutesPersonnes[i];
     if (t[0] == p.id) continue;
-    if (String(t[6] || '').trim().toLowerCase() === nv && (t[7] || '').trim().toLowerCase() === lv) coresidents.push(t);
+    if (String(t[6] || '').trim().toLowerCase() !== nv || (t[7] || '').trim().toLowerCase() !== lv) continue;
+    // Si les 2 ont un complément différent → pas même foyer
+    const tComp = [t[19], t[20]].filter(Boolean).join(' · ').trim().toLowerCase();
+    if (myComp && tComp && myComp !== tComp) continue;
+    coresidents.push(t);
   }
   if (!coresidents.length) return '';
   let html = '<div style="background:white;border-radius:14px;padding:14px 16px;margin:10px 0;box-shadow:0 2px 8px rgba(0,0,0,0.06);"><div style="font-size:13px;font-weight:700;color:var(--bleu);margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--gris);">🏠 Résidants à cette adresse <span style="font-weight:400;color:#888;">(' + coresidents.length + ')</span></div>';
   for (const c of coresidents) {
     const statut = c[3] || 'Non visité';
+    const compInfo = [c[19], c[20]].filter(Boolean).join(' · ');
     const statutBadge = statut === 'Visité' ? '<span style="background:#27ae60;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">✓ Visité</span>' : statut === 'Absent' ? '<span style="background:#e67e22;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">🚪 Absent</span>' : statut === 'Opposition' ? '<span style="background:#c0392b;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">🚫 Opposition</span>' : '<span style="background:#95a5a6;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">Non visité</span>';
-    html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f0f2f5;"><div style="flex:1;"><div style="font-size:14px;font-weight:600;">' + c[1] + ' ' + c[2] + '</div><div style="font-size:11px;color:#5a6070;">ID ' + c[0] + '</div><div style="margin-top:4px;">' + statutBadge + '</div></div><button onclick="voirCoResident(' + c[0] + ')" style="background:var(--bleu);color:white;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;">👁️ Voir</button></div>';
+    html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f0f2f5;"><div style="flex:1;"><div style="font-size:14px;font-weight:600;">' + c[1] + ' ' + c[2] + '</div><div style="font-size:11px;color:#5a6070;">ID ' + c[0] + (compInfo ? ' · ' + compInfo : '') + '</div><div style="margin-top:4px;">' + statutBadge + '</div></div><button onclick="voirCoResident(' + c[0] + ')" style="background:var(--bleu);color:white;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;">👁️ Voir</button></div>';
   }
   html += '</div>';
   return html;
@@ -929,7 +976,8 @@ function genererCoResidents(p) {
 
 function afficherFiche(p) {
   const isVisite = p.statut === 'Visité';
-  const adresse = [p.nVoie, p.libelleVoie].filter(Boolean).join(' ') || '—';
+  const adresseBase = [p.nVoie, p.libelleVoie].filter(Boolean).join(' ') || '—';
+  const adresse = p.complement ? adresseBase + '<br><span style="font-size:11px;color:#8e44ad;">' + p.complement + '</span>' : adresseBase;
   const cOpts = CANDIDATS.map(c => '<option value="' + c + '" ' + (p.candidatActuel === c ? 'selected' : '') + '>' + (c || '-- Choisir --') + '</option>').join('');
   const conflitInfo = isVisite && p.militant && p.militant !== currentMilitant ? '<div class="alerte-conflit"><div class="titre">⚠️ Déjà visité par ' + p.militant + '</div><div class="detail">' + (p.dateDerniereVisite || '') + (p.candidatActuel ? ' · ' + p.candidatActuel : '') + '</div></div>' : '';
   const headerBg = isFicheSecondaire ? '#e67e22' : 'var(--bleu)';
@@ -1121,12 +1169,13 @@ function afficherStats(data) {
   Chart.register(ChartDataLabels);
   const statsBureau = {};
   toutesPersonnes.forEach(p => {
-    const bureau = p[9] || 'Inconnu';
-    if (!statsBureau[bureau]) statsBureau[bureau] = { visites: 0, total: 0 };
+    const bureau = p[18] || p[9] || 'Inconnu';
+    if (!statsBureau[bureau]) statsBureau[bureau] = { visites: 0, total: 0, opposition: 0 };
     statsBureau[bureau].total++;
     if (p[3] === 'Visité') statsBureau[bureau].visites++;
+    if (p[3] === 'Opposition') statsBureau[bureau].opposition++;
   });
-  const bureaux = Object.keys(statsBureau).filter(b => b !== 'Inconnu').sort((a, b) => statsBureau[b].total - statsBureau[a].total).slice(0, 6);
+  const bureaux = Object.keys(statsBureau).filter(b => b !== 'Inconnu' && statsBureau[b].total > 10).sort((a, b) => statsBureau[b].total - statsBureau[a].total).slice(0, 6);
   const rangs = ['1er', '2e', '3e', '4e', '5e', '6e'];
   const couleursBureau = ['#3498db', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c'];
 
@@ -1184,12 +1233,7 @@ async function chargerComparaison() {
     const bureaux = snapBureaux.val();
     const config = snapConfig.val() || {};
 
-    if (!bureaux && !config.votants2020) {
-      statsDiv.innerHTML = '<div style="color:#888;font-size:12px;">Pas de données comparaison. Importez le CSV dans l\'onglet CSV.</div>';
-      return;
-    }
-
-    // Calculer totaux depuis données bureau
+    // Calculer totaux depuis données bureau (si CSV importé)
     let totalVotants2020 = 0, totalInscrits2026 = 0, totalFoyersJohnny = 0;
     if (bureaux) {
       Object.keys(bureaux).forEach(key => {
@@ -1205,7 +1249,7 @@ async function chargerComparaison() {
     const totalVisites = toutesPersonnes.filter(p => p[3] === 'Visité').length;
     const foyersJohnny = totalFoyersJohnny || parseNum(config.foyersJohnny);
     const objectif = parseNum(config.objectifGagner) || 1362;
-    const reserveVoix = totalVisites;
+    const reserveVoix = totalInscrits - votants2020;
 
     // Calculer intentions 2026 par candidat depuis toutesPersonnes
     const intentionsParCandidat = {};
@@ -1599,24 +1643,22 @@ async function importerCSV(type) {
       const dataLines = lines.slice(1);
       const total = dataLines.length;
       const updates = {};
+      let imported = 0;
       dataLines.forEach((line, i) => {
         const cols = parseCSVLine(line);
         const id = cols[0];
-        if (!id) return;
-        updates['personnes/' + id] = {
-          id: parseInt(id) || id,
-          nom: cols[1] || '', prenom: cols[2] || '', statut: cols[3] || 'Non visité',
-          sexe: cols[4] || '', age: cols[5] || '', numVoie: cols[6] || '', libelleVoie: cols[7] || '',
-          nomUsage: cols[8] || '', codeBureau: cols[9] || '', candidat: cols[10] || '', dateVisite: cols[11] || '',
-          notes: cols[12] || '', secteur: cols[13] || '', militant: cols[14] || '', observation: cols[15] || '',
-          mail: cols[16] || '', tel: cols[17] || ''
-        };
+        if (!id || isNaN(parseInt(id))) return;
+        // Ignorer lignes invalides (en-têtes numériques, lignes vides)
+        const nom = (cols[1] || '').trim();
+        if (!nom || !isNaN(parseInt(nom))) return;
+        updates['personnes/' + id] = mapperCSVPersonne(cols);
+        imported++;
         progressFill.style.width = Math.round((i + 1) / total * 100) + '%';
       });
       await db.ref().update(updates);
       countEl.style.display = 'block';
-      countEl.textContent = '✅ ' + total + ' électeurs importés';
-      showToast('🔥 ' + total + ' personnes importées !', 'succes');
+      countEl.textContent = '✅ ' + imported + ' électeurs importés';
+      showToast('🔥 ' + imported + ' personnes importées !', 'succes');
 
     } else if (type === 'militants') {
       if (lines.length < 2) { showToast('❌ Fichier vide', 'erreur'); return; }
@@ -1710,18 +1752,15 @@ async function lancerImport() {
   if (type === 'personnes') {
     // Import des personnes
     const updates = {};
+    let imported2 = 0;
     dataLines.forEach((line, i) => {
       const cols = parseCSVLine(line);
       const id = cols[0];
-      if (!id) return;
-      updates['personnes/' + id] = {
-        id: parseInt(id) || id,
-        nom: cols[1] || '', prenom: cols[2] || '', statut: cols[3] || 'Non visité',
-        sexe: cols[4] || '', age: cols[5] || '', numVoie: cols[6] || '', libelleVoie: cols[7] || '',
-        nomUsage: cols[8] || '', codeBureau: cols[9] || '', candidat: cols[10] || '', dateVisite: cols[11] || '',
-        notes: cols[12] || '', secteur: cols[13] || '', militant: cols[14] || '', observation: cols[15] || '',
-        mail: cols[16] || '', tel: cols[17] || ''
-      };
+      if (!id || isNaN(parseInt(id))) return;
+      const nom2 = (cols[1] || '').trim();
+      if (!nom2 || !isNaN(parseInt(nom2))) return;
+      updates['personnes/' + id] = mapperCSVPersonne(cols);
+      imported2++;
 
       const pct = Math.round((i + 1) / total * 100);
       $('importProgressBar').style.width = pct + '%';
