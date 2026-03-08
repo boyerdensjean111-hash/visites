@@ -186,7 +186,7 @@
 </div>
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v7</span> 🔥</div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v8</span> 🔥</div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -235,7 +235,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v7</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v8</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;">📜</button>
@@ -546,7 +546,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v7';
+const APP_VERSION = 'Firebase v8';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -1841,22 +1841,27 @@ function envoyerSyncQueue() {
   syncQueue = [];
   var nbActions = batch.length;
   // Envoyer le lot en 1 seule requête
+  var payload = JSON.stringify({ action: 'batch', items: batch });
   fetch(SYNC_SHEET_URL, {
     method: 'POST',
-    mode: 'no-cors',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'batch', items: batch })
-  }).then(function() {
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: payload,
+    redirect: 'follow'
+  }).then(function(resp) {
+    return resp.text().catch(function() { return ''; });
+  }).then(function(txt) {
     // Alerte admin : sync réussie
     if (currentRole === 'admin') {
       showToast('📊 Google Sheets : ' + nbActions + ' action' + (nbActions > 1 ? 's' : '') + ' synchronisée' + (nbActions > 1 ? 's' : '') + ' ✅', 'succes');
     }
-  }).catch(function() {
+    console.log('[SYNC] OK : ' + nbActions + ' actions — ' + txt);
+  }).catch(function(err) {
     // Si erreur, remettre dans la file pour réessayer
     syncQueue = batch.concat(syncQueue);
     if (currentRole === 'admin') {
       showToast('⚠️ Google Sheets : sync échouée — réessai dans 2 min (' + nbActions + ' en attente)', 'warning');
     }
+    console.error('[SYNC] Erreur : ' + err.message);
   });
 }
 
