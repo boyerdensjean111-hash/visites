@@ -160,6 +160,22 @@
   #papMapContainer { flex:1; min-height:0; }
   .pap-marker-label { background:var(--rouge); color:white; font-family:'Bebas Neue',sans-serif; font-size:18px; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:3px solid white; box-shadow:0 3px 10px rgba(0,0,0,0.4); }
   .pap-marker-name { background:white; color:var(--bleu); font-family:'DM Sans',sans-serif; font-size:11px; font-weight:700; padding:3px 8px; border-radius:6px; box-shadow:0 2px 6px rgba(0,0,0,0.2); white-space:nowrap; border:2px solid var(--bleu); }
+  .pap-gps-bar { background:linear-gradient(135deg,#1a3a6b,#2755a8); color:white; padding:10px 14px; flex-shrink:0; display:flex; align-items:center; gap:10px; }
+  .pap-gps-etape { flex:1; }
+  .pap-gps-etape .label { font-size:10px; opacity:.7; text-transform:uppercase; }
+  .pap-gps-etape .rue { font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:.5px; }
+  .pap-gps-distance { text-align:right; }
+  .pap-gps-distance .dist { font-family:'Bebas Neue',sans-serif; font-size:22px; }
+  .pap-gps-distance .unit { font-size:10px; opacity:.7; }
+  .pap-gps-btns { display:flex; gap:6px; flex-shrink:0; }
+  .pap-gps-btn { background:rgba(255,255,255,0.2); border:none; color:white; width:36px; height:36px; border-radius:50%; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+  .pap-gps-btn.active { background:var(--vert); }
+  .pap-gps-pos { background:#3498db; width:18px; height:18px; border-radius:50%; border:3px solid white; box-shadow:0 0 12px rgba(52,152,219,0.6); }
+  .pap-gps-pos-pulse { background:rgba(52,152,219,0.25); width:40px; height:40px; border-radius:50%; animation:gpsPulse 2s infinite; }
+  @keyframes gpsPulse { 0%{transform:scale(0.8);opacity:1} 100%{transform:scale(2);opacity:0} }
+  .pap-carte-switch { display:flex; gap:4px; }
+  .pap-carte-switch button { background:rgba(255,255,255,0.15); border:none; color:white; padding:5px 10px; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer; }
+  .pap-carte-switch button.active { background:rgba(255,255,255,0.4); }
   .btn-legal { position:absolute; bottom:20px; right:20px; background:rgba(255,255,255,0.15); color:rgba(255,255,255,0.7); border:none; padding:8px 14px; border-radius:20px; font-size:11px; cursor:pointer; }
   .firebase-badge { background:linear-gradient(135deg,#FF9800,#F44336); color:white; font-size:9px; font-weight:700; padding:2px 6px; border-radius:4px; margin-left:4px; letter-spacing:.5px; }
   .csv-list { list-style:none; padding:0; }
@@ -226,7 +242,7 @@
 </div>
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v17</span> 🔥</div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v18</span> 🔥</div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -275,7 +291,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v17</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v18</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;">📜</button>
@@ -589,7 +605,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v17';
+const APP_VERSION = 'Firebase v18';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -2501,53 +2517,188 @@ function papOuvrirBureau(bureau) {
   papParler(bureau + '. ' + stats.restant + ' personnes restantes.');
 }
 
-// CARTE: affiche carte Leaflet fullscreen avec les rues de la division
+// =====================================================
+// CARTE SATELLITE + GPS
+// =====================================================
 let papMapInstance = null;
+let papGpsWatchId = null;
+let papGpsMarker = null;
+let papGpsPulse = null;
+let papEtapes = [];
+let papEtapeActuelle = 0;
+let papTuileSat = null;
+let papTuilePlan = null;
 
 function papOuvrirCarte(bureau, divIdx) {
   const div = PAP_DATA[bureau].divisions[divIdx];
   if (!div || !div.rues || div.rues.length === 0) return;
 
-  // Supprimer ancienne carte si existe
   document.querySelectorAll('.pap-carte-overlay').forEach(e => e.remove());
+  papEtapes = [];
+  papEtapeActuelle = 0;
 
-  // Créer overlay fullscreen
   const overlay = document.createElement('div');
   overlay.className = 'pap-carte-overlay';
   overlay.innerHTML =
     '<div class="pap-carte-header">' +
-      '<h3>🗺️ ' + div.label + '</h3>' +
-      '<button class="pap-carte-fermer" onclick="papFermerCarte()">✕ Fermer</button>' +
+      '<div style="display:flex;align-items:center;gap:10px;">' +
+        '<button class="pap-carte-fermer" onclick="papFermerCarte()">✕</button>' +
+        '<h3>🗺️ ' + div.label + '</h3>' +
+      '</div>' +
+      '<div class="pap-carte-switch">' +
+        '<button id="papBtnSat" class="active" onclick="papSwitchTuile(\'sat\')">🛰️ Satellite</button>' +
+        '<button id="papBtnPlan" onclick="papSwitchTuile(\'plan\')">🗺️ Plan</button>' +
+      '</div>' +
     '</div>' +
-    '<div class="pap-carte-legende">' +
-      '<span>📍 <b>' + div.rues.length + ' rues</b></span>' +
-      '<span style="color:var(--rouge);">● Étapes</span>' +
-      '<span style="color:var(--bleu);">— Itinéraire</span>' +
+    '<div class="pap-gps-bar" id="papGpsBar">' +
+      '<div class="pap-gps-btns">' +
+        '<button class="pap-gps-btn" id="papBtnGps" onclick="papToggleGps()" title="Ma position">📍</button>' +
+        '<button class="pap-gps-btn" onclick="papEtapePrecedente()" title="Étape précédente">◀</button>' +
+        '<button class="pap-gps-btn" onclick="papEtapeSuivante()" title="Étape suivante">▶</button>' +
+      '</div>' +
+      '<div class="pap-gps-etape">' +
+        '<div class="label">PROCHAINE ÉTAPE</div>' +
+        '<div class="rue" id="papGpsRue">Chargement...</div>' +
+      '</div>' +
+      '<div class="pap-gps-distance">' +
+        '<div class="dist" id="papGpsDist">--</div>' +
+        '<div class="unit" id="papGpsUnit">m</div>' +
+      '</div>' +
     '</div>' +
     '<div id="papMapContainer"></div>';
 
   document.body.appendChild(overlay);
 
-  // Init Leaflet map centré sur La Plaine-des-Palmistes
   setTimeout(function() {
-    papMapInstance = L.map('papMapContainer', { zoomControl: true }).setView([-21.137, 55.594], 15);
+    papMapInstance = L.map('papMapContainer', { zoomControl: false }).setView([-21.137, 55.594], 16);
 
-    // Tuile OpenStreetMap propre (pas de POI commercial)
-    L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap',
-      maxZoom: 19
-    }).addTo(papMapInstance);
+    // Vue satellite par défaut (Esri World Imagery - gratuit)
+    papTuileSat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      attribution: '© Esri', maxZoom: 19
+    });
+    papTuilePlan = L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+      attribution: '© OSM', maxZoom: 19
+    });
+    papTuileSat.addTo(papMapInstance);
 
-    // Géocoder chaque rue et placer les marqueurs
+    // Bouton zoom
+    L.control.zoom({ position: 'bottomright' }).addTo(papMapInstance);
+
     papGeocoderRues(div.rues);
   }, 100);
 }
 
+function papSwitchTuile(type) {
+  if (!papMapInstance) return;
+  if (type === 'sat') {
+    papMapInstance.removeLayer(papTuilePlan);
+    papTuileSat.addTo(papMapInstance);
+    document.getElementById('papBtnSat').classList.add('active');
+    document.getElementById('papBtnPlan').classList.remove('active');
+  } else {
+    papMapInstance.removeLayer(papTuileSat);
+    papTuilePlan.addTo(papMapInstance);
+    document.getElementById('papBtnPlan').classList.add('active');
+    document.getElementById('papBtnSat').classList.remove('active');
+  }
+}
+
 function papFermerCarte() {
+  if (papGpsWatchId) { navigator.geolocation.clearWatch(papGpsWatchId); papGpsWatchId = null; }
   if (papMapInstance) { papMapInstance.remove(); papMapInstance = null; }
   document.querySelectorAll('.pap-carte-overlay').forEach(e => e.remove());
 }
 
+// GPS tracking
+function papToggleGps() {
+  if (papGpsWatchId) {
+    navigator.geolocation.clearWatch(papGpsWatchId);
+    papGpsWatchId = null;
+    if (papGpsMarker) { papMapInstance.removeLayer(papGpsMarker); papGpsMarker = null; }
+    if (papGpsPulse) { papMapInstance.removeLayer(papGpsPulse); papGpsPulse = null; }
+    document.getElementById('papBtnGps').classList.remove('active');
+    return;
+  }
+
+  if (!navigator.geolocation) { alert('GPS non disponible'); return; }
+
+  document.getElementById('papBtnGps').classList.add('active');
+
+  papGpsWatchId = navigator.geolocation.watchPosition(function(pos) {
+    var lat = pos.coords.latitude;
+    var lng = pos.coords.longitude;
+    var latlng = [lat, lng];
+
+    // Position marker (point bleu)
+    if (!papGpsMarker) {
+      var posIcon = L.divIcon({ className: '', html: '<div class="pap-gps-pos"></div>', iconSize: [18, 18], iconAnchor: [9, 9] });
+      papGpsMarker = L.marker(latlng, { icon: posIcon, zIndexOffset: 1000 }).addTo(papMapInstance);
+      var pulseIcon = L.divIcon({ className: '', html: '<div class="pap-gps-pos-pulse"></div>', iconSize: [40, 40], iconAnchor: [20, 20] });
+      papGpsPulse = L.marker(latlng, { icon: pulseIcon, zIndexOffset: 999 }).addTo(papMapInstance);
+      papMapInstance.setView(latlng, 17);
+    } else {
+      papGpsMarker.setLatLng(latlng);
+      if (papGpsPulse) papGpsPulse.setLatLng(latlng);
+    }
+
+    // Distance vers étape actuelle
+    if (papEtapes.length > 0 && papEtapeActuelle < papEtapes.length) {
+      var etape = papEtapes[papEtapeActuelle];
+      var dist = papMapInstance.distance(latlng, [etape.lat, etape.lng]);
+      papMajGpsBar(etape, dist);
+
+      // Auto-avancer si < 50m de l'étape
+      if (dist < 50 && papEtapeActuelle < papEtapes.length - 1) {
+        papEtapeActuelle++;
+        papParler('Étape atteinte! Direction: ' + papEtapes[papEtapeActuelle].nom);
+      }
+    }
+  }, function(err) {
+    alert('Erreur GPS: ' + err.message);
+    document.getElementById('papBtnGps').classList.remove('active');
+  }, { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 });
+}
+
+function papMajGpsBar(etape, dist) {
+  var el = document.getElementById('papGpsRue');
+  var elDist = document.getElementById('papGpsDist');
+  var elUnit = document.getElementById('papGpsUnit');
+  if (el) el.textContent = (papEtapeActuelle + 1) + '. ' + etape.nom;
+  if (dist !== null && elDist && elUnit) {
+    if (dist >= 1000) {
+      elDist.textContent = (dist / 1000).toFixed(1);
+      elUnit.textContent = 'km';
+    } else {
+      elDist.textContent = Math.round(dist);
+      elUnit.textContent = 'm';
+    }
+  }
+}
+
+function papEtapeSuivante() {
+  if (papEtapeActuelle < papEtapes.length - 1) {
+    papEtapeActuelle++;
+    var e = papEtapes[papEtapeActuelle];
+    if (papMapInstance) papMapInstance.setView([e.lat, e.lng], 17);
+    papMajGpsBar(e, null);
+    document.getElementById('papGpsDist').textContent = '→';
+    document.getElementById('papGpsUnit').textContent = '';
+    papParler('Étape ' + (papEtapeActuelle + 1) + ': ' + e.nom);
+  }
+}
+
+function papEtapePrecedente() {
+  if (papEtapeActuelle > 0) {
+    papEtapeActuelle--;
+    var e = papEtapes[papEtapeActuelle];
+    if (papMapInstance) papMapInstance.setView([e.lat, e.lng], 17);
+    papMajGpsBar(e, null);
+    document.getElementById('papGpsDist').textContent = '→';
+    document.getElementById('papGpsUnit').textContent = '';
+  }
+}
+
+// Géocodage des rues
 function papGeocoderRues(rues) {
   const resultats = [];
   let termine = 0;
@@ -2570,15 +2721,15 @@ function papGeocoderRues(rues) {
           termine++;
           if (termine === rues.length) papAfficherMarqueurs(resultats);
         });
-    }, idx * 300); // 300ms entre chaque requête (respect rate limit Nominatim)
+    }, idx * 300);
   });
 }
 
 function papAfficherMarqueurs(resultats) {
   if (!papMapInstance || resultats.length === 0) return;
 
-  // Trier par index original
   resultats.sort(function(a, b) { return a.idx - b.idx; });
+  papEtapes = resultats;
 
   const points = [];
 
@@ -2586,36 +2737,41 @@ function papAfficherMarqueurs(resultats) {
     var latlng = [r.lat, r.lng];
     points.push(latlng);
 
-    // Marqueur numéroté gros et visible
+    // Gros marqueur numéroté bien visible sur satellite
     var numIcon = L.divIcon({
       className: '',
-      html: '<div class="pap-marker-label">' + (i + 1) + '</div>',
-      iconSize: [32, 32],
-      iconAnchor: [16, 16]
+      html: '<div class="pap-marker-label" style="width:38px;height:38px;font-size:20px;border:4px solid #fff;">' + (i + 1) + '</div>',
+      iconSize: [38, 38],
+      iconAnchor: [19, 19]
     });
 
     var marker = L.marker(latlng, { icon: numIcon }).addTo(papMapInstance);
 
-    // Tooltip avec nom de rue toujours visible
-    marker.bindTooltip('<b>' + (i + 1) + '.</b> ' + r.nom + ' <span style="color:#888;">(' + r.total + ' pers.)</span>', {
+    // Tooltip nom de rue (fond blanc, bien visible sur satellite)
+    marker.bindTooltip('<b>' + (i + 1) + '.</b> ' + r.nom + ' <span style="color:#888;">(' + r.total + ')</span>', {
       permanent: true,
-      direction: 'right',
-      offset: [18, 0],
+      direction: i % 2 === 0 ? 'right' : 'left',
+      offset: i % 2 === 0 ? [22, 0] : [-22, 0],
       className: 'pap-marker-name'
     });
   });
 
-  // Tracer l'itinéraire (ligne bleue entre les points)
+  // Itinéraire : ligne blanche épaisse + ligne rouge par-dessus
   if (points.length > 1) {
-    L.polyline(points, { color: '#1a3a6b', weight: 4, opacity: 0.8, dashArray: '10, 8' }).addTo(papMapInstance);
+    L.polyline(points, { color: '#ffffff', weight: 6, opacity: 0.9 }).addTo(papMapInstance);
+    L.polyline(points, { color: '#e74c3c', weight: 3, opacity: 1 }).addTo(papMapInstance);
   }
 
-  // Zoom sur tous les marqueurs
-  var group = L.featureGroup(papMapInstance._layers ? Object.values(papMapInstance._layers).filter(function(l) { return l.getLatLng; }) : []);
-  if (group.getLayers().length > 0) {
-    papMapInstance.fitBounds(group.getBounds().pad(0.15));
-  } else if (points.length > 0) {
-    papMapInstance.fitBounds(L.latLngBounds(points).pad(0.15));
+  // Zoom sur tout
+  if (points.length > 0) {
+    papMapInstance.fitBounds(L.latLngBounds(points).pad(0.2));
+  }
+
+  // Première étape dans la barre GPS
+  if (papEtapes.length > 0) {
+    papMajGpsBar(papEtapes[0], null);
+    document.getElementById('papGpsDist').textContent = '→';
+    document.getElementById('papGpsUnit').textContent = 'GO';
   }
 }
 
