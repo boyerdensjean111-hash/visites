@@ -212,7 +212,7 @@
 </div>
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v11</span> 🔥</div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v15</span> 🔥</div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -261,7 +261,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v14</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v15</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;">📜</button>
@@ -575,7 +575,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v14';
+const APP_VERSION = 'Firebase v15';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -2115,9 +2115,11 @@ function papParler(texte) {
 }
 
 // PAP Alert popup with optional voice
-function papAlert(icon, titre, msg, voiceMsg, callback) {
+function papAlert(icon, titre, msg, voiceMsg, callback, btnTexte) {
   // Remove old alerts
   document.querySelectorAll('.pap-alert, .pap-alert-overlay').forEach(e => e.remove());
+
+  papAlertCallback = callback || null;
 
   const overlay = document.createElement('div');
   overlay.className = 'pap-alert-overlay';
@@ -2127,18 +2129,19 @@ function papAlert(icon, titre, msg, voiceMsg, callback) {
   box.innerHTML = '<div class="pap-alert-icon">' + icon + '</div>' +
     '<div class="pap-alert-title">' + titre + '</div>' +
     '<div class="pap-alert-msg">' + msg + '</div>' +
-    '<button class="pap-alert-btn" onclick="fermerPapAlert()">OK 👍</button>';
+    '<button class="pap-alert-btn" onclick="fermerPapAlert()">' + (btnTexte || 'OK 👍') + '</button>';
 
   document.body.appendChild(overlay);
   document.body.appendChild(box);
 
   if (voiceMsg) papParler(voiceMsg);
 
-  // Auto close after 4s
-  setTimeout(fermerPapAlert, 4000);
+  // Auto close after 5s (with callback)
+  setTimeout(fermerPapAlert, 5000);
 
   overlay.onclick = fermerPapAlert;
 }
+let papAlertCallback = null;
 
 function fermerPapAlert() {
   document.querySelectorAll('.pap-alert, .pap-alert-overlay').forEach(e => {
@@ -2146,6 +2149,11 @@ function fermerPapAlert() {
     e.style.opacity = '0';
     setTimeout(() => e.remove(), 200);
   });
+  if (papAlertCallback) {
+    const cb = papAlertCallback;
+    papAlertCallback = null;
+    setTimeout(cb, 300);
+  }
 }
 
 // =====================================================
@@ -2479,6 +2487,32 @@ function papOuvrirBureau(bureau) {
   papParler(bureau + '. ' + stats.restant + ' personnes restantes.');
 }
 
+// CARTE: ouvre Google Maps avec les rues de la division
+function papOuvrirCarte(bureau, divIdx) {
+  const div = PAP_DATA[bureau].divisions[divIdx];
+  if (!div || !div.rues || div.rues.length === 0) return;
+
+  // Collecter 1 adresse unique par rue
+  const adresses = [];
+  div.rues.forEach(rue => {
+    if (rue.personnes && rue.personnes.length > 0) {
+      // Prendre la premiere adresse de la rue
+      const addr = rue.personnes[0].a;
+      if (addr) adresses.push(addr + ', La Plaine-des-Palmistes, Reunion');
+    }
+  });
+
+  if (adresses.length === 0) return;
+
+  // Construire URL Google Maps Directions
+  // Format: https://www.google.com/maps/dir/addr1/addr2/addr3/...
+  const base = 'https://www.google.com/maps/dir/';
+  const encoded = adresses.map(a => encodeURIComponent(a)).join('/');
+  const url = base + encoded;
+
+  window.open(url, '_blank');
+}
+
 // DIVISION VIEW: show streets and persons
 function papOuvrirDivision(bureau, divIdx) {
   papEtatActuel.bureau = bureau;
@@ -2537,7 +2571,17 @@ function papOuvrirDivision(bureau, divIdx) {
     rue: div.rues[0] ? div.rues[0].rue : ''
   }));
 
-  papParler(div.label + '. ' + ds.restant + ' personnes restantes.');
+  // Alerte carte itineraire automatique
+  const nbRues = div.rues.length;
+  const voixMsg = div.label + '! ' + nbRues + ' rues a visiter, ' + ds.restant + ' personnes t\'attendent. C\'est parti!';
+  papAlert(
+    '🗺️',
+    'TON ITINÉRAIRE',
+    '<b>' + div.label + '</b><br>' + nbRues + ' rues à visiter · ' + ds.restant + ' personnes restantes',
+    voixMsg,
+    function() { papOuvrirCarte(bureau, divIdx); },
+    "C'est parti ! 🚀"
+  );
 }
 
 function escapeQuotes(s) {
