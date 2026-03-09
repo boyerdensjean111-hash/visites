@@ -176,6 +176,17 @@
   .pap-carte-switch { display:flex; gap:4px; }
   .pap-carte-switch button { background:rgba(255,255,255,0.15); border:none; color:white; padding:5px 10px; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer; }
   .pap-carte-switch button.active { background:rgba(255,255,255,0.4); }
+  .pap-carte-panel { position:absolute; bottom:0; left:0; right:0; z-index:810; background:white; border-radius:16px 16px 0 0; box-shadow:0 -4px 20px rgba(0,0,0,0.3); max-height:55vh; overflow-y:auto; animation:slideUp .3s ease; }
+  .pap-carte-panel-header { background:var(--bleu); color:white; padding:12px 16px; border-radius:16px 16px 0 0; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:1; }
+  .pap-carte-panel-header h4 { font-family:'Bebas Neue',sans-serif; font-size:18px; margin:0; letter-spacing:.5px; }
+  .pap-carte-panel-close { background:rgba(255,255,255,0.2); border:none; color:white; width:30px; height:30px; border-radius:50%; font-size:16px; cursor:pointer; }
+  .pap-carte-personne { padding:12px 16px; border-bottom:1px solid var(--gris); display:flex; align-items:center; gap:10px; cursor:pointer; }
+  .pap-carte-personne:active { background:var(--gris); }
+  .pap-carte-personne .icon { font-size:20px; flex-shrink:0; }
+  .pap-carte-personne .info { flex:1; }
+  .pap-carte-personne .nom { font-weight:700; font-size:14px; }
+  .pap-carte-personne .addr { font-size:11px; color:var(--texte2); }
+  .pap-carte-personne .go { font-size:20px; color:var(--bleu-clair); }
   .btn-legal { position:absolute; bottom:20px; right:20px; background:rgba(255,255,255,0.15); color:rgba(255,255,255,0.7); border:none; padding:8px 14px; border-radius:20px; font-size:11px; cursor:pointer; }
   .firebase-badge { background:linear-gradient(135deg,#FF9800,#F44336); color:white; font-size:9px; font-weight:700; padding:2px 6px; border-radius:4px; margin-left:4px; letter-spacing:.5px; }
   .csv-list { list-style:none; padding:0; }
@@ -242,7 +253,7 @@
 </div>
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v21</span> 🔥</div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v24</span> 🔥</div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -291,7 +302,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v21</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v24</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;">📜</button>
@@ -605,7 +616,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v21';
+const APP_VERSION = 'Firebase v24';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -1043,7 +1054,7 @@ function afficherFiche(p) {
   const cOpts = CANDIDATS.map(c => '<option value="' + c + '" ' + (p.candidatActuel === c ? 'selected' : '') + '>' + (c || '-- Choisir --') + '</option>').join('');
   const conflitInfo = isVisite && p.militant && p.militant !== currentMilitant ? '<div class="alerte-conflit"><div class="titre">⚠️ Déjà visité par ' + p.militant + '</div><div class="detail">' + (p.dateDerniereVisite || '') + (p.candidatActuel ? ' · ' + p.candidatActuel : '') + '</div></div>' : '';
   const headerBg = isFicheSecondaire ? '#e67e22' : 'var(--bleu)';
-  const btnRetourHtml = isFicheSecondaire ? '' : (papFromPAP ? '<button class="btn-retour" onclick="retourPAP()">← Retour PAP</button>' : '<button class="btn-retour" onclick="retourRecherche()">← Retour</button>');
+  const btnRetourHtml = isFicheSecondaire ? '' : (papFromCarte ? '<button class="btn-retour" onclick="retourCarte()">← Retour Carte 🗺️</button>' : (papFromPAP ? '<button class="btn-retour" onclick="retourPAP()">← Retour PAP</button>' : '<button class="btn-retour" onclick="retourRecherche()">← Retour</button>'));
   const btnRetourPrincipale = isFicheSecondaire ? '<button onclick="retourFichePrincipale()" style="display:block;width:100%;margin-top:10px;background:var(--bleu);color:white;border:none;border-radius:10px;padding:10px 16px;font-size:14px;font-weight:700;cursor:pointer;">🏠 Retour fiche principale</button>' : '';
   $('saisieContenu').innerHTML = btnRetourHtml + conflitInfo + '<div class="fiche"><div class="fiche-header" style="background:' + headerBg + ';"><div style="display:flex;justify-content:space-between;align-items:flex-start;"><div class="nom">' + p.nom + '</div><div style="font-size:14px;color:white;font-weight:600;">ID — ' + p.id + '</div></div><div class="prenom">' + p.prenom + '</div>' + (p.nomUsage && p.nomUsage !== p.nom ? '<div class="nom-usage">Usage : ' + p.nomUsage + '</div>' : '') + (isVisite ? '<div class="badge-deja-visite">✅ Visité' + (p.militant ? ' par ' + p.militant.split(' ').pop() : '') + (p.candidatActuel ? ' · ' + p.candidatActuel : '') + '</div>' : '') + btnRetourPrincipale + '</div><div class="fiche-body">' + (p.sexe ? '<div class="fiche-row"><span class="label">Sexe</span><span class="value">' + (p.sexe === 'M' ? '👨 Masculin' : '👩 Féminin') + '</span></div>' : '') + (p.age ? '<div class="fiche-row"><span class="label">Âge</span><span class="value">' + p.age + ' ans</span></div>' : '') + '<div class="fiche-row"><span class="label">Adresse</span><span class="value">' + adresse + '</span></div><div class="fiche-row"><span class="label">Bureau 🏢</span><span class="value">' + (p.bureau || '—') + '</span></div><div class="fiche-row"><span class="label">Statut</span><span class="value"><span class="statut-badge ' + (p.statut === 'Visité' ? 'statut-visite' : 'statut-non') + '">' + (p.statut === 'Visité' ? '✓ Visité' : p.statut === 'Absent' ? '🚪 Absent' : p.statut === 'Opposition' ? '🚫 Opposition' : 'Non visité') + '</span></span></div>' + (p.dateDerniereVisite ? '<div class="fiche-row"><span class="label">Dernière visite</span><span class="value">' + p.dateDerniereVisite + '</span></div>' : '') + '</div></div>' + (isFicheSecondaire ? '' : genererCoResidents(p)) + '<div class="form-section"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--gris);"><h3 style="font-size:13px;font-weight:700;color:var(--bleu);text-transform:uppercase;letter-spacing:.5px;margin:0;padding:0;border:none;">✏️ Enregistrer une visite</h3>' + ((currentRole === 'admin' || currentRole === 'superviseur' || currentRole === 'responsable bureaux' || currentRole === 'manager') ? '<button onclick="demanderReinitialisation()" style="background:#c0392b;color:white;border:none;border-radius:8px;width:36px;height:36px;font-size:18px;cursor:pointer;" title="Réinitialiser">🗑️</button>' : '') + '</div><div class="field"><label>Statut</label><select id="fStatut"><option value="Visité" ' + (p.statut === 'Visité' ? 'selected' : '') + '>✅ Visité</option><option value="Non visité" ' + (p.statut === 'Non visité' || !p.statut ? 'selected' : '') + '>❌ Non visité</option><option value="Absent" ' + (p.statut === 'Absent' ? 'selected' : '') + '>🚪 Absent</option><option value="Opposition" ' + (p.statut === 'Opposition' ? 'selected' : '') + '>🚫 Opposition</option></select></div><div class="field"><label>Candidat soutenu</label><select id="fCandidat">' + cOpts + '</select></div><div class="field"><label>Notes</label><textarea id="fNotes" placeholder="Remarques...">' + (p.notes || '') + '</textarea></div><div class="field"><label>📇 Contact</label><div style="display:flex;gap:8px;"><div style="flex:1;"><input type="email" id="fMail" placeholder="📧 Mail" value="' + (p.mail || '') + '"></div><div style="flex:1;"><input type="tel" id="fTel" placeholder="📞 Tél" value="' + (p.tel || '') + '"></div></div></div>' + ((currentRole === 'admin' || currentRole === 'superviseur') ? '<div class="field"><label>Observation</label><textarea id="fObservation" placeholder="Observation...">' + (p.observation || '') + '</textarea></div>' : '') + '<button class="btn-vert" onclick="enregistrerVisite()">✅ Enregistrer</button></div>';
 }
@@ -1131,6 +1142,11 @@ async function executerEnregistrement() {
     if (isFicheSecondaire) {
       showToast('🔥 ' + currentPersonne.nom + ' ' + currentPersonne.prenom + ' enregistré !', 'succes');
       setTimeout(() => retourFichePrincipale(), 800);
+      return;
+    }
+    if (papFromCarte) {
+      showToast('🔥 Enregistré ! Retour carte...', 'succes');
+      setTimeout(function() { retourCarte(); }, 1000);
       return;
     }
     afficherFiche(currentPersonne);
@@ -2076,6 +2092,8 @@ const PAP_BUREAU_ICONS = { 'B1': '🏛️', 'B2': '🏘️', 'B3': '🎭', 'B4':
 let papSonActif = true;
 let papEtatActuel = { bureau: null, division: null, rue: null };
 let papFromPAP = false; // flag to know if saisie was opened from PAP
+let papFromCarte = false; // flag: saisie ouverte depuis la carte
+let papCarteContext = null; // { bureau, divIdx, rueIdx } pour retour carte
 
 // Voice synthesis — voix douce et naturelle
 let papVoixChoisie = null;
@@ -2572,7 +2590,7 @@ function papOuvrirCarte(bureau, divIdx) {
   document.body.appendChild(overlay);
 
   setTimeout(function() {
-    papMapInstance = L.map('papMapContainer', { zoomControl: false }).setView([-21.137, 55.594], 16);
+    papMapInstance = L.map('papMapContainer', { zoomControl: false }).setView([-21.135, 55.625], 15);
 
     // Vue satellite par défaut (Esri World Imagery - gratuit)
     papTuileSat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
@@ -2724,31 +2742,71 @@ function papEtapePrecedente() {
   }
 }
 
-// Géocodage des rues
+// Coordonnées pré-géocodées des rues (BAN - Base Adresse Nationale)
+const PAP_COORDS={"LLÉE DES BÉGONIAS":[-21.140255,55.621056],"RUE DES HORTENSIAS":[-21.139609,55.619975],"RUE LUCIEN BOYER":[-21.143864,55.618118],"RUE LUC BOYER":[-21.138774,55.606703],"RUE DES GLAÏEULS":[-21.136693,55.617358],"RUE DES GLAIEULS":[-21.136693,55.617358],"LLÉE YLANG YLANG":[-21.137852,55.618636],"RUE RICHARD ADOLPHE":[-21.140212,55.616399],"RUE ARZAL ADOLPHE":[-21.138266,55.620855],"RUE DES MIMOSAS":[-21.139238,55.618296],"RUE DELMAS HOAREAU":[-21.135843,55.604846],"RUE AMÉDÉE DORO":[-21.147081,55.615671],"RUE EUGÈNE ROCHETAING":[-21.144507,55.613624],"RUELLE ARTHUR DEURVEILHER":[-21.140605,55.612353],"RUE DIEUDONNÉ":[-21.145932,55.61694],"RUE MARC HENRI PINOT":[-21.145837,55.611004],"IMPASSE JH ALEXIS ARHEL":[-21.137755,55.604515],"RUE JEAN THEVENIN":[-21.141536,55.613591],"RUE JEAN THÉVENIN":[-21.141536,55.613591],"RUE ETIENNE LAFEUILLADE":[-21.139662,55.612044],"RUE OLIVIER PAYET":[-21.140664,55.611984],"RUE HENRI PIGNOLET":[-21.140384,55.604759],"RUE DES REMPARTS":[-21.135639,55.605776],"IMPASSE HERVÉ THAMON":[-21.143548,55.624493],"RUE EMILE EVAN":[-21.160642,55.617611],"IMPASSE DES CAMÉLIAS":[-21.163967,55.623158],"RUE LOUIS RAPHAËL MAILLOT":[-21.148858,55.601809],"RUE DES TROËNES":[-21.15795,55.635464],"LLÉE FOND DE RAISIN":[-21.156213,55.611879],"LLÉE DES CLÉM":[-21.148751,55.603216],"IMPASSE DES LONGOSES":[-21.147267,55.600701],"RUE DU SACRÉ CŒUR":[-21.15082,55.613707],"RUE EDMOND ROSTAND":[-21.150102,55.599199],"RUELLE CARCANY":[-21.149006,55.599918],"LLÉE DES CHÊNES":[-21.148751,55.603216],"RUE DES GRÉVILÉAS":[-21.154086,55.608409],"RUELLE DES PRUNES":[-21.154749,55.607777],"RUE BOUVIER DELOZIER":[-21.150254,55.615221],"RUE JOSEPH BARET":[-21.162282,55.623047],"RUE DE LA RÉPUBLIQUE":[-21.138461,55.625243],"RUE BOIS DE GAULETTE":[-21.152601,55.631827],"IMPASSE DES BRINGELLIERS":[-21.146768,55.621162],"LLÉE DE L'ALOES":[-21.144414,55.626547],"LLÉE DE L'ALOÈS":[-21.144414,55.626547],"RUE DONAT ROBERT":[-21.158098,55.630223],"IMPASSE DES MERLES":[-21.152621,55.618353],"RUE LOUIS PARNY":[-21.146101,55.619282],"RUE THÉOBALD GINET":[-21.150647,55.623351],"RUE ROBERT BERTIN":[-21.150274,55.620228],"LLÉE DES MUSCADIERS":[-21.146818,55.621888],"RUE DES CITRONNIERS":[-21.151414,55.618366],"RUE FLOR":[-21.133466,55.627717],"RUE BERTIN ROBERT":[-21.150274,55.620228],"RUE FRÉMICOURT PERRAULT":[-21.144365,55.627801],"RUE DE LA BUTTE":[-21.142267,55.623412],"RUE EDOUARD BIENVENU":[-21.152087,55.617347],"RUE DES C":[-21.139858,55.631146],"LLÉE DES TRÈFLES":[-21.142658,55.623169],"RUE GEORGES LEBEAU":[-21.146347,55.622485],"RUE THÉO MARIANNE":[-21.14385,55.62268],"RUE BERNARD GINET":[-21.161245,55.627745],"CHEMIN BRAS PATIENCE":[-21.127441,55.625905],"RUE BRAS PATIENCE":[-21.127441,55.625905],"RUELLE CASCADE BIBERON":[-21.12959,55.632041],"RUE OSCAR TURPIN":[-21.131817,55.624727],"RUE DU VIEUX CLOCHER":[-21.13225,55.629561],"RUELLE DE L'ESCALIER":[-21.133416,55.631401],"LLÉE MARCEAU ROBERT":[-21.131702,55.625815],"RUE LE TORT":[-21.129716,55.630437],"RUELLE TEXTOR":[-21.130966,55.629773],"RUE DE L'EGLISE":[-21.132877,55.627083],"RUELLE TEXTOR LE CLOS RENAISSANCE":[-21.130966,55.629773],"RUELLE DES ACACIAS":[-21.133407,55.632838],"RUE ADOLPHE ARZAL":[-21.138266,55.620855],"RUE ALEXIS DE VILLENEUVE":[-21.13258,55.632825],"RUE DES CHRYSANTHÈMES":[-21.130067,55.629774],"IMPASSE BOIS DE SABLE":[-21.135772,55.629357],"RUE ETIENNETTE":[-21.130946,55.632553],"RUE DU PÈRE COUPY":[-21.127259,55.64327],"RUE DES NÉNUPHARS":[-21.12917,55.6303],"RUE TULLY CLARIVOT":[-21.130373,55.630648],"RUE DES BLEUETS":[-21.129702,55.628382],"RUE DE LA SHLMR":[-21.133466,55.627717],"RUE AIMÉ PAYET":[-21.131996,55.627793],"RUE AIMÉ PAYET -":[-21.131996,55.627793],"RUE PIERRE JASMIN":[-21.134168,55.631598],"LLÉE SAINT EXPÉDIT":[-21.131701,55.628986],"RUE JACQUES BRUNET":[-21.130637,55.628375],"LLÉE DU SUD":[-21.133391,55.625689],"VENUE DU STADE":[-21.133238,55.622325],"RUE GASTON CROCHET":[-21.136329,55.629621],"RUE LOUIS PADRE":[-21.143676,55.629978],"RUE RAPHAËL BABET":[-21.132374,55.635407],"IMPASSE SOLANDRA":[-21.135781,55.634382],"RUE DES CYPRÈS":[-21.139858,55.631146],"IMPASSE DES CAFÉIERS":[-21.137748,55.628417],"IMPASSE RIMBAUD":[-21.140304,55.628868],"RUE ARISTIDE PATU DE ROSEMOND":[-21.135521,55.628078],"LLÉE DES CÈDRES":[-21.142543,55.629324],"RUE DES MOUTARDIERS":[-21.139017,55.623977],"IMPASSE STANISLAS MARCHAND":[-21.142027,55.627091],"IMPASSE DES NÈFLES":[-21.142315,55.62747],"IMPASSE DES LATANIERS":[-21.135781,55.634382],"RUE DES EUCALYPTUS":[-21.139191,55.632622],"RUE DES LANTERNES":[-21.138562,55.632632],"RUE DES FUCHSIAS":[-21.142611,55.629718],"RUE ALFRED DE PEINDRAY D'AMBELLE":[-21.136193,55.632708],"IMPASSE DES MOUTARDIERS":[-21.138927,55.624519],"IMPASSE DES VACOAS":[-21.13927,55.626048],"IMPASSE BELLE DE NUIT":[-21.142558,55.634275],"LLÉE DES CORBEILLES D'OR":[-21.132872,55.634688],"IMPASSE DES JACINTHES":[-21.140466,55.629135],"IMPASSE DES CANISTELS":[-21.140875,55.626119],"RUE DE LA CROIX ROUGE":[-21.137002,55.6305],"LLÉE DES AGAPANTHES":[-21.140008,55.627173],"IMPASSE DES BANANIERS":[-21.142117,55.625983],"LLÉE DES ANÉMONES":[-21.139864,55.626222],"RUE DU GYMNASE":[-21.138569,55.625458],"RUE DES CAPUCINES":[-21.13959,55.633028],"RUE LOUIS CARRON":[-21.13983,55.629104],"RUE DES SORBIERS":[-21.129167,55.636541],"RUE THOMAS ROBERT":[-21.124923,55.637061],"RUE ANACLET BEGUE":[-21.115543,55.6458],"LLÉE JOCELYN ERUDEL":[-21.130373,55.633628],"ALLÉE BOIS DE COULEUR":[-21.127289,55.64432],"RUE LOUIS DECOTTE":[-21.12676,55.635209],"RUE ROBERT MARCELLY":[-21.129354,55.63913],"IMPASSE DES FIGUES":[-21.128492,55.64094],"ALLÉE DES FRAMBOISIERS":[-21.124264,55.642309],"IMPASSE DES VERVEINES":[-21.126644,55.639104],"RUE DES CRISTALLINES":[-21.129778,55.637162],"IMPASSE EUGÈNE ROBERT":[-21.124923,55.637061],"RUE MARIE EMILIENNE MAILLOT":[-21.122443,55.642808],"LLÉE SAINTE AGATHE":[-21.125684,55.63753],"RUE ROGER MURAT":[-21.123384,55.641328],"IMPASSE DES DAHLIAS":[-21.125637,55.639307],"IMPASSE DES GERBERAS":[-21.123827,55.638452],"RUE DES FANJANS":[-21.125509,55.642598],"IMPASSE MAGNOLIA":[-21.130846,55.638716],"RUE DES ROMARINS":[-21.123562,55.639378],"IMPASSE FRANGIPANNIER":[-21.121992,55.640947],"RUE EMILE RITOU":[-21.12383,55.641975],"RUE DES ARUMS":[-21.120918,55.638116],"RUE DES SONGES":[-21.127373,55.639852],"RUE DUREAU":[-21.127259,55.64327]};
+
+let papRuesNonTrouvees = [];
+
 function papGeocoderRues(rues) {
   const resultats = [];
-  let termine = 0;
+  papRuesNonTrouvees = [];
 
   rues.forEach(function(rue, idx) {
-    const query = rue.rue + ', La Plaine-des-Palmistes, La Réunion';
-    const url = 'https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(query) + '&limit=1';
+    var coords = PAP_COORDS[rue.rue];
+    if (coords) {
+      resultats.push({ idx: idx, lat: coords[0], lng: coords[1], nom: rue.rue, total: rue.personnes.length, verifie: true });
+    } else {
+      papRuesNonTrouvees.push(rue.rue);
+    }
+  });
+
+  papAfficherMarqueurs(resultats);
+  papAfficherVerification(resultats.length, rues.length, papRuesNonTrouvees);
+}
+
+// Affiche le résultat de vérification sur la carte
+function papAfficherVerification(trouvees, total, nonTrouvees) {
+  var elRue = document.getElementById('papGpsRue');
+  var elDist = document.getElementById('papGpsDist');
+  var elUnit = document.getElementById('papGpsUnit');
+
+  if (nonTrouvees.length === 0) {
+    // Tout trouvé !
+    if (elRue) elRue.innerHTML = '✅ ' + total + '/' + total + ' rues localisées';
+    if (elDist) elDist.textContent = '✓';
+    if (elUnit) elUnit.textContent = '';
+    papParler(total + ' rues trouvées ! Carte prête.');
+    setTimeout(function() {
+      if (papEtapes.length > 0) papMajGpsBar(papEtapes[0], null);
+    }, 3000);
+  } else {
+    // Certaines rues non trouvées
+    if (elRue) elRue.innerHTML = '⚠️ ' + trouvees + '/' + total + ' rues trouvées';
+    if (elDist) elDist.textContent = nonTrouvees.length;
+    if (elUnit) elUnit.textContent = 'manq.';
+    papParler(trouvees + ' rues trouvées sur ' + total + '. ' + nonTrouvees.length + ' rues introuvables.');
+
+    // Bouton pour voir les rues manquantes
+    var bar = document.getElementById('papGpsBar');
+    if (bar) {
+      var btn = document.createElement('button');
+      btn.className = 'pap-gps-btn';
+      btn.textContent = '⚠️';
+      btn.title = 'Rues non trouvées';
+      btn.onclick = function() { papVoirRuesManquantes(nonTrouvees); };
+      bar.querySelector('.pap-gps-btns').appendChild(btn);
+    }
 
     setTimeout(function() {
-      fetch(url)
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-          if (data && data.length > 0) {
-            resultats.push({ idx: idx, lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon), nom: rue.rue, total: rue.personnes.length });
-          }
-          termine++;
-          if (termine === rues.length) papAfficherMarqueurs(resultats);
-        })
-        .catch(function() {
-          termine++;
-          if (termine === rues.length) papAfficherMarqueurs(resultats);
-        });
-    }, idx * 300);
-  });
+      if (papEtapes.length > 0) papMajGpsBar(papEtapes[0], null);
+    }, 4000);
+  }
+}
+
+// Popup avec la liste des rues non trouvées
+function papVoirRuesManquantes(rues) {
+  var msg = rues.map(function(r, i) { return (i + 1) + '. ' + r; }).join('<br>');
+  papAlert('⚠️', 'RUES NON TROUVÉES', msg + '<br><br><small>Ces rues ne sont pas dans OpenStreetMap. La carte est quand même utilisable avec les rues trouvées.</small>', null);
 }
 
 // Algorithme plus proche voisin : trie les étapes pour éviter les croisements
@@ -2800,6 +2858,14 @@ function papAfficherMarqueurs(resultats) {
       offset: i % 2 === 0 ? [22, 0] : [-22, 0],
       className: 'pap-marker-name'
     });
+
+    // Clic sur marqueur → ouvre le panel personnes de cette rue
+    (function(etape, index) {
+      marker.on('click', function() {
+        papEtapeActuelle = index;
+        papOuvrirPanelRue(etape);
+      });
+    })(r, i);
   });
 
   // Tracer la route RÉELLE via OSRM (suit les vraies rues)
@@ -2846,6 +2912,140 @@ function papTracerRouteReelle(points) {
       L.polyline(points, { color: '#ffffff', weight: 6, opacity: 0.9 }).addTo(papMapInstance);
       L.polyline(points, { color: '#e74c3c', weight: 3, opacity: 1 }).addTo(papMapInstance);
     });
+}
+
+// =====================================================
+// CARTE → WORKFLOW : Panel rue + Fiche + Retour carte
+// =====================================================
+
+// Ouvre le panel en bas de la carte avec la liste des personnes de la rue
+function papOuvrirPanelRue(etape) {
+  // Fermer ancien panel
+  document.querySelectorAll('.pap-carte-panel').forEach(function(e) { e.remove(); });
+
+  // Trouver la rue dans PAP_DATA
+  var bureau = papEtatActuel.bureau;
+  var divIdx = papEtatActuel.division;
+  if (!bureau || divIdx === null) return;
+  var div = PAP_DATA[bureau].divisions[divIdx];
+  if (!div) return;
+
+  var rueData = null;
+  var rueIdx = -1;
+  for (var i = 0; i < div.rues.length; i++) {
+    if (div.rues[i].rue === etape.nom) { rueData = div.rues[i]; rueIdx = i; break; }
+  }
+  if (!rueData) return;
+
+  var rs = papStatsRue(rueData);
+
+  var panel = document.createElement('div');
+  panel.className = 'pap-carte-panel';
+
+  var html = '<div class="pap-carte-panel-header">' +
+    '<h4>📍 ' + etape.nom + ' (' + rs.done + '/' + rs.total + ')</h4>' +
+    '<button class="pap-carte-panel-close" onclick="papFermerPanel()">✕</button>' +
+    '</div>';
+
+  rueData.personnes.forEach(function(p, pIdx) {
+    var statut = papGetStatut(p.n, p.p);
+    var icon = statut === 'Visité' ? '✅' : statut === 'Absent' ? '🚪' : statut === 'Opposition' ? '🚫' : '👤';
+    var done = statut !== 'Non visité';
+
+    html += '<div class="pap-carte-personne" style="' + (done ? 'opacity:.5;' : '') + '" onclick="papOuvrirFicheDepuisCarte(\'' + escapeQuotes(p.n) + '\',\'' + escapeQuotes(p.p) + '\',' + rueIdx + ')">' +
+      '<div class="icon">' + icon + '</div>' +
+      '<div class="info">' +
+        '<div class="nom">' + p.n + ' ' + p.p + '</div>' +
+        '<div class="addr">' + p.a + '</div>' +
+      '</div>' +
+      '<div class="go">' + (done ? '' : '→') + '</div>' +
+    '</div>';
+  });
+
+  panel.innerHTML = html;
+  document.querySelector('.pap-carte-overlay').appendChild(panel);
+
+  papParler(etape.nom + '. ' + rs.restant + ' personnes restantes.');
+}
+
+function papFermerPanel() {
+  document.querySelectorAll('.pap-carte-panel').forEach(function(e) {
+    e.style.transition = 'transform .2s';
+    e.style.transform = 'translateY(100%)';
+    setTimeout(function() { e.remove(); }, 200);
+  });
+}
+
+// Ouvre la fiche d'une personne depuis la carte (masque la carte, ouvre saisie)
+function papOuvrirFicheDepuisCarte(nom, prenom, rueIdx) {
+  papFromCarte = true;
+  papCarteContext = {
+    bureau: papEtatActuel.bureau,
+    divIdx: papEtatActuel.division,
+    rueIdx: rueIdx
+  };
+
+  // Masquer la carte (pas la détruire)
+  var overlay = document.querySelector('.pap-carte-overlay');
+  if (overlay) overlay.style.display = 'none';
+
+  // Utiliser le matching PAP pour trouver la personne
+  papFromPAP = true;
+  papEtatActuel.rue = rueIdx;
+  papCliquerPersonne(nom, prenom, papEtatActuel.bureau, papEtatActuel.division, rueIdx);
+}
+
+// Retour sur la carte après enregistrement
+function retourCarte() {
+  papFromCarte = false;
+  papFromPAP = false;
+
+  // Alertes motivation
+  if (currentPersonne && papCarteContext) {
+    var bureau = papCarteContext.bureau;
+    var divIdx = papCarteContext.divIdx;
+    var rueIdx = papCarteContext.rueIdx;
+    var div = PAP_DATA[bureau].divisions[divIdx];
+
+    if (div && div.rues[rueIdx]) {
+      var rue = div.rues[rueIdx];
+      var rs = papStatsRue(rue);
+      var ds = papStatsDivision(div);
+
+      if (rs.restant === 0) {
+        papAlert('🏆', 'RUE TERMINÉE !', rue.rue + ' ✅ complète !<br>Passe au marqueur suivant !',
+          'Rue terminée ! Excellent ! Passe au marqueur suivant.');
+      } else {
+        papAlert('👏', 'BRAVO !', 'Encore ' + rs.restant + ' dans ' + rue.rue,
+          'Bravo ! Encore ' + rs.restant + ' personne' + (rs.restant > 1 ? 's' : '') + '.');
+      }
+
+      if (ds.restant === 0) {
+        setTimeout(function() {
+          papAlert('⭐', 'DIVISION COMPLÈTE !', div.label + ' terminée ! 🎊',
+            'Division complète ! Tu es un champion !');
+        }, 4500);
+      }
+    }
+  }
+
+  // Réafficher la carte
+  var overlay = document.querySelector('.pap-carte-overlay');
+  if (overlay) {
+    overlay.style.display = 'flex';
+    // Rafraîchir le panel rue si ouvert
+    if (papEtapes.length > papEtapeActuelle) {
+      papOuvrirPanelRue(papEtapes[papEtapeActuelle]);
+    }
+  } else {
+    // Carte détruite, rouvrir
+    showPage('pap');
+    if (papCarteContext) {
+      papOuvrirDivision(papCarteContext.bureau, papCarteContext.divIdx);
+    }
+  }
+
+  papCarteContext = null;
 }
 
 
