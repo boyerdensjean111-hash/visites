@@ -165,6 +165,32 @@
   .csv-progress { height:4px; background:#e0e4ea; border-radius:2px; margin-top:8px; overflow:hidden; display:none; }
   .csv-progress-fill { height:100%; background:var(--vert); border-radius:2px; transition:width .3s; width:0%; }
   .csv-count { font-size:11px; color:var(--vert); font-weight:600; margin-top:4px; display:none; }
+  /* PAP Styles */
+  .pap-bureaux { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px; }
+  .pap-bureau-btn { background:white; border:2px solid #e0e4ea; border-radius:14px; padding:16px 12px; text-align:center; cursor:pointer; transition:all .2s; }
+  .pap-bureau-btn:active { transform:scale(0.97); }
+  .pap-bureau-btn.selected { border-color:var(--bleu-clair); background:linear-gradient(135deg,#eef2ff,#dce6ff); }
+  .pap-bureau-num { font-family:'Bebas Neue',sans-serif; font-size:28px; color:var(--bleu); }
+  .pap-bureau-secteur { font-size:11px; color:var(--texte2); margin-top:2px; }
+  .pap-bureau-count { font-size:12px; font-weight:700; color:var(--vert); margin-top:4px; }
+  .pap-division-card { background:white; border-radius:12px; padding:14px; margin-bottom:8px; box-shadow:0 1px 4px rgba(0,0,0,0.07); cursor:pointer; display:flex; align-items:center; justify-content:space-between; }
+  .pap-division-card:active { transform:scale(0.98); }
+  .pap-rue-header { background:linear-gradient(135deg,var(--bleu),var(--bleu-clair)); color:white; border-radius:10px; padding:10px 14px; margin:12px 0 8px; font-size:13px; font-weight:700; }
+  .pap-personne { background:white; border-radius:10px; padding:12px 14px; margin-bottom:6px; box-shadow:0 1px 4px rgba(0,0,0,0.07); cursor:pointer; display:flex; align-items:center; gap:10px; border-left:4px solid #e0e4ea; }
+  .pap-personne:active { transform:scale(0.98); }
+  .pap-personne.visite { border-left-color:var(--vert); opacity:.5; }
+  .pap-personne.absent { border-left-color:var(--orange); opacity:.5; }
+  .pap-personne.opposition { border-left-color:var(--rouge); opacity:.5; }
+  .pap-progress { height:8px; background:#e0e4ea; border-radius:4px; overflow:hidden; margin-top:6px; }
+  .pap-progress-fill { height:100%; border-radius:4px; transition:width .4s ease; }
+  .pap-alert { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:9000; background:white; border-radius:20px; padding:30px 24px; text-align:center; box-shadow:0 15px 60px rgba(0,0,0,0.4); animation:papAlertIn .4s ease; max-width:320px; width:90%; }
+  @keyframes papAlertIn { from { opacity:0; transform:translate(-50%,-50%) scale(0.7); } to { opacity:1; transform:translate(-50%,-50%) scale(1); } }
+  .pap-alert-icon { font-size:50px; margin-bottom:10px; }
+  .pap-alert-title { font-family:'Bebas Neue',sans-serif; font-size:24px; color:var(--bleu); margin-bottom:6px; }
+  .pap-alert-msg { font-size:14px; color:var(--texte2); line-height:1.5; margin-bottom:16px; }
+  .pap-alert-btn { background:var(--bleu-clair); color:white; border:none; border-radius:10px; padding:12px 24px; font-family:'DM Sans',sans-serif; font-size:14px; font-weight:600; cursor:pointer; }
+  .pap-alert-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:8999; animation:fadeIn .2s; }
+  .pap-son-toggle { display:flex; align-items:center; gap:8px; background:white; border-radius:20px; padding:6px 14px; font-size:12px; font-weight:600; color:var(--texte2); box-shadow:0 1px 4px rgba(0,0,0,0.1); cursor:pointer; border:none; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
@@ -186,7 +212,7 @@
 </div>
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v9</span> 🔥</div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v11</span> 🔥</div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -235,7 +261,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v9</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v12</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;">📜</button>
@@ -270,6 +296,9 @@
     <div id="saisieContenu">
       <div class="vide"><div style="font-size:40px;margin-bottom:10px;">🔍</div>Recherchez d'abord une personne</div>
     </div>
+  </div>
+  <div class="page" id="page-pap">
+    <div id="papContenu"></div>
   </div>
   <div class="page" id="page-stats">
     <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
@@ -546,7 +575,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v9';
+const APP_VERSION = 'Firebase v12';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -833,7 +862,9 @@ function seConnecter() {
 }
 
 function mettreAJourOnglets() {
-  document.querySelectorAll('.tab[data-page="stats"], .tab[data-page="observations"], .tab[data-page="admin"], .tab[data-page="csv"]').forEach(t => t.remove());
+  document.querySelectorAll('.tab[data-page="stats"], .tab[data-page="observations"], .tab[data-page="admin"], .tab[data-page="csv"], .tab[data-page="pap"]').forEach(t => t.remove());
+  // PAP tab for everyone
+  ajouterOngletPAP();
   if (currentRole === 'superviseur' || currentRole === 'admin' || currentRole === 'responsable bureaux') ajouterOnglet('stats', '📊 Stats');
   if (currentRole === 'superviseur' || currentRole === 'admin') ajouterOnglet('observations', '📝 Obs');
   if (currentRole === 'admin') ajouterOnglet('admin', '👁️ Admin');
@@ -864,7 +895,7 @@ function confirmerDeconnexion() {
   fermerModal('modalDeconnexion');
   arreterListenersFirebase();
   if (currentMilitant) db.ref('connectes/' + sanitizeKey(currentMilitant)).remove();
-  document.querySelectorAll('.tab[data-page="stats"], .tab[data-page="admin"], .tab[data-page="observations"]').forEach(t => t.remove());
+  document.querySelectorAll('.tab[data-page="stats"], .tab[data-page="admin"], .tab[data-page="observations"], .tab[data-page="pap"]').forEach(t => t.remove());
   currentMilitant = null; currentRole = 'militant'; currentPersonne = null; pinSaisi = ''; statsCache = null; adminCache = null;
   majDots(); $('loginErreur').textContent = '';
   $('loginNom').value = ''; remplirSelectMilitants();
@@ -981,7 +1012,7 @@ function afficherFiche(p) {
   const cOpts = CANDIDATS.map(c => '<option value="' + c + '" ' + (p.candidatActuel === c ? 'selected' : '') + '>' + (c || '-- Choisir --') + '</option>').join('');
   const conflitInfo = isVisite && p.militant && p.militant !== currentMilitant ? '<div class="alerte-conflit"><div class="titre">⚠️ Déjà visité par ' + p.militant + '</div><div class="detail">' + (p.dateDerniereVisite || '') + (p.candidatActuel ? ' · ' + p.candidatActuel : '') + '</div></div>' : '';
   const headerBg = isFicheSecondaire ? '#e67e22' : 'var(--bleu)';
-  const btnRetourHtml = isFicheSecondaire ? '' : '<button class="btn-retour" onclick="retourRecherche()">← Retour</button>';
+  const btnRetourHtml = isFicheSecondaire ? '' : (papFromPAP ? '<button class="btn-retour" onclick="retourPAP()">← Retour PAP</button>' : '<button class="btn-retour" onclick="retourRecherche()">← Retour</button>');
   const btnRetourPrincipale = isFicheSecondaire ? '<button onclick="retourFichePrincipale()" style="display:block;width:100%;margin-top:10px;background:var(--bleu);color:white;border:none;border-radius:10px;padding:10px 16px;font-size:14px;font-weight:700;cursor:pointer;">🏠 Retour fiche principale</button>' : '';
   $('saisieContenu').innerHTML = btnRetourHtml + conflitInfo + '<div class="fiche"><div class="fiche-header" style="background:' + headerBg + ';"><div style="display:flex;justify-content:space-between;align-items:flex-start;"><div class="nom">' + p.nom + '</div><div style="font-size:14px;color:white;font-weight:600;">ID — ' + p.id + '</div></div><div class="prenom">' + p.prenom + '</div>' + (p.nomUsage && p.nomUsage !== p.nom ? '<div class="nom-usage">Usage : ' + p.nomUsage + '</div>' : '') + (isVisite ? '<div class="badge-deja-visite">✅ Visité' + (p.militant ? ' par ' + p.militant.split(' ').pop() : '') + (p.candidatActuel ? ' · ' + p.candidatActuel : '') + '</div>' : '') + btnRetourPrincipale + '</div><div class="fiche-body">' + (p.sexe ? '<div class="fiche-row"><span class="label">Sexe</span><span class="value">' + (p.sexe === 'M' ? '👨 Masculin' : '👩 Féminin') + '</span></div>' : '') + (p.age ? '<div class="fiche-row"><span class="label">Âge</span><span class="value">' + p.age + ' ans</span></div>' : '') + '<div class="fiche-row"><span class="label">Adresse</span><span class="value">' + adresse + '</span></div><div class="fiche-row"><span class="label">Bureau 🏢</span><span class="value">' + (p.bureau || '—') + '</span></div><div class="fiche-row"><span class="label">Statut</span><span class="value"><span class="statut-badge ' + (p.statut === 'Visité' ? 'statut-visite' : 'statut-non') + '">' + (p.statut === 'Visité' ? '✓ Visité' : p.statut === 'Absent' ? '🚪 Absent' : p.statut === 'Opposition' ? '🚫 Opposition' : 'Non visité') + '</span></span></div>' + (p.dateDerniereVisite ? '<div class="fiche-row"><span class="label">Dernière visite</span><span class="value">' + p.dateDerniereVisite + '</span></div>' : '') + '</div></div>' + (isFicheSecondaire ? '' : genererCoResidents(p)) + '<div class="form-section"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--gris);"><h3 style="font-size:13px;font-weight:700;color:var(--bleu);text-transform:uppercase;letter-spacing:.5px;margin:0;padding:0;border:none;">✏️ Enregistrer une visite</h3>' + ((currentRole === 'admin' || currentRole === 'superviseur' || currentRole === 'responsable bureaux' || currentRole === 'manager') ? '<button onclick="demanderReinitialisation()" style="background:#c0392b;color:white;border:none;border-radius:8px;width:36px;height:36px;font-size:18px;cursor:pointer;" title="Réinitialiser">🗑️</button>' : '') + '</div><div class="field"><label>Statut</label><select id="fStatut"><option value="Visité" ' + (p.statut === 'Visité' ? 'selected' : '') + '>✅ Visité</option><option value="Non visité" ' + (p.statut === 'Non visité' || !p.statut ? 'selected' : '') + '>❌ Non visité</option><option value="Absent" ' + (p.statut === 'Absent' ? 'selected' : '') + '>🚪 Absent</option><option value="Opposition" ' + (p.statut === 'Opposition' ? 'selected' : '') + '>🚫 Opposition</option></select></div><div class="field"><label>Candidat soutenu</label><select id="fCandidat">' + cOpts + '</select></div><div class="field"><label>Notes</label><textarea id="fNotes" placeholder="Remarques...">' + (p.notes || '') + '</textarea></div><div class="field"><label>📇 Contact</label><div style="display:flex;gap:8px;"><div style="flex:1;"><input type="email" id="fMail" placeholder="📧 Mail" value="' + (p.mail || '') + '"></div><div style="flex:1;"><input type="tel" id="fTel" placeholder="📞 Tél" value="' + (p.tel || '') + '"></div></div></div>' + ((currentRole === 'admin' || currentRole === 'superviseur') ? '<div class="field"><label>Observation</label><textarea id="fObservation" placeholder="Observation...">' + (p.observation || '') + '</textarea></div>' : '') + '<button class="btn-vert" onclick="enregistrerVisite()">✅ Enregistrer</button></div>';
 }
@@ -1052,14 +1083,7 @@ async function executerEnregistrement() {
       nom: currentPersonne.nom + ' ' + currentPersonne.prenom
     });
     syncVersGoogleSheets({ action: 'log', date: dateNow, action_type: 'Enregistrement', militant: currentMilitant, id: String(id), nom: currentPersonne.nom + ' ' + currentPersonne.prenom });
-
-    // 📊 Sync vers Google Sheets (arrière-plan, non bloquant)
-    syncVersGoogleSheets({
-      action: 'enregistrement',
-      id: id, statut: statut, candidat: candidat, notes: notes,
-      observation: observation, mail: mail, tel: tel,
-      militant: currentMilitant, dateVisite: dateNow
-    });
+    // ℹ️ Données personne : sync auto par miroir GAS (toutes les 2 min)
 
     // Mise à jour locale
     currentPersonne.statut = statut;
@@ -1113,12 +1137,7 @@ async function confirmerReinitialisation() {
       nom: currentPersonne.nom + ' ' + currentPersonne.prenom
     });
     syncVersGoogleSheets({ action: 'log', date: dateReinit, action_type: 'Suppression', militant: currentMilitant, id: String(currentPersonne.id), nom: currentPersonne.nom + ' ' + currentPersonne.prenom });
-
-    // 📊 Sync vers Google Sheets (arrière-plan)
-    syncVersGoogleSheets({
-      action: 'reinitialisation',
-      id: currentPersonne.id
-    });
+    // ℹ️ Données personne : sync auto par miroir GAS (toutes les 2 min)
 
     currentPersonne.statut = 'Non visité';
     currentPersonne.candidatActuel = '';
@@ -1141,7 +1160,7 @@ async function confirmerReinitialisation() {
 // =====================================================
 // NAVIGATION
 // =====================================================
-function initTabs() { document.querySelectorAll('.tab').forEach(tab => { tab.onclick = () => { const page = tab.dataset.page; if (!page) return; document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); tab.classList.add('active'); $('page-' + page).classList.add('active'); if (page === 'stats') chargerStats(); if (page === 'admin') chargerAdmin(); if (page === 'csv') { verifierStatutsCSV(); chargerConfigComparaison(); } }; }); }
+function initTabs() { document.querySelectorAll('.tab').forEach(tab => { tab.onclick = () => { const page = tab.dataset.page; if (!page) return; document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); tab.classList.add('active'); $('page-' + page).classList.add('active'); if (page === 'stats') chargerStats(); if (page === 'admin') chargerAdmin(); if (page === 'csv') { verifierStatutsCSV(); chargerConfigComparaison(); } if (page === 'pap') afficherPapAccueil(); }; }); }
 function showPage(page) { const tab = document.querySelector('.tab[data-page="' + page + '"]'); if (tab) tab.click(); }
 function retourRecherche() { isFicheSecondaire = false; fichePrincipaleId = null; showPage('recherche'); setTimeout(() => rechercher(), 50); }
 function voirCoResident(id) { fichePrincipaleId = currentPersonne ? currentPersonne.id : null; isFicheSecondaire = true; selectionnerPersonne(id); }
@@ -1439,7 +1458,7 @@ function afficherMenuGestion() {
   $('gestionTitre').textContent = '⚙️ Gestion';
   $('gestionBtnRetour').style.display = 'none';
   $('gestionBtnAjouter').style.display = 'none';
-  $('gestionContenu').innerHTML = '<div style="display:flex;flex-direction:column;gap:10px;"><button onclick="ouvrirSectionGestion(\'militants\')" style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:14px;width:100%;"><span style="font-size:28px;">👥</span><div><div style="font-weight:700;font-size:14px;color:#1a3a6b;">Militants</div><div style="font-size:12px;color:#888;">Gérer les militants</div></div></button><button onclick="ouvrirSectionGestion(\'export\')" style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:14px;width:100%;"><span style="font-size:28px;">📊</span><div><div style="font-weight:700;font-size:14px;color:#1a3a6b;">Export / Stats</div><div style="font-size:12px;color:#888;">Statistiques avancées</div></div></button></div>';
+  $('gestionContenu').innerHTML = '<div style="display:flex;flex-direction:column;gap:10px;"><button onclick="ouvrirSectionGestion(\'militants\')" style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:14px;width:100%;"><span style="font-size:28px;">👥</span><div><div style="font-weight:700;font-size:14px;color:#1a3a6b;">Militants</div><div style="font-size:12px;color:#888;">Gérer les militants</div></div></button><button onclick="ouvrirSectionGestion(\'export\')" style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:14px;width:100%;"><span style="font-size:28px;">📊</span><div><div style="font-weight:700;font-size:14px;color:#1a3a6b;">Export / Stats</div><div style="font-size:12px;color:#888;">Statistiques avancées</div></div></button><button onclick="ouvrirSectionGestion(\'testalertes\')" style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:14px;width:100%;"><span style="font-size:28px;">🔊</span><div><div style="font-weight:700;font-size:14px;color:#1a3a6b;">Alertes Vocales PAP</div><div style="font-size:12px;color:#888;">Tester toutes les alertes</div></div></button></div>';
 }
 
 function ouvrirSectionGestion(section) {
@@ -1452,6 +1471,9 @@ function ouvrirSectionGestion(section) {
   } else if (section === 'export') {
     $('gestionTitre').textContent = '📊 Export';
     afficherExport();
+  } else if (section === 'testalertes') {
+    $('gestionTitre').textContent = '🔊 Alertes Vocales';
+    afficherTestAlertes();
   }
 }
 
@@ -1471,6 +1493,103 @@ function afficherExport() {
   toutesPersonnes.forEach(p => { const m = p[14] || '—'; if (!stats[m]) stats[m] = 0; if (p[3] === 'Visité') stats[m]++; });
   const sorted = Object.entries(stats).filter(([k]) => k !== '—').sort((a, b) => b[1] - a[1]);
   div.innerHTML = '<div style="font-weight:700;margin-bottom:10px;">👥 Visites par militant</div>' + sorted.map(([nom, nb]) => '<div style="background:white;border:1px solid #e0e4ea;border-radius:10px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;"><span style="font-weight:600;">' + nom + '</span><span style="font-family:\'Bebas Neue\';font-size:20px;color:#1a3a6b;">' + nb + '</span></div>').join('');
+}
+
+function afficherTestAlertes() {
+  const div = $('gestionContenu');
+  const alertes = [
+    { cat: '🏠 PENDANT LA VISITE D\'UNE RUE', items: [
+      { icon: '👏', titre: 'Première visite', texte: 'C\'est parti ! Encore 5 personnes dans cette rue !', voix: 'C\'est parti ! Encore 5 personnes dans cette rue !' },
+      { icon: '💪', titre: 'Moitié faite', texte: 'Déjà 3 sur 6 dans cette rue. Continue !', voix: 'Déjà la moitié ! Plus que 3 personnes !' },
+      { icon: '👏', titre: 'Visite enregistrée', texte: 'Bravo ! Encore 2 personnes dans cette rue', voix: 'Bravo ! Encore 2 personnes dans cette rue.' },
+      { icon: '⚡', titre: 'Avant-dernière', texte: 'Plus que 1 personne dans cette rue !', voix: 'Dernière personne dans cette rue ! Allez, encore un effort !' },
+      { icon: '🏆', titre: 'Rue terminée', texte: 'Rue des Sorbiers : 6/6. Passe à la rue suivante !', voix: 'Rue terminée ! Excellent travail ! Passe à la rue suivante.' },
+    ]},
+    { cat: '📋 DIVISIONS ET BUREAUX', items: [
+      { icon: '⭐', titre: 'Division complète', texte: 'RITOU 1 : 19/19. Excellent travail !', voix: 'Division complète ! Tu es un champion !' },
+      { icon: '🏅', titre: 'Bureau terminé', texte: 'Bureau B2 RITOU : 84/84. Félicitations !', voix: 'Bureau terminé ! Félicitations ! Tu es un champion !' },
+    ]},
+    { cat: '🚪 NAVIGATION PAP', items: [
+      { icon: '🚪', titre: 'Accueil PAP', texte: 'Bienvenue ! 12 visites sur 498. Courage !', voix: 'Bienvenue ! 12 visites sur 498. Courage !' },
+      { icon: '🏘️', titre: 'Ouverture bureau', texte: 'B2. 84 personnes restantes.', voix: 'Bureau 2. 84 personnes restantes.' },
+      { icon: '📋', titre: 'Ouverture division', texte: 'RITOU 1. 19 personnes restantes.', voix: 'RITOU 1. 19 personnes restantes.' },
+      { icon: '👋', titre: 'Bon retour', texte: 'Bon retour ! Tu étais sur Rue des Sorbiers, il reste 2 personnes.', voix: 'Bon retour ! Tu étais sur Rue des Sorbiers. Il reste 2 personnes.' },
+    ]},
+    { cat: '🎯 MOTIVATION SPÉCIALE', items: [
+      { icon: '🔥', titre: 'Encouragement 10%', texte: 'Déjà 10% du bureau ! Continue comme ça !', voix: 'Déjà 10 pourcent du bureau ! Continue comme ça !' },
+      { icon: '🚀', titre: 'Encouragement 50%', texte: 'La moitié du bureau est faite ! Tu gères !', voix: 'La moitié du bureau est faite ! Tu gères !' },
+      { icon: '🎊', titre: 'Encouragement 90%', texte: 'Presque fini ! Plus que quelques personnes !', voix: 'Presque fini ! Plus que quelques personnes !' },
+      { icon: '🥇', titre: 'Tout terminé', texte: 'TOUT EST FAIT ! Tu es le meilleur militant !', voix: 'Tout est fait ! Tu es le meilleur militant ! Félicitations !' },
+    ]},
+  ];
+
+  let html = '<div style="background:linear-gradient(135deg,#8e44ad,#9b59b6);border-radius:12px;padding:14px;color:white;text-align:center;margin-bottom:14px;">' +
+    '<div style="font-size:36px;margin-bottom:6px;">🔊</div>' +
+    '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:20px;">Test Alertes Vocales PAP</div>' +
+    '<div style="font-size:12px;opacity:.8;margin-top:4px;">Clique sur ▶ pour écouter chaque alerte</div>' +
+    '<div style="margin-top:10px;display:flex;justify-content:center;gap:10px;">' +
+    '<button onclick="papSonActif=true;showToast(\'🔊 Son activé\',\'succes\')" style="background:rgba(255,255,255,0.2);border:none;color:white;padding:8px 16px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;">🔊 Activer son</button>' +
+    '<button onclick="speechSynthesis.cancel();showToast(\'⏹ Arrêté\')" style="background:rgba(255,255,255,0.2);border:none;color:white;padding:8px 16px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;">⏹ Stop</button>' +
+    '</div></div>';
+
+  alertes.forEach(cat => {
+    html += '<div style="font-size:12px;font-weight:700;color:var(--texte2);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px;">' + cat.cat + '</div>';
+    cat.items.forEach((a, i) => {
+      html += '<div style="background:white;border-radius:12px;padding:12px;margin-bottom:8px;box-shadow:0 1px 4px rgba(0,0,0,0.07);">' +
+        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">' +
+        '<div style="font-size:24px;">' + a.icon + '</div>' +
+        '<div style="flex:1;"><div style="font-weight:700;font-size:14px;color:var(--bleu);">' + a.titre + '</div></div>' +
+        '<button onclick="testAlertePAP(' + alertes.indexOf(cat) + ',' + i + ')" style="background:var(--bleu-clair);color:white;border:none;border-radius:50%;width:40px;height:40px;font-size:18px;cursor:pointer;flex-shrink:0;">▶</button>' +
+        '</div>' +
+        '<div style="font-size:13px;color:var(--texte2);line-height:1.5;background:#f8f9fa;border-radius:8px;padding:10px;"><strong>Texte :</strong> ' + a.texte + '</div>' +
+        '<div style="font-size:12px;color:#8e44ad;margin-top:6px;background:#f3e8ff;border-radius:8px;padding:8px;"><strong>🔊 Voix :</strong> <em>' + a.voix + '</em></div>' +
+        '</div>';
+    });
+  });
+
+  // Bouton test alerte visuelle complète
+  html += '<div style="margin-top:16px;"><div style="font-size:12px;font-weight:700;color:var(--texte2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">🎬 TEST COMPLET (VISUEL + VOCAL)</div>';
+  html += '<div style="display:flex;flex-direction:column;gap:8px;">';
+  html += '<button onclick="papAlert(\'👏\',\'BRAVO !\',\'Encore 3 personnes dans<br>Rue des Sorbiers\',\'Bravo ! Encore 3 personnes dans cette rue.\')" style="background:var(--vert);color:white;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;">▶ Tester : Bravo (visuel + voix)</button>';
+  html += '<button onclick="papAlert(\'🏆\',\'RUE TERMINÉE !\',\'Rue des Sorbiers : 6/6 ✅<br>Passe à la rue suivante !\',\'Rue terminée ! Excellent travail ! Passe à la rue suivante.\')" style="background:var(--orange);color:white;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;">▶ Tester : Rue terminée (visuel + voix)</button>';
+  html += '<button onclick="papAlert(\'⭐\',\'DIVISION COMPLÈTE !\',\'RITOU 1 : 19/19 ✅<br>🎊 Excellent travail !\',\'Division complète ! Tu es un champion !\')" style="background:var(--bleu-clair);color:white;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;">▶ Tester : Division complète (visuel + voix)</button>';
+  html += '<button onclick="papAlert(\'🥇\',\'TOUT TERMINÉ !\',\'498/498 ✅<br>Tu es le meilleur militant !\',\'Tout est fait ! Tu es le meilleur militant ! Félicitations !\')" style="background:#8e44ad;color:white;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;">▶ Tester : Tout terminé (visuel + voix)</button>';
+  html += '</div></div>';
+
+  div.innerHTML = html;
+}
+
+// Données alertes pour le test par index
+const ALERTES_TEST_DATA = [
+  [ // cat 0 - Pendant la visite
+    { voix: 'C\'est parti ! Encore 5 personnes dans cette rue !' },
+    { voix: 'Déjà la moitié ! Plus que 3 personnes !' },
+    { voix: 'Bravo ! Encore 2 personnes dans cette rue.' },
+    { voix: 'Dernière personne dans cette rue ! Allez, encore un effort !' },
+    { voix: 'Rue terminée ! Excellent travail ! Passe à la rue suivante.' },
+  ],
+  [ // cat 1 - Divisions
+    { voix: 'Division complète ! Tu es un champion !' },
+    { voix: 'Bureau terminé ! Félicitations ! Tu es un champion !' },
+  ],
+  [ // cat 2 - Navigation
+    { voix: 'Bienvenue ! 12 visites sur 498. Courage !' },
+    { voix: 'Bureau 2. 84 personnes restantes.' },
+    { voix: 'RITOU 1. 19 personnes restantes.' },
+    { voix: 'Bon retour ! Tu étais sur Rue des Sorbiers. Il reste 2 personnes.' },
+  ],
+  [ // cat 3 - Motivation spéciale
+    { voix: 'Déjà 10 pourcent du bureau ! Continue comme ça !' },
+    { voix: 'La moitié du bureau est faite ! Tu gères !' },
+    { voix: 'Presque fini ! Plus que quelques personnes !' },
+    { voix: 'Tout est fait ! Tu es le meilleur militant ! Félicitations !' },
+  ],
+];
+
+function testAlertePAP(catIdx, itemIdx) {
+  papSonActif = true;
+  const alerte = ALERTES_TEST_DATA[catIdx] && ALERTES_TEST_DATA[catIdx][itemIdx];
+  if (alerte) papParler(alerte.voix);
 }
 
 function ouvrirAjoutMilitant() { ouvrirModal('modalAjoutMilitant'); $('nouveauNom').value = ''; $('nouveauPin').value = String(Math.floor(1000 + Math.random() * 9000)); $('nouveauRole').value = 'militant'; $('nouveauEmail').value = ''; }
@@ -1816,35 +1935,29 @@ function parseCSVLine(line) {
 }
 
 // =====================================================
-// SYNC → GOOGLE SHEETS (envoi 10s après dernière action + backup toutes les 2 min)
+// SYNC → GOOGLE SHEETS (logs, militants, comparaison, mentions uniquement)
+// Les données personnes sont synchronisées automatiquement
+// par le miroir GAS qui lit Firebase toutes les 2 minutes.
 // =====================================================
-let syncQueue = []; // File d'attente des changements
-let syncTimer = null;
+let syncQueue = [];
 let syncDebounce = null;
-const SYNC_INTERVAL = 2 * 60 * 1000; // 2 minutes (backup)
 const SYNC_DEBOUNCE = 10 * 1000; // 10 secondes après dernière action
 
 function syncVersGoogleSheets(data) {
   if (!SYNC_SHEET_URL) return;
-  // Ajouter à la file d'attente
   syncQueue.push(data);
-  // Relancer le debounce : envoi 10s après la dernière action ajoutée
   if (syncDebounce) clearTimeout(syncDebounce);
   syncDebounce = setTimeout(envoyerSyncQueue, SYNC_DEBOUNCE);
-  // Garder l'intervalle de 2 min en backup
-  if (!syncTimer) {
-    syncTimer = setInterval(envoyerSyncQueue, SYNC_INTERVAL);
-  }
 }
 
 function envoyerSyncQueue() {
   if (!syncQueue.length || !SYNC_SHEET_URL) return;
-  // Prendre toute la file et la vider
   var batch = syncQueue.slice();
   syncQueue = [];
+
   var nbActions = batch.length;
-  // Envoyer le lot en 1 seule requête
   var payload = JSON.stringify({ action: 'batch', items: batch });
+
   fetch(SYNC_SHEET_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -1853,16 +1966,15 @@ function envoyerSyncQueue() {
   }).then(function(resp) {
     return resp.text().catch(function() { return ''; });
   }).then(function(txt) {
-    // Alerte admin : sync réussie
     if (currentRole === 'admin') {
-      showToast('📊 Google Sheets : ' + nbActions + ' action' + (nbActions > 1 ? 's' : '') + ' synchronisée' + (nbActions > 1 ? 's' : '') + ' ✅', 'succes');
+      showToast('📊 Sync GSheets : ' + nbActions + ' action(s) ✅', 'succes');
     }
     console.log('[SYNC] OK : ' + nbActions + ' actions — ' + txt);
   }).catch(function(err) {
-    // Si erreur, remettre dans la file pour réessayer
-    syncQueue = batch.concat(syncQueue);
+    // Remettre dans la file pour réessayer
+    batch.forEach(function(item) { syncQueue.push(item); });
     if (currentRole === 'admin') {
-      showToast('⚠️ Google Sheets : sync échouée — réessai dans 2 min (' + nbActions + ' en attente)', 'warning');
+      showToast('⚠️ Sync GSheets échouée — réessai au prochain batch', 'warning');
     }
     console.error('[SYNC] Erreur : ' + err.message);
   });
@@ -1876,6 +1988,421 @@ function sanitizeKey(str) {
   return str.replace(/[.#$\[\]\/]/g, '_');
 }
 
+
+// =====================================================
+// 🚪 PORTE À PORTE (PAP)
+// =====================================================
+const PAP_DATA = {"B5":{"secteurs":["P.PLAINE","CENTRE"],"total":77,"divisions":[{"id":"P.PLAINE 1 (B5)","label":"P.PLAINE 1","total":20,"rues":[{"rue":"LL\u00c9E DES B\u00c9GONIAS","personnes":[{"n":"B\u00c9RIL \u00e9p/SAINT-GILLES","p":"Marie M\u00e9linda","a":"11 all\u00e9e des b\u00e9gonias"},{"n":"SAINT-GILLES","p":"Coralie Saraswathi","a":"11 all\u00e9e des b\u00e9gonias"},{"n":"SAINT-GILLES","p":"Mathias Madurai Minatchy","a":"11 all\u00e9e des b\u00e9gonias"},{"n":"SAINT-GILLES","p":"Natya Kalamini","a":"11 all\u00e9e des b\u00e9gonias"},{"n":"SORNOM","p":"Jean-Claude Emile","a":"4 all\u00e9e des B\u00e9gonias"}]},{"rue":"RUE DES HORTENSIAS","personnes":[{"n":"ELISABETH","p":"Anthony Jean Fred","a":"21 rue des Hortensias"},{"n":"MUSSARD","p":"Alex Joseph","a":"49 rue des Hortensias"},{"n":"RANAIVOHARIVONY \u00e9p/MUSSARD","p":"Ginette Zanvie","a":"49 rue des Hortensias"},{"n":"ROBERT","p":"Marie Raima","a":"21 rue des Hortensias"}]},{"rue":"RUE LUCIEN BOYER","personnes":[{"n":"AFFEJEE","p":"Mamode Idriss","a":"20 rue Lucien Boyer"},{"n":"BOUCHER","p":"Yoland Just Antoine","a":"27 rue Lucien Boyer"},{"n":"GONTHIER \u00e9p/AFFEJEE","p":"Nicole-Christine Marie","a":"20 rue Lucien Boyer"}]},{"rue":"RUE LUC BOYER","personnes":[{"n":"CHINDRA","p":"Ludovic Jean Yves","a":"73 rue Luc Boyer"},{"n":"GASQUE","p":"Alan Micka\u00ebl","a":"53 rue Luc Boyer"},{"n":"SIDAT","p":"Fran\u00e7ois Johny","a":"65 rue Luc Boyer"},{"n":"SOUCRAMANIEN","p":"Isabelle Christine","a":"73 rue Luc Boyer"}]},{"rue":"RUE DES GLA\u00cfEULS","personnes":[{"n":"COMPAGNON","p":"Yohan Pierre Robert","a":"4 rue des Gla\u00efeuls"},{"n":"YOUSSOUF","p":"Carine","a":"4 rue des Gla\u00efeuls"}]},{"rue":"RUE DES GLAIEULS","personnes":[{"n":"MAILLOT Vve/LUCILLY","p":"Marie Th\u00e9r\u00e8se H\u00e9l\u00e8ne","a":"18 rue des Glaieuls"}]},{"rue":"LL\u00c9E YLANG YLANG","personnes":[{"n":"NAYAGOM","p":"Eric Jean Didier","a":"2 all\u00e9e Ylang Ylang"}]}]},{"id":"P.PLAINE 2 (B5)","label":"P.PLAINE 2","total":20,"rues":[{"rue":"RUE RICHARD ADOLPHE","personnes":[{"n":"AZOR","p":"Anna Carinne","a":"52 rue Richard Adolphe"},{"n":"BUNDHOO","p":"Alain Jean-Philippe","a":"86 rue Richard Adolphe"},{"n":"ETIENNE","p":"Marie Prisca","a":"86 rue Richard Adolphe"},{"n":"PATEL","p":"Sarah-Linda","a":"33 rue Richard Adolphe"}]},{"rue":"RUE ARZAL ADOLPHE","personnes":[{"n":"BARRET","p":"Guibert Alin","a":"15 rue Arzal Adolphe"}]},{"rue":"RUE DES MIMOSAS","personnes":[{"n":"BOYER","p":"Jean-Damien","a":"25 rue des mimosas"},{"n":"de FLORIS","p":"Pierre David Louis Daniel G\u00e9rard","a":"66 rue des mimosas"}]},{"rue":"RUE DELMAS HOAREAU","personnes":[{"n":"KEREGUY","p":"Enora","a":"11 rue Delmas Hoareau"},{"n":"TRAJAN","p":"Jean Teddy","a":"2 rue Delmas Hoareau"}]},{"rue":"RUE AM\u00c9D\u00c9E DORO","personnes":[{"n":"LEBON Vve FESSARD","p":"Marie Th\u00e9r\u00e8se Andr\u00e9e","a":"11 rue Am\u00e9d\u00e9e Doro"},{"n":"VIRAYE \u00e9p/RASSABY","p":"Laetitia Marie Sarodja","a":"9 rue Am\u00e9d\u00e9e Doro"}]},{"rue":"RUE EUG\u00c8NE ROCHETAING","personnes":[{"n":"ALI","p":"Haniati","a":"27 rue Eug\u00e8ne Rochetaing"},{"n":"BALMINE \u00e9p/LAUPE","p":"Lauriane Marie Jacqueline","a":"29 rue Eug\u00e8ne Rochetaing"},{"n":"COGREL","p":"Na\u00ebl Gabriel","a":"87 rue Eug\u00e8ne Rochetaing"},{"n":"JEAN","p":"Brigitte Marie Claude Marguerite","a":"1 rue Eug\u00e8ne Rochetaing"},{"n":"ROBERT","p":"Gr\u00e9gory Jean-Philippe","a":"52 rue Eug\u00e8ne Rochetaing"},{"n":"TECHER \u00e9p/BARDIL","p":"Marie Ang\u00e9lique","a":"2 rue Eug\u00e8ne Rochetaing"}]},{"rue":"RUELLE ARTHUR DEURVEILHER","personnes":[{"n":"GRONDIN","p":"Chlo\u00e9 Emmanuelle","a":"7 ruelle Arthur Deurveilher"}]},{"rue":"RUE DIEUDONN\u00c9","personnes":[{"n":"LALLEMAND","p":"Marie Lolita","a":"12 rue Dieudonn\u00e9"}]},{"rue":"RUE MARC HENRI PINOT","personnes":[{"n":"MOREL","p":"Rodolphe Jean Ludovic","a":"9 ter rue Marc Henri Pinot"}]}]},{"id":"P.PLAINE 3 (B5)","label":"P.PLAINE 3","total":17,"rues":[{"rue":"IMPASSE JH ALEXIS ARHEL","personnes":[{"n":"BLAGNAC","p":"Marie Evelyne","a":"13 impasse Jh Alexis Arhel"}]},{"rue":"RUE JEAN THEVENIN","personnes":[{"n":"BOINALI \u00e9p/KODIO","p":"Zainaba","a":"55 rue Jean Thevenin"},{"n":"ETIENNE","p":"Florine","a":"18 rue Jean Thevenin"},{"n":"FONTAINE","p":"Dimitri Jeffrey","a":"13 rue Jean Thevenin"},{"n":"KODIO","p":"Hassana","a":"55 rue Jean Thevenin"}]},{"rue":"RUE JEAN TH\u00c9VENIN","personnes":[{"n":"GRONDIN","p":"Marie Estellida","a":"47 rue Jean Th\u00e9venin"},{"n":"GRONDIN","p":"R\u00e9my G\u00e9rald","a":"38 rue Jean Th\u00e9venin"},{"n":"GUICHARD","p":"Jean Fr\u00e9d\u00e9ric","a":"47 rue Jean Th\u00e9venin"},{"n":"GUICHARD","p":"Lorenza Marie Elsa","a":"47 rue Jean Th\u00e9venin"},{"n":"NATAN","p":"Cathy Marie Aur\u00e9lie","a":"13 rue Jean Th\u00e9venin"},{"n":"PUYLAURENT Vve GRONDIN","p":"Th\u00e9r\u00e8se Marie Roseline","a":"38 rue Jean Th\u00e9venin"},{"n":"VARONDIN","p":"Olivia","a":"38 rue Jean Th\u00e9venin"}]},{"rue":"RUE ETIENNE LAFEUILLADE","personnes":[{"n":"SORRES","p":"Nancy","a":"48 rue Etienne Lafeuillade"}]},{"rue":"RUE OLIVIER PAYET","personnes":[{"n":"B\u00c9GUE","p":"Fernand G\u00e9rard Tristan","a":"19 rue Olivier Payet"},{"n":"CRESCENCE","p":"Esther Marie H\u00e9l\u00e8ne","a":"12 rue Olivier Payet"},{"n":"MONOGUY","p":"Lise Marie Ang\u00e9lique","a":"12 rue Olivier Payet"},{"n":"PAUS\u00c9","p":"Pascal Thierry","a":"12 rue Olivier Payet"}]}]},{"id":"P.PLAINE 5 (B5)","label":"P.PLAINE 5","total":9,"rues":[{"rue":"RUE HENRI PIGNOLET","personnes":[{"n":"ARMAND","p":"Josian Eric","a":"72 rue Henri Pignolet"},{"n":"B\u00c9LAIR","p":"Christian Philippe","a":"74 rue Henri Pignolet"},{"n":"GHIRARDO","p":"Nathalie Odile Aline","a":"72 rue Henri Pignolet"},{"n":"GLENAC","p":"Nathalie","a":"21 rue Henri Pignolet"},{"n":"GRONDIN","p":"Audrey Marie Yolaine","a":"31 rue Henri Pignolet"},{"n":"HUBERT","p":"Jordan","a":"74 rue Henri Pignolet"},{"n":"MOUNIER \u00e9p/POIRIER","p":"Maryse","a":"44 rue Henri Pignolet"},{"n":"NATY","p":"David Jean Willy","a":"68 A rue Henri Pignolet"},{"n":"SOUCANE","p":"Diane Marie Catherine","a":"21 rue Henri Pignolet"}]}]},{"id":"CENTRE 7 (B5)","label":"CENTRE 7","total":11,"rues":[{"rue":"RUE DES REMPARTS","personnes":[{"n":"BLAGNAC \u00e9p/ROBERT","p":"Marie Lucie","a":"68 rue des remparts"},{"n":"BOYER \u00e9p/GROSSET","p":"Marie Th\u00e9r\u00e8se Adeline","a":"19 rue des Remparts"},{"n":"GROSSET","p":"Marc Robert","a":"19 rue des Remparts"},{"n":"JEAN","p":"Alicia Emeline","a":"10 rue des remparts"},{"n":"MAILLOT","p":"Anny-Rose","a":"64 rue des remparts"},{"n":"MOUTOUCOMORAPOULLE Vve VIRAMOUTOU","p":"Marie Micheline","a":"76 rue des Remparts"},{"n":"TECHER","p":"Ludivine Marie Prisca","a":"64 rue des remparts"}]},{"rue":"IMPASSE HERV\u00c9 THAMON","personnes":[{"n":"DELY","p":"Marc Anthony","a":"7 impasse Herv\u00e9 Thamon"},{"n":"MAILLOT \u00e9p/DELY","p":"Val\u00e9rie","a":"7 impasse Herv\u00e9 Thamon"},{"n":"MONTADRE","p":"Damien","a":"25 impasse Herv\u00e9 Thamon"},{"n":"PARICIO","p":"Elodie Sabine","a":"25 impasse Herv\u00e9 Thamon"}]}]}]},"B6":{"secteurs":["CALUMETS","CENTRE","P.PLAINE"],"total":66,"divisions":[{"id":"CALUMETS 1 (B6)","label":"CALUMETS 1","total":20,"rues":[{"rue":"RUE EMILE EVAN","personnes":[{"n":"BOYER (MONTPRE BOYER)","p":"Claude Marcel","a":"78 bis rue Emile Evan"},{"n":"GEORGETTE","p":"Reza Karl","a":"169 b rue Emile Evan"},{"n":"HOAREAU","p":"Gladys Marie Pierrette","a":"65 rue Emile Evan"},{"n":"MAILLOT","p":"Marie Rose-May","a":"80 rue Emile Evan"},{"n":"NALLAMOUTOU \u00e9p/RASSABY","p":"Peguy Fran\u00e7oise","a":"124 rue Emile Evan"},{"n":"ONIAN","p":"Youmna","a":"169 b rue Emile Evan"},{"n":"PERENO","p":"Jo\u00ebl Raymond Victor","a":"80 rue Emile Evan"},{"n":"PERS\u00c9E","p":"Ana\u00efs Marie Edwige","a":"34 rue Emile Evan"},{"n":"RASSABY","p":"James Laurent","a":"124 rue Emile Evan"},{"n":"TEVANEE","p":"Jean Fabrice","a":"61 rue Emile Evan"},{"n":"TEVANEE","p":"Samuel","a":"61 rue Emile Evan"},{"n":"TIN-TIN-PING \u00e9p/TEVANEE","p":"Marina","a":"61 rue Emile Evan"},{"n":"VALLIAM\u00c9","p":"Mikha\u00efl Mogane Mathis","a":"161 rue Emile Evan"}]},{"rue":"IMPASSE DES CAM\u00c9LIAS","personnes":[{"n":"BORY","p":"Andr\u00e9 Jean Marc","a":"5 impasse des cam\u00e9lias"},{"n":"VIMBOULY \u00e9p/BORY","p":"Annie Rose","a":"5 impasse des cam\u00e9lias"}]},{"rue":"RUE LOUIS RAPHA\u00cbL MAILLOT","personnes":[{"n":"BOYER","p":"Jo\u00ebl Bertrand","a":"12 bis rue Louis Rapha\u00ebl Maillot"}]},{"rue":"RUE DES TRO\u00cbNES","personnes":[{"n":"FONTAINE","p":"Jean Roland","a":"35 rue des Tro\u00ebnes"}]},{"rue":"LL\u00c9E FOND DE RAISIN","personnes":[{"n":"GUENO","p":"Aurore","a":"4 all\u00e9e fond de raisin"},{"n":"SAUTRON","p":"Jean Yannick","a":"4 all\u00e9e fond de raisin"}]},{"rue":"LL\u00c9E DES CL\u00c9M","personnes":[{"n":"BOYER","p":"Fabrice","a":"8 all\u00e9e des cl\u00e9mentines"}]}]},{"id":"CALUMETS 2 (B6)","label":"CALUMETS 2","total":18,"rues":[{"rue":"IMPASSE DES LONGOSES","personnes":[{"n":"HUET","p":"Josiane Marie Pascaline","a":"4 impasse des longoses"}]},{"rue":"RUE DU SACR\u00c9 C\u0152UR","personnes":[{"n":"JOCKEY","p":"Damien","a":"4 rue du sacr\u00e9 c\u0153ur"},{"n":"NIAMDILA","p":"Cindy Marie Samantha","a":"4 rue du sacr\u00e9 c\u0153ur"}]},{"rue":"RUE EDMOND ROSTAND","personnes":[{"n":"OGET","p":"Morgane Nathalie Edith","a":"10 rue Edmond Rostand"}]},{"rue":"RUELLE CARCANY","personnes":[{"n":"CHOUAT","p":"Hamid","a":"25 ruelle Carcany"},{"n":"CHOUAT","p":"Marie Djamila","a":"25 ruelle Carcany"},{"n":"HOAREAU \u00e9p/CHOUAT","p":"Marie Lydie","a":"25 ruelle Carcany"}]},{"rue":"LL\u00c9E DES CH\u00caNES","personnes":[{"n":"L\u00c9PINAY","p":"C\u00e9dric Ren\u00e9","a":"6 all\u00e9e des ch\u00eanes"}]},{"rue":"RUE DES GR\u00c9VIL\u00c9AS","personnes":[{"n":"PAYET","p":"Ang\u00e9lique Marie Th\u00e9r\u00e8se","a":"4 rue des Gr\u00e9vil\u00e9as"}]},{"rue":"RUELLE DES PRUNES","personnes":[{"n":"SINGAMA","p":"Dany","a":"1 ruelle des prunes"}]},{"rue":"RUE B","personnes":[{"n":"LAROSE","p":"Rudy Pascal Junior","a":"21 rue Baptiste Degoutho"},{"n":"PAYET","p":"Paul Augustin","a":"35 rue Baptiste Degoutho"},{"n":"ROBERT","p":"Graziella Marie Chlo\u00eb","a":"21 rue Baptiste Degoutho"},{"n":"ROBERT \u00e9p/PAYET","p":"Marie Lucette","a":"35 rue Baptiste Degoutho"},{"n":"de LARICHAUDY","p":"Corinne","a":"31 rue Baptiste Degoutho"}]},{"rue":"RUE BOUVIER DELOZIER","personnes":[{"n":"ROS\u00c9","p":"Georges-Marie Roland","a":"13 rue Bouvier Delozier"},{"n":"VALMONT \u00e9p/ROS\u00c9","p":"Florelle Marie Sonia","a":"13 rue Bouvier Delozier"}]},{"rue":"RUE JOSEPH BARET","personnes":[{"n":"LACROIX","p":"Sabrina L\u00e9one Lysianne","a":"32 rue Joseph Baret"}]}]},{"id":"CENTRE 6 (B6)","label":"CENTRE 6","total":16,"rues":[{"rue":"RUE DE LA R\u00c9PUBLIQUE","personnes":[{"n":"BIRONDA \u00e9p/SOUNDRON","p":"Karine","a":"601 rue de la R\u00e9publique"},{"n":"De PEINDRAY D'AMBELLE","p":"Natacha Marie-Claude","a":"717 rue de la R\u00e9publique"},{"n":"ETHEVE","p":"Jean Fabrice","a":"473 rue de la R\u00e9publique"},{"n":"ETHEVE","p":"Anthony Fran\u00e7ois","a":"113 rue de la R\u00e9publique"},{"n":"FONTAINE","p":"Micka\u00ebl Emmanuel","a":"440 rue de la R\u00e9publique"},{"n":"LADERVAL","p":"Fred Hippolyte","a":"553 rue de la R\u00e9publique"},{"n":"MOUTOUCO MORAPOUL\u00c9","p":"Marie Brigitte","a":"362 rue de la R\u00e9publique"},{"n":"PAYET","p":"Jean Fabrice","a":"473 rue de la R\u00e9publique"},{"n":"RICHARD \u00e9p/LADERVAL","p":"Marie Dominique","a":"553 rue de la R\u00e9publique"},{"n":"ROBERT","p":"Emmeline Marie Marthe","a":"16 rue de la R\u00e9publique"},{"n":"ROBERT","p":"Rudy St\u00e9phane","a":"16 rue de la R\u00e9publique"},{"n":"R\u00c9OS","p":"Emmanuelle","a":"423 rue de la R\u00e9publique"},{"n":"SHUN-MAN-YIN \u00e9p/SINAMOUNY","p":"Graziella Marie Sabine","a":"121 rue de la R\u00e9publique"},{"n":"SINAMOUNY","p":"Patrick Jean Ren\u00e9","a":"121 rue de la R\u00e9publique"},{"n":"SOUNDRON","p":"Guilbert Jean Ren\u00e9","a":"601 rue de la R\u00e9publique"},{"n":"SOUNDRON","p":"No\u00ebmie Marie L\u00e9a","a":"601 rue de la R\u00e9publique"}]}]},{"id":"P.PLAINE 4 (B6)","label":"P.PLAINE 4","total":12,"rues":[{"rue":"RUE HENRI PIGNOLET","personnes":[{"n":"BOYER","p":"Fran\u00e7oise","a":"122 bis rue Henri Pignolet"},{"n":"CADET Vve ARHEL","p":"Marie Louise","a":"166 rue Henri Pignolet"},{"n":"CLAIN \u00e9p/ARHEL","p":"Priscilla Michelle","a":"99 rue Henri Pignolet"},{"n":"LAURET","p":"Youmna","a":"122 ter rue Henri Pignolet"},{"n":"LEBEAU","p":"Elisa Marie Amelberge","a":"121 rue Henri Pignolet"},{"n":"MADIOUMA","p":"Alexandre","a":"135 rue Henri Pignolet"},{"n":"MARMILLOD","p":"Claude Henri","a":"90 rue Henri Pignolet"},{"n":"MOUTOUSSAMY Vve PARIS","p":"Claudine","a":"205 rue Henri Pignolet"},{"n":"PATCHAMA","p":"Cyrille","a":"141 rue Henri Pignolet"},{"n":"SENDEGEYA","p":"Paulo Kateregga","a":"137 rue Henri Pignolet"},{"n":"SEUSSE","p":"Karine Marie Betty","a":"90 rue Henri Pignolet"},{"n":"TIN-TIN-PING \u00e9p/B\u00c9LAIR","p":"Marie-Claire","a":"74 rue Henri Pignolet"}]}]}]},"B4":{"secteurs":["CENTRE-SUD","CALUMETS"],"total":80,"divisions":[{"id":"CENTRE-SUD 1 (B4)","label":"CENTRE-SUD 1","total":20,"rues":[{"rue":"RUE BOIS DE GAULETTE","personnes":[{"n":"BOURGAUD","p":"Jimmy Emile","a":"34 rue bois de gaulette"},{"n":"ESPARON","p":"Fred Jean","a":"16 rue Bois de Gaulette"},{"n":"FRAN\u00c7OISE","p":"Henry-Marc","a":"30 rue bois de gaulette"},{"n":"HUBERT","p":"Ulrick","a":"11 rue bois de gaulette"},{"n":"LEBON","p":"Cynthia Johanna","a":"34 rue bois de gaulette"},{"n":"SAUTRON","p":"Gilbert","a":"9 rue bois de gaulette"},{"n":"S\u00c9VERIN","p":"Marie Gladys","a":"16 rue Bois de Gaulette"}]},{"rue":"IMPASSE DES BRINGELLIERS","personnes":[{"n":"DAUPHIN","p":"Audrey Marie-Th\u00e9r\u00e8se","a":"4 impasse des bringelliers"},{"n":"INGAR","p":"Nazir Ahmed","a":"6 impasse des bringelliers"},{"n":"MIQUEL","p":"Ga\u00ebl","a":"4 impasse des bringelliers"},{"n":"PATEL \u00e9p/INGAR","p":"Malika","a":"6 impasse des bringelliers"},{"n":"RAKOTOSEHENO","p":"Diera Harijao","a":"3 impasse des bringelliers"}]},{"rue":"LL\u00c9E DE L'ALOES","personnes":[{"n":"FRUTEAU","p":"Jean Denis","a":"4 all\u00e9e de l'aloes"}]},{"rue":"LL\u00c9E DE L'ALO\u00c8S","personnes":[{"n":"GRONDIN","p":"Marie Guyl\u00e8ne","a":"3 all\u00e9e de l'alo\u00e8s"},{"n":"GRONDIN","p":"Vincent","a":"3 all\u00e9e de l'alo\u00e8s"},{"n":"IVOULA","p":"Marie Cindy","a":"1 all\u00e9e de l'Alo\u00e8s"}]},{"rue":"RUE DONAT ROBERT","personnes":[{"n":"H\u00c9BERT","p":"Rapha\u00ebl Ir\u00e9n\u00e9 Roger","a":"18 rue Donat Robert"},{"n":"PAUS\u00c9","p":"Marie Nad\u00e8ge Pierrette","a":"10 rue Donat Robert"}]},{"rue":"IMPASSE DES MERLES","personnes":[{"n":"LUC \u00e9p/VITRY","p":"Sylvia Marie Estelle","a":"2 impasse des merles"},{"n":"VITRY","p":"Jean-Bernard Antoine","a":"2 impasse des merles"}]}]},{"id":"CENTRE-SUD 2 (B4)","label":"CENTRE-SUD 2","total":19,"rues":[{"rue":"RUE LOUIS PARNY","personnes":[{"n":"BOOZ","p":"Eric Jean Baptiste","a":"13 rue Louis Parny"},{"n":"FURIA \u00e9p/BOOZ","p":"Marie Benjamine","a":"13 rue Louis Parny"},{"n":"PAYET","p":"T\u00e9dy Jo","a":"15 rue Louis Parny"}]},{"rue":"RUE TH\u00c9OBALD GINET","personnes":[{"n":"CONSTANT","p":"Fabrice","a":"43 rue Th\u00e9obald Ginet"},{"n":"DIJOUX","p":"Sandrine","a":"33 rue Th\u00e9obald Ginet"},{"n":"LEBON","p":"Ingrid Marie Ma\u00eblys","a":"30 rue Th\u00e9obald Ginet"}]},{"rue":"RUE ROBERT BERTIN","personnes":[{"n":"GIGAN","p":"Mathieu","a":"30 rue Robert Bertin"},{"n":"GRONDIN","p":"Jean-Bernard","a":"48 rue Robert Bertin"},{"n":"GROSSET \u00e9p/GIGAN","p":"Marie Christelle","a":"30 rue Robert Bertin"}]},{"rue":"LL\u00c9E DES MUSCADIERS","personnes":[{"n":"HOAREAU","p":"Bernadette Brigitte M Chantal","a":"8 all\u00e9e des muscadiers"}]},{"rue":"RUE DES CITRONNIERS","personnes":[{"n":"LEGROS","p":"Roch Andr\u00e9","a":"14 rue des citronniers"}]},{"rue":"RUE FLOR","personnes":[{"n":"LICHARDY","p":"Oc\u00e9ane Marie Ornella","a":"7 rue Florent Paus\u00e9"},{"n":"TROCA","p":"Dimitri Jean Gr\u00e9gory","a":"7 rue Florent Paus\u00e9"}]},{"rue":"RUE BERTIN ROBERT","personnes":[{"n":"RANDRIANARIVELO \u00e9p/LUCILY","p":"Justine","a":"27 rue Bertin Robert"}]},{"rue":"RUE FR\u00c9MICOURT PERRAULT","personnes":[{"n":"FLAMENT \u00e9p/RIVOLI","p":"V\u00e9ronique Dani\u00e8le Josiane","a":"55 rue Fr\u00e9micourt Perrault"},{"n":"MAILLOT","p":"Christian Gabriel","a":"144 rue Fr\u00e9micourt Perrault"},{"n":"MAILLOT \u00e9p/BONDY","p":"Antoinette Marie","a":"144 rue Fr\u00e9micourt Perrault"},{"n":"RIVOLI","p":"Jean-Luc","a":"55 rue Fr\u00e9micourt Perrault"},{"n":"SERVEAUX ETHEVE","p":"Quentin Louis Adrien","a":"126 A rue Fr\u00e9micourt Perrault"}]}]},{"id":"CENTRE-SUD 3 (B4)","label":"CENTRE-SUD 3","total":18,"rues":[{"rue":"RUE DE LA BUTTE","personnes":[{"n":"DAMOUR","p":"Di\u00e9son Wilson Junior","a":"14 rue de la Butte"},{"n":"DAMOUR","p":"M\u00e9gane Marie-Annick","a":"14 rue de la Butte"},{"n":"DAMOUR","p":"Jean Wilson","a":"14 rue de la Butte"},{"n":"HOAREAU","p":"Nolwen Marie Noellie","a":"7 rue de la Butte"},{"n":"KICHENIN MOUTALOU","p":"John","a":"12 rue de la Butte"},{"n":"MASSON","p":"Lynda Marie Florine","a":"13 rue de la Butte"},{"n":"RIVIERE","p":"Marie Vanessa Sarah","a":"14 rue de la Butte"}]},{"rue":"RUE EDOUARD BIENVENU","personnes":[{"n":"CHAMBON","p":"Mathieu Claude","a":"24 rue Edouard Bienvenu"},{"n":"CHAMBON","p":"Valentin Lo\u00efc","a":"24 rue Edouard Bienvenu"},{"n":"LEBEAU","p":"Oc\u00e9ane Marie Ang\u00e9lina","a":"27 rue Edouard Bienvenu"},{"n":"LEBL\u00c9","p":"Melvin","a":"27 rue Edouard Bienvenu"},{"n":"MONDON","p":"Joseph Ariste","a":"24 rue Edouard Bienvenu"}]},{"rue":"RUE DES C","personnes":[{"n":"TURPIN","p":"Agathe","a":"12 rue des cent m\u00e8tres"}]},{"rue":"LL\u00c9E DES TR\u00c8FLES","personnes":[{"n":"BERNARD","p":"Corinne Marie C\u00e9line","a":"13 all\u00e9e des tr\u00e8fles"},{"n":"CARPAYE","p":"Ra\u00efchade","a":"3 all\u00e9e des tr\u00e8fles"},{"n":"LAW SOUNE","p":"Ana\u00efs","a":"3 all\u00e9e des tr\u00e8fles"},{"n":"LEBEAU","p":"Karine Marie Elodie","a":"2 all\u00e9e des tr\u00e8fles"},{"n":"PERRAULT","p":"Marie-Christine","a":"27 all\u00e9e des tr\u00e8fles"}]}]},{"id":"CENTRE-SUD 4 (B4)","label":"CENTRE-SUD 4","total":14,"rues":[{"rue":"RUE GEORGES LEBEAU","personnes":[{"n":"AGENOR DUTREMBLAY","p":"Marie-Lyne","a":"36 rue Georges Lebeau"},{"n":"ARHEL","p":"Florent Jean David","a":"83 rue Georges Lebeau"},{"n":"FLORUSSE","p":"Aur\u00e9lie Camille","a":"12 rue Georges Lebeau"},{"n":"FLORUSSE","p":"Chlo\u00e9","a":"12 rue Georges Lebeau"},{"n":"FLORUSSE","p":"Thierry","a":"12 rue Georges Lebeau"},{"n":"LEBEAU","p":"Quentin Florent","a":"17 rue Georges Lebeau"},{"n":"MARA","p":"Tatiana","a":"74 bis rue Georges Lebeau"},{"n":"MOULLAN","p":"Yasmine","a":"40 rue Georges Lebeau"},{"n":"RAMALINGOM","p":"Marie Natacha","a":"84 rue Georges Lebeau"},{"n":"VIRAPIN","p":"Laurent Jean Sullivan","a":"12 rue Georges Lebeau"},{"n":"VIRAPIN","p":"Oc\u00e9ane Marie Julie","a":"12 rue Georges Lebeau"},{"n":"VIRAPIN","p":"Patricia Marie Charlette","a":"12 rue Georges Lebeau"}]},{"rue":"RUE TH\u00c9O MARIANNE","personnes":[{"n":"ADAM","p":"Jean Hugues","a":"34 rue Th\u00e9o Marianne"},{"n":"FURCY","p":"Jacques Andr\u00e9","a":"35 rue Th\u00e9o Marianne"}]}]},{"id":"CALUMETS 3 (B4)","label":"CALUMETS 3","total":9,"rues":[{"rue":"RUE BERNARD GINET","personnes":[{"n":"CALADAMA","p":"Damien Jean Vivien","a":"124 bis rue Bernard Ginet"},{"n":"CARO","p":"Carol Marie Nathalie","a":"107 rue Bernard Ginet"},{"n":"CHALLET","p":"Coralie Marie-Laura","a":"122 bis rue Bernard Ginet"},{"n":"DUTRIEUX","p":"Coddy","a":"85 rue Bernard Ginet"},{"n":"GRONDIN \u00e9p/MARDAYE","p":"Marie Roselle","a":"54 rue Bernard Ginet"},{"n":"MARDAYE","p":"Emilien","a":"54 rue Bernard Ginet"},{"n":"MARTIN","p":"Herwan Cl\u00e9ment","a":"8 rue Bernard Ginet"},{"n":"MARTIN","p":"Jean Paul","a":"8 rue Bernard Ginet"},{"n":"PO\u00cfNAPIN","p":"Alexis","a":"122 bis rue Bernard Ginet"}]}]}]},"B1":{"secteurs":["CENTRE"],"total":96,"divisions":[{"id":"CENTRE 1 (B1)","label":"CENTRE 1","total":20,"rues":[{"rue":"CHEMIN BRAS PATIENCE","personnes":[{"n":"A\u00cf NOUDDINE","p":"Fatima","a":"97 chemin Bras Patience"}]},{"rue":"RUE BRAS PATIENCE","personnes":[{"n":"GRONDIN","p":"Norbert Ga\u00ebl","a":"122 rue Bras Patience"},{"n":"LEGER","p":"Nathalie Marie-Louise","a":"56 rue Bras Patience"}]},{"rue":"RUELLE CASCADE BIBERON","personnes":[{"n":"PITOU","p":"Jean Luc","a":"19 ruelle Cascade Biberon"}]},{"rue":"RUE OSCAR TURPIN","personnes":[{"n":"AHAMED","p":"Faouzia","a":"46 rue Oscar Turpin"},{"n":"DUCHEMANN","p":"Rosien Jean","a":"46 rue Oscar Turpin"}]},{"rue":"RUE DU VIEUX CLOCHER","personnes":[{"n":"PERRAULT","p":"Landry Pascal","a":"12 rue du Vieux Clocher"},{"n":"TECHER \u00e9p/PERRAULT","p":"Aur\u00e9lie Marie S\u00e9verine","a":"12 rue du Vieux Clocher"}]},{"rue":"RUELLE DE L'ESCALIER","personnes":[{"n":"PITOU \u00e9p/RIVIERE","p":"Sophie Fran\u00e7oise","a":"5 ruelle de l'escalier"},{"n":"RIVIERE","p":"Jean-Fran\u00e7ois","a":"5 ruelle de l'escalier"}]},{"rue":"LL\u00c9E MARCEAU ROBERT","personnes":[{"n":"ARABOUX","p":"Clar\u00e8ne Lydie","a":"42 all\u00e9e Marceau Robert B\u00e2t E"},{"n":"DUGAIN","p":"Ryan Jean Jo\u00e9","a":"1 all\u00e9e Marceau Robert B\u00e2t C"},{"n":"FAUSTIN","p":"Exp\u00e9dit Jean St\u00e9phane","a":"60 all\u00e9e Marceau Robert b\u00e2t F"},{"n":"NAZE","p":"Julie Marie-El\u00e9onore","a":"2 all\u00e9e Marceau Robert"},{"n":"TREPORT \u00e9p/FAUSTIN","p":"Elsie Marie Ga\u00eblle","a":"60 all\u00e9e marceau robert"}]},{"rue":"RUE LE TORT","personnes":[{"n":"ATCHY \u00e9p/ROBERT","p":"Samantha Marie R\u00e9gine","a":"4 rue Le Tort"},{"n":"CHASSAN","p":"Enora Marie Elisabeth","a":"1 rue Le Tort"},{"n":"CHASSAN","p":"J\u00e9r\u00f4me Jean Nicolas","a":"1 rue Le Tort"},{"n":"ROBERT","p":"Joaquim Ruddy","a":"4 rue Le Tort"},{"n":"TECHER \u00e9p/CHASSAN","p":"Audrey Th\u00e9r\u00e8se","a":"1 rue Le Tort"}]}]},{"id":"CENTRE 2 (B1)","label":"CENTRE 2","total":20,"rues":[{"rue":"RUELLE TEXTOR","personnes":[{"n":"BOIS\u00c9DU","p":"Pascal Denis","a":"3 ruelle Textor"}]},{"rue":"RUE DE L'EGLISE","personnes":[{"n":"BOYER","p":"Eve","a":"55 rue de l'Eglise"},{"n":"BOYER","p":"Jean Bruno","a":"18 rue de l'Eglise"},{"n":"BOYER","p":"Jean K\u00e9vin","a":"18 rue de l'Eglise"},{"n":"DAMOUR","p":"Manon Marie Jannine","a":"44 bis rue de l'Eglise"},{"n":"DIJOUX \u00e9p/BOYER","p":"Marie Georgette","a":"18 rue de l'Eglise"},{"n":"ELAMRI","p":"Samia","a":"49 rue de l'Eglise Apt 3"},{"n":"FOLL","p":"Jean-Fr\u00e9d\u00e9ric","a":"27 rue de l'Eglise"},{"n":"HOARAU","p":"Val\u00e9rie Anne-Claire","a":"16 rue de l'Eglise"},{"n":"MOUTAMA","p":"Jean Fran\u00e7ois","a":"55 rue de l'Eglise"},{"n":"NOURRY \u00e9p/ROBERT","p":"Marie Gismaine","a":"41 rue de l'Eglise"},{"n":"RAZAKA","p":"Nathalie Mamy","a":"27 rue de l'Eglise"},{"n":"ROBERT","p":"Jean-Georges","a":"41 rue de l'Eglise"},{"n":"SOUBADOU - VILY","p":"Ana\u00efs","a":"15 rue de l'Eglise"},{"n":"SOUBADOU \u00e9p/VILY","p":"Marie Laurence","a":"15 rue de l'Eglise"},{"n":"VILY","p":"Fr\u00e9d\u00e9ric","a":"15 rue de l'Eglise"},{"n":"V\u00c9LIA","p":"Raymonde Danielle Patricia","a":"11 rue de l'Eglise"}]},{"rue":"RUELLE TEXTOR LE CLOS RENAISSANCE","personnes":[{"n":"COLLET","p":"Herbert Alexandre","a":"40 ruelle Textor Le Clos Renaissance"}]},{"rue":"RUELLE DES ACACIAS","personnes":[{"n":"GAUVIN","p":"Fr\u00e9d\u00e9ric Richard Joseph","a":"8 ruelle des acacias"}]},{"rue":"RUE ADOLPHE ARZAL","personnes":[{"n":"GINET","p":"Mathieu Philippe Jean","a":"4 rue Adolphe Arzal"}]}]},{"id":"CENTRE 3 (B1)","label":"CENTRE 3","total":20,"rues":[{"rue":"RUE ALEXIS DE VILLENEUVE","personnes":[{"n":"MERCURE","p":"Sidonia Marie-Virginie","a":"14 rue Alexis de Villeneuve"},{"n":"MOUTOUSSAMY","p":"Marie Lynda","a":"3 rue Alexis de Villeneuve"},{"n":"TECHER","p":"Steeven Bryan","a":"14 rue Alexis de Villeneuve"}]},{"rue":"RUE DES CHRYSANTH\u00c8MES","personnes":[{"n":"NUGENT","p":"Julie Marie Yasmine","a":"14 rue des Chrysanth\u00e8mes"}]},{"rue":"IMPASSE BOIS DE SABLE","personnes":[{"n":"SAUTRON","p":"Lydie Ga\u00eblle","a":"14 impasse bois de sable"}]},{"rue":"RUE ETIENNETTE","personnes":[{"n":"AREKONAMAND","p":"Julie","a":"1 rue Etiennette"}]},{"rue":"RUE DU P\u00c8RE COUPY","personnes":[{"n":"ARZAC","p":"Alain Jean Fr\u00e9d\u00e9ric","a":"81 rue du P\u00e8re Coupy"},{"n":"BENOIT","p":"Marie St\u00e9phanie","a":"83 rue du P\u00e8re Coupy"},{"n":"CERVEAUX","p":"Pierre L\u00e9onus","a":"23 rue du P\u00e8re Coupy"},{"n":"FENELON","p":"Sylvette Marie Anise","a":"16 rue du P\u00e8re Coupy"},{"n":"GALENT","p":"Jean-Claude","a":"16 rue du P\u00e8re Coupy"},{"n":"H\u00c9RODE \u00e9p/CERVEAUX","p":"Marie Antoinette Vania","a":"23 rue du P\u00e8re Coupy"},{"n":"MAILLOT","p":"Marie Liana","a":"81 rue du P\u00e8re Coupy"},{"n":"MAILLOT \u00e9p/ROBERT","p":"Marie Suzie","a":"23 rue du P\u00e8re Coupy"},{"n":"OLIVETTE","p":"Lucie Marie-Ana\u00efs","a":"73 rue du p\u00e8re Coupy"},{"n":"ROBERT","p":"Joseph Andr\u00e9","a":"23 rue du P\u00e8re Coupy"}]},{"rue":"RUE DES N\u00c9NUPHARS","personnes":[{"n":"BERNARDINI","p":"Enrico","a":"4 rue des N\u00e9nuphars"},{"n":"GOVIN \u00e9p/DIJOUX","p":"Juliana Marie Huguette","a":"11 A rue des n\u00e9nuphars"}]},{"rue":"RUE TULLY CLARIVOT","personnes":[{"n":"COCHARD","p":"Emma Anne Ga\u00eblle","a":"2 rue Tully Clarivot"},{"n":"HOAREAU","p":"Matthieu Jean Beno\u00eet","a":"2 rue Tully Clarivot"}]}]},{"id":"CENTRE 4 (B1)","label":"CENTRE 4","total":20,"rues":[{"rue":"RUE DES BLEUETS","personnes":[{"n":"D'EURVEILHER","p":"Rodolphe","a":"19 rue des Bleuets"}]},{"rue":"RUE DE LA SHLMR","personnes":[{"n":"FONTAINE","p":"Jean Pierrot","a":"3 rue de la SHLMR"},{"n":"FONTAINE","p":"Marie H\u00e9l\u00e8ne","a":"1 rue de la SHLMR"},{"n":"GOURAMA","p":"Am\u00e9lina Marie Brigitte","a":"3 rue de la SHLMR"},{"n":"VICTOIRE","p":"Maximin Jean Aniel","a":"10 rue de la SHLMR"}]},{"rue":"RUE AIM\u00c9 PAYET","personnes":[{"n":"HAMADA","p":"Johanna","a":"10 rue Aim\u00e9 Payet"},{"n":"HAMADA","p":"Fatima","a":"10 rue Aim\u00e9 Payet"},{"n":"HAMADA","p":"Nina","a":"10 rue Aim\u00e9 Payet"},{"n":"LAI KUEN","p":"Marie Annick","a":"14 rue Aim\u00e9 Payet"},{"n":"MADI HALIDI","p":"Izak","a":"10 rue Aim\u00e9 Payet"},{"n":"MAILLOT","p":"Morgan Exp\u00e9dit Gilbert","a":"3 rue Aim\u00e9 Payet"},{"n":"PAILLOTE","p":"Alix Henri Paul","a":"14 rue Aim\u00e9 Payet"}]},{"rue":"RUE AIM\u00c9 PAYET -","personnes":[{"n":"HOAREAU","p":"Emilie Marie","a":"13 rue Aim\u00e9 Payet - Apt 5"}]},{"rue":"RUE PIERRE JASMIN","personnes":[{"n":"K/BIDI","p":"Bruno Jean Eric","a":"17 rue Pierre Jasmin"}]},{"rue":"LL\u00c9E SAINT EXP\u00c9DIT","personnes":[{"n":"PAYET","p":"Jean Christophe","a":"1 all\u00e9e Saint Exp\u00e9dit"}]},{"rue":"RUE JACQUES BRUNET","personnes":[{"n":"FURCY","p":"Marie Jo\u00eblle","a":"27 rue Jacques Brunet"},{"n":"POULOT","p":"Jasmine Marie","a":"22 rue Jacques Brunet"},{"n":"SAUTRON","p":"Marie Ang\u00e9lique","a":"14 rue Jacques Brunet"},{"n":"TOLCY","p":"Bryan Jean Paris","a":"14 rue Jacques Brunet"}]},{"rue":"LL\u00c9E DU SUD","personnes":[{"n":"TARANNE","p":"Marie-Yasmine","a":"2 all\u00e9e du Sud"}]}]},{"id":"CENTRE 5 (B1)","label":"CENTRE 5","total":16,"rues":[{"rue":"RUE DE LA R\u00c9PUBLIQUE","personnes":[{"n":"AFA","p":"Anne-Marie Josia","a":"285 rue de la R\u00e9publique"},{"n":"CHANE WET","p":"Aline Sylvie","a":"281 rue de la R\u00e9publique"},{"n":"DIEUDONN\u00c9","p":"Audrey Marie","a":"41 bis rue de la R\u00e9publique"},{"n":"FARLAE-SIMMISSIEL","p":"Teddy","a":"375 rue de la R\u00e9publique"},{"n":"GANNE","p":"Claude Fran\u00e7ois","a":"177 rue de la R\u00e9publique"},{"n":"GRONDIN","p":"Jessie Marie Ange","a":"168 rue de la R\u00e9publique"},{"n":"K/BIDI","p":"Jean-Ren\u00e9","a":"319 rue de la R\u00e9publique"},{"n":"LEPINAY","p":"Emmanuelle Alexandra","a":"291 rue de la R\u00e9publique"},{"n":"LOWINSKY","p":"Christine Marie G\u00e9raldine","a":"76 rue de la R\u00e9publique"},{"n":"L\u00c9GER","p":"Pascal Emmanuel","a":"285 rue de la R\u00e9publique"},{"n":"NARAYANIN \u00e9p/de FLORE","p":"Marie Paulette Jacqueline","a":"53 rue de la R\u00e9publique"},{"n":"PLANCHON","p":"Nad\u00e8ge Marie-H\u00e9l\u00e8ne","a":"177 rue de la R\u00e9publique"},{"n":"POULAIN \u00e9p/K/BIDI","p":"Isabelle Marcelle Andr\u00e9e","a":"319 rue de la R\u00e9publique"},{"n":"RENARD","p":"Dorian Yves Pascale","a":"41 bis rue de la R\u00e9publique"},{"n":"SANITATE","p":"Marine Magalie G\u00e9raldine","a":"319 rue de la R\u00e9publique Apt 1"},{"n":"SAVIGNY","p":"Lu\u00e7ay","a":"369 rue de la R\u00e9publique"}]}]}]},"B3":{"secteurs":["CULT"],"total":93,"divisions":[{"id":"CULT 1 (B3)","label":"CULT 1","total":20,"rues":[{"rue":"VENUE DU STADE","personnes":[{"n":"VELLAYOUDOM","p":"Nicolas Pierre Olivier","a":"28 avenue du stade"}]},{"rue":"RUE GASTON CROCHET","personnes":[{"n":"BEGUE \u00e9p/COLLET","p":"Emmanuelle","a":"17 rue Gaston Crochet"},{"n":"COLLET","p":"Jean Fran\u00e7ois","a":"17 rue Gaston Crochet"},{"n":"HOAREAU","p":"G\u00e9rald","a":"7 rue Gaston Crochet"},{"n":"VALIN","p":"C\u00e9line Marie Carole","a":"7 rue Gaston Crochet"}]},{"rue":"RUE LOUIS PADRE","personnes":[{"n":"BILLAC","p":"Eric","a":"51 rue Louis Padre"},{"n":"CERVEAUX","p":"Claude Fran\u00e7ois","a":"27 rue Louis Padre"},{"n":"CERVEAUX","p":"Sandrine","a":"27 rue Louis Padre"},{"n":"GRONDIN \u00e9p/LAW-YU-KUAN","p":"Sonie Marie Andr\u00e9e","a":"3 rue Louis Padre"},{"n":"LAW-YU-KUAN","p":"Jean Bernard","a":"3 rue Louis Padre"},{"n":"MAILLOT \u00e9p/BILLAC","p":"Marie Josiane","a":"51 rue Louis Padre"},{"n":"PAULCAN","p":"Paola Marie Yohanne","a":"49 rue Louis Padre"},{"n":"ROBERT \u00e9p/CERVEAUX","p":"Marie Jocelyne","a":"27 rue Louis Padre"}]},{"rue":"RUE RAPHA\u00cbL BABET","personnes":[{"n":"ADRAS \u00e9p/GOURAMA","p":"Solange","a":"9 rue Rapha\u00ebl Babet"},{"n":"B\u00c8GUE","p":"Jean Indriss","a":"12 rue Rapha\u00ebl Babet"},{"n":"DAVERY","p":"Marie Ruphine","a":"37 rue Rapha\u00ebl Babet"},{"n":"GONTHIER","p":"Jessie Marie Sarah","a":"29 rue Rapha\u00ebl Babet"},{"n":"GOURAMA","p":"Jean Philippe","a":"9 rue Rapha\u00ebl Babet"},{"n":"TECHER","p":"Louis Philippe","a":"4 rue Rapha\u00ebl Babet"},{"n":"ZORA","p":"Claude Thierry","a":"2 rue Rapha\u00ebl Babet Apt 5"}]}]},{"id":"CULT 2 (B3)","label":"CULT 2","total":20,"rues":[{"rue":"IMPASSE SOLANDRA","personnes":[{"n":"BILLOT","p":"Michel Eric","a":"7 impasse Solandra"},{"n":"DALLEAU","p":"Marie Mimose","a":"7 impasse Solandra"}]},{"rue":"RUE DES CYPR\u00c8S","personnes":[{"n":"CANDASSAMY","p":"Emilie Maie Elodie","a":"2 rue des Cypr\u00e8s"},{"n":"MOULIN","p":"Jean-Ren\u00e9 Yves L\u00e9once","a":"10 rue des cypr\u00e8s"}]},{"rue":"IMPASSE DES CAF\u00c9IERS","personnes":[{"n":"DAMPFHOFFER","p":"Albert","a":"9 impasse des caf\u00e9iers"}]},{"rue":"IMPASSE RIMBAUD","personnes":[{"n":"DUHOUVR\u00c9","p":"Marie Sophie","a":"1 impasse Rimbaud"},{"n":"DUHOUVR\u00c9","p":"S\u00e9bastien Domy Cl\u00e9mencio","a":"1 impasse Rimbaud"},{"n":"HENRIETTE POINAMA","p":"Fuad Lucas","a":"5 impasse Rimbaud"}]},{"rue":"RUE ARISTIDE PATU DE ROSEMOND","personnes":[{"n":"GEA","p":"Emmanuel","a":"13 rue Aristide Patu de Rosemond"},{"n":"PAYET","p":"Myl\u00e8ne Sophie","a":"10 rue Aristide Patu de Rosemond"}]},{"rue":"LL\u00c9E DES C\u00c8DRES","personnes":[{"n":"GINET","p":"Marie Fan\u00e9lie","a":"4 all\u00e9e des C\u00e8dres"}]},{"rue":"RUE DES MOUTARDIERS","personnes":[{"n":"GRONDIN","p":"Marie Martine","a":"40 rue des Moutardiers"},{"n":"MANGLOU","p":"Wendy","a":"17 rue des Moutardiers"}]},{"rue":"IMPASSE STANISLAS MARCHAND","personnes":[{"n":"NAYABOURY","p":"Betty Marie Nad\u00e8ge","a":"14 impasse Stanislas Marchand"}]},{"rue":"IMPASSE DES N\u00c8FLES","personnes":[{"n":"SANSPOIL \u00e9p/ZANEGUY","p":"Maryse","a":"2 impasse des n\u00e8fles"},{"n":"ZANEGUY","p":"Jean Fran\u00e7ois","a":"2 impasse des n\u00e8fles"}]},{"rue":"IMPASSE DES LATANIERS","personnes":[{"n":"ABLANCOURT-BALAGU\u00c9","p":"Suzette Marie Ghislaine","a":"7 impasse des Lataniers"},{"n":"BRUN \u00e9p/TECHER","p":"Arlette H\u00e9l\u00e8ne Pierre","a":"15 bis impasse des Lataniers"},{"n":"CAZAL Vve/BALAGU\u00c9","p":"Marie Rita","a":"7 impasse des Lataniers"},{"n":"TECHER","p":"Henri-Max Elys\u00e9","a":"15 bis impasse des Lataniers"}]}]},{"id":"CULT 3 (B3)","label":"CULT 3","total":19,"rues":[{"rue":"RUE DES EUCALYPTUS","personnes":[{"n":"AB\u00c9MONTY \u00e9p/RIVIERE","p":"Marie Joslaine","a":"51 rue des Eucalyptus"},{"n":"BOYER","p":"Estella Marie Lucie","a":"5 rue des Eucalyptus"},{"n":"DESPLAS \u00e9p/GROSSET","p":"Marie Claude","a":"57 rue des Eucalyptus"},{"n":"GOSSARD \u00e9p/RIVIERE","p":"Chantal Marie Exp\u00e9dite","a":"51 rue des Eucalyptus"},{"n":"GROSSET","p":"Lucay","a":"57 rue des Eucalyptus"},{"n":"RIVIERE","p":"Vincent Jean Baptiste","a":"51 rue des Eucalyptus"}]},{"rue":"RUE DES LANTERNES","personnes":[{"n":"BERTON","p":"Michel Andr\u00e9","a":"26 rue des Lanternes"},{"n":"MAILLOT \u00e9p/BERTON","p":"Marie Yvette Mimose","a":"26 rue des Lanternes"},{"n":"THIAW-LAM","p":"Farrel Ah-Yane","a":"16 rue des lanternes"}]},{"rue":"RUE DES FUCHSIAS","personnes":[{"n":"AMANY-SAVRIMOUTOU","p":"Jean Roger","a":"18 rue des Fuchsias"},{"n":"RIVI\u00c8RE","p":"Flora","a":"2 rue des Fuchsias"},{"n":"RIVI\u00c8RE","p":"Marie Josiane","a":"2 rue des Fuchsias"},{"n":"ROBORE","p":"Ludivine Nancy Marguerite","a":"42 rue des Fuchsias"}]},{"rue":"RUE ALFRED DE PEINDRAY D'AMBELLE","personnes":[{"n":"ARMOUET \u00e9p/CARCANY","p":"Annie Claude","a":"71 rue Alfred de Peindray d'Ambelle"},{"n":"CARCANY","p":"R\u00e9my","a":"71 rue Alfred de Peindray d'Ambelle"}]},{"rue":"IMPASSE DES MOUTARDIERS","personnes":[{"n":"BARAN","p":"Vickie","a":"9 impasse des Moutardiers"},{"n":"GRONDIN","p":"Giovanni","a":"3 impasse des moutardiers"},{"n":"VALIN","p":"Marine","a":"17 impasse des moutardiers"},{"n":"VIRAYE","p":"Jean David","a":"9 impasse des Moutardiers"}]}]},{"id":"CULT 4 (B3)","label":"CULT 4","total":18,"rues":[{"rue":"IMPASSE DES VACOAS","personnes":[{"n":"BARONCE","p":"Laetitia","a":"32 impasse des vacoas"},{"n":"HUMEAU","p":"Jean-Michel","a":"34 bis impasse des vacoas"},{"n":"PAYET \u00e9p/HUMEAU","p":"Evelyne Marie-Pascale","a":"34 bis impasse des vacoas"}]},{"rue":"IMPASSE BELLE DE NUIT","personnes":[{"n":"BOYER","p":"Stacie Marie Th\u00e9r\u00e8se","a":"7 impasse belle de nuit"}]},{"rue":"LL\u00c9E DES CORBEILLES D'OR","personnes":[{"n":"CARPIN","p":"Exp\u00e9dit Henri Marc","a":"7 all\u00e9e des corbeilles d'or"},{"n":"DOLPHIN","p":"Marie Nicole","a":"7 all\u00e9e des corbeilles d'or"}]},{"rue":"IMPASSE DES JACINTHES","personnes":[{"n":"DAMOUR","p":"Marie Th\u00e9r\u00e8se","a":"13 impasse des Jacinthes"}]},{"rue":"IMPASSE DES CANISTELS","personnes":[{"n":"DANGLADE","p":"Xavier","a":"5 impasse des Canistels"}]},{"rue":"RUE DE LA CROIX ROUGE","personnes":[{"n":"DIJOUX","p":"Kenza Marie H\u00e9l\u00e9na","a":"7 rue de la croix rouge"},{"n":"GRONDIN \u00e9p/CAILASSON","p":"Rose Marie Ir\u00e8ne","a":"26 rue de la croix rouge"}]},{"rue":"LL\u00c9E DES AGAPANTHES","personnes":[{"n":"GUILGORI","p":"Jean Patrick","a":"9 all\u00e9e des agapanthes"},{"n":"IVOULA","p":"Laetitia Zana","a":"64 all\u00e9e des agapanthes"},{"n":"NGUYEN-DUY-NGUYEN","p":"Sandy Laure","a":"16 all\u00e9e des Agapanthes"},{"n":"TURPIN","p":"C\u00e9dric","a":"64 all\u00e9e des agapanthes"}]},{"rue":"IMPASSE DES BANANIERS","personnes":[{"n":"MOUNIAPIN","p":"Fabrice","a":"2 impasse des bananiers"},{"n":"MOUNIAPIN","p":"Varincka Marie Cynthia","a":"2 impasse des bananiers"},{"n":"NARSAPA \u00e9p/MOUNIAPIN","p":"Rosine Marie Clorette","a":"2 impasse des bananiers"}]},{"rue":"LL\u00c9E DES AN\u00c9MONES","personnes":[{"n":"PALER ESSOMPOULLE","p":"Julia","a":"14 all\u00e9e des an\u00e9mones"}]}]},{"id":"CULT 5 (B3)","label":"CULT 5","total":16,"rues":[{"rue":"RUE DU GYMNASE","personnes":[{"n":"HUBERT","p":"Baptiste Didier","a":"41 rue du Gymnase"},{"n":"MAFOUTA","p":"Marie-H\u00e9l\u00e9na","a":"31 rue du Gymnase"},{"n":"POTHIN","p":"Murielle","a":"29 rue du gymnase"},{"n":"SALA\u00cf","p":"Jean Christophe Emile","a":"15 rue du gymnase"}]},{"rue":"RUE DES CAPUCINES","personnes":[{"n":"CHAN-THU","p":"Jean-Paul Hugues","a":"24 rue des Capucines"},{"n":"HUET","p":"Marie Audrey","a":"22 rue des capucines"},{"n":"MORVAN","p":"Fr\u00e9d\u00e9ric","a":"22 rue des capucines"},{"n":"MORVAN","p":"Kenny","a":"22 rue des capucines"},{"n":"TERPIED","p":"Jean-Luc Fabrice","a":"5 rue des capucines"}]},{"rue":"RUE LOUIS CARRON","personnes":[{"n":"CLAIN","p":"Jean Marie","a":"52 rue Louis Carron"},{"n":"DINOT","p":"S\u00e9bastien","a":"72 rue Louis Carron"},{"n":"ELIE","p":"Coralie","a":"48 rue Louis Carron"},{"n":"HENRYLIENNE","p":"Maryse","a":"72 rue Louis Carron"},{"n":"MAUNIER","p":"M\u00e9lanie","a":"102 rue Louis Carron"},{"n":"POS\u00c9E","p":"Marie Sabine","a":"13 rue Louis Carron"},{"n":"YAHAM\u00c9TI","p":"D\u00e9sir\u00e9 Jean-Patrick","a":"119 rue Louis Carron"}]}]}]},"B2":{"secteurs":["RITOU"],"total":84,"divisions":[{"id":"RITOU 1 (B2)","label":"RITOU 1","total":19,"rues":[{"rue":"RUE DES SORBIERS","personnes":[{"n":"AH-TING","p":"Marie Vinsianne","a":"20 rue des sorbiers"},{"n":"BOULEVART","p":"Julie","a":"16 rue des sorbiers"},{"n":"JACOPO \u00e9p/TURPIN","p":"Emmanuelle","a":"19 rue des Sorbiers"},{"n":"JUPPIN de FONDAUMIERE","p":"Julien","a":"16 rue des sorbiers"},{"n":"MAILLOT","p":"Fabrice Willy","a":"20 rue des sorbiers"},{"n":"TURPIN","p":"Freddy Jean Paul","a":"19 rue des Sorbiers"}]},{"rue":"RUE THOMAS ROBERT","personnes":[{"n":"BONNIN","p":"Julie Anick B\u00e9atrice","a":"22 rue Thomas Robert"},{"n":"GRONDIN","p":"Marc Patrice","a":"2 rue Thomas Robert"},{"n":"LEBIHAN \u00e9p/PALASSY","p":"Marie Sylvette","a":"22 rue Thomas Robert"},{"n":"PALASSY","p":"Jean-Claude","a":"22 rue Thomas Robert"}]},{"rue":"RUE ANACLET BEGUE","personnes":[{"n":"DUCHEMANN","p":"L\u00e9onard Jean Daniel","a":"22 rue Anaclet Begue"},{"n":"SAUTRON","p":"Jean Dominique","a":"14 rue Anaclet Begue"},{"n":"SEVAMY ep/SAUTRON","p":"Marie Sylvie","a":"14 rue Anaclet Begue"}]},{"rue":"LL\u00c9E JOCELYN ERUDEL","personnes":[{"n":"EVANS","p":"Eug\u00e8ne Christian","a":"52 all\u00e9e Jocelyn Erudel"}]},{"rue":"ALL\u00c9E BOIS DE COULEUR","personnes":[{"n":"JEAN-FRAN\u00c7OIS","p":"Jayson","a":"2 ter all\u00e9e bois de couleur"},{"n":"RAFOUGILET","p":"Audrey","a":"2 ter all\u00e9e bois de couleur"}]},{"rue":"RUE LOUIS DECOTTE","personnes":[{"n":"INFANTE","p":"Cassandra Marie Patricia","a":"19 rue Louis Decotte"},{"n":"MONTUSCLAT","p":"Guibert Joseph Richard","a":"19 rue Louis Decotte"},{"n":"MONTUSCLAT","p":"Hugo","a":"19 rue Louis Decotte"}]}]},{"id":"RITOU 2 (B2)","label":"RITOU 2","total":17,"rues":[{"rue":"RUE ROBERT MARCELLY","personnes":[{"n":"LEBON","p":"Alexandre Jean-David","a":"6 rue Robert Marcelly"},{"n":"MERLO \u00e9p/LEBON","p":"Zila St\u00e9phanie","a":"6 rue Robert Marcelly"},{"n":"ROBERT","p":"Rapha\u00ebl Philippe","a":"32 rue Robert Marcelly"}]},{"rue":"IMPASSE DES FIGUES","personnes":[{"n":"ARAYE","p":"Judianna Marie Estellie","a":"16 bis impasse des figues"},{"n":"BELIN","p":"Sergeline Marie Lucie","a":"8 bis impasse des figues"},{"n":"LAUGIER","p":"Fabrice Thom","a":"3 impasse des figues"},{"n":"NOURRY","p":"Jo\u00ebl","a":"8 bis impasse des figues"},{"n":"VEE","p":"Fr\u00e9d\u00e9ric","a":"16 bis impasse des figues"}]},{"rue":"ALL\u00c9E DES FRAMBOISIERS","personnes":[{"n":"BILLET","p":"Jean Wilfrid J\u00e9r\u00f4me","a":"15 bis all\u00e9e des Framboisiers"},{"n":"ROBERT","p":"Sandra Marie Emmanuelle","a":"15 bis all\u00e9e des Framboisiers"}]},{"rue":"IMPASSE DES VERVEINES","personnes":[{"n":"BOYER","p":"Roger","a":"33 impasse des verveines"},{"n":"MALET","p":"Amandine Marie Ana\u00efs","a":"12 impasse des verveines"},{"n":"NARAYANAPOULE","p":"Brice","a":"22 impasse des verveines"},{"n":"OUL\u00c9DI","p":"J\u00e9r\u00e9my","a":"10 impasse des verveines"},{"n":"PERS\u00c9E","p":"Marie Ludivine","a":"10 impasse des verveines"},{"n":"SAUTRON","p":"Doriane Marie Laurence","a":"35 impasse des verveines"},{"n":"VAZEMONT","p":"Marie Sandrine","a":"33 impasse des verveines"}]}]},{"id":"RITOU 3 (B2)","label":"RITOU 3","total":16,"rues":[{"rue":"RUE DES CRISTALLINES","personnes":[{"n":"CLAIN","p":"Jean Bertrand","a":"16 rue des cristallines"},{"n":"HENRI \u00e9p/ITEMA","p":"Gaelle","a":"18 rue des cristallines"},{"n":"ITEMA","p":"Ren\u00e9 Jean Denis","a":"18 rue des cristallines"},{"n":"VINGUETAMA-PERIANAGOM","p":"Marie Louise","a":"7 rue des cristallines"}]},{"rue":"IMPASSE EUG\u00c8NE ROBERT","personnes":[{"n":"CLAIN","p":"Micka\u00ebl","a":"22 impasse Eug\u00e8ne Robert"}]},{"rue":"RUE MARIE EMILIENNE MAILLOT","personnes":[{"n":"DURAND","p":"Fanny","a":"26 rue Marie Emilienne Maillot"},{"n":"ROY\u00c9","p":"Didier Ludovic","a":"3 rue Marie Emilienne Maillot"}]},{"rue":"LL\u00c9E SAINTE AGATHE","personnes":[{"n":"FOUDRAIN","p":"Dani\u00e9la Anne-Flora","a":"10 all\u00e9e Sainte Agathe"},{"n":"PAYET","p":"Gladys Marie Ruffine","a":"17 all\u00e9e Sainte Agathe"},{"n":"PAYET","p":"Ludovic Jean Daniel","a":"13 all\u00e9e Sainte Agathe"}]},{"rue":"RUE ROGER MURAT","personnes":[{"n":"ROBERT","p":"Jean Yannick","a":"27 rue Roger Murat"}]},{"rue":"IMPASSE DES DAHLIAS","personnes":[{"n":"SAUTRON","p":"Jean Alfred","a":"9 impasse des Dahlias"}]},{"rue":"IMPASSE DES GERBERAS","personnes":[{"n":"BOUC","p":"Jean Daniel","a":"17 impasse des gerberas"},{"n":"GERVILLE \u00e9p/BOUC","p":"Marie B\u00e9atrice","a":"17 impasse des gerberas"},{"n":"PANECHOU","p":"Vincent","a":"33 impasse des gerberas"},{"n":"ROBERT","p":"Cindy Marie Marguerite","a":"33 impasse des gerberas"}]}]},{"id":"RITOU 4 (B2)","label":"RITOU 4","total":16,"rues":[{"rue":"RUE DES FANJANS","personnes":[{"n":"CA\u00cfLA","p":"O'Neil Leeroy","a":"3 bis rue des fanjans"},{"n":"CLAIN","p":"Marine Eug\u00e8nie Marie Josie","a":"3 rue des fanjans"},{"n":"DAUPIARD","p":"Bruno Jean Hermann","a":"9 rue des fanjans"},{"n":"ICHANE","p":"L\u00e9a","a":"3 bis rue des fanjans"},{"n":"NOUKIAMA","p":"Christopher","a":"2 rue des fanjans"},{"n":"TECHER \u00e9p/DAUPIARD","p":"Marie Alice","a":"9 rue des fanjans"},{"n":"TIEN-T'SIN","p":"Emeline","a":"2 rue des fanjans Apt 1"}]},{"rue":"IMPASSE MAGNOLIA","personnes":[{"n":"CHRISTY","p":"Michel Abel Maurice","a":"30 impasse Magnolia"},{"n":"JEAN-MARIE","p":"Luciano Patrick","a":"4 impasse Magnolia"}]},{"rue":"RUE DES ROMARINS","personnes":[{"n":"FONTAINE","p":"Luciano Christophe","a":"6 rue des romarins"},{"n":"LOWINSKY","p":"Jo\u00eb Jean Ars\u00e8ne","a":"4 rue des Romarins"},{"n":"PICARD","p":"Ch\u00e9rifa Claudia","a":"6 rue des romarins"},{"n":"PICARD","p":"Rose Hosmane Fran\u00e7aisa","a":"4 rue des romarins"},{"n":"PICARD","p":"Wendy","a":"4 rue des Romarins"},{"n":"VITRY","p":"Joseph Rosier","a":"4 rue des romarins"}]},{"rue":"IMPASSE FRANGIPANNIER","personnes":[{"n":"TEYSSEDRE","p":"Ingrid Emmanuelle","a":"6 impasse Frangipannier"}]}]},{"id":"RITOU 5 (B2)","label":"RITOU 5","total":16,"rues":[{"rue":"RUE EMILE RITOU","personnes":[{"n":"BOIX","p":"Adrien David Esteban","a":"21 rue Emile Ritou"},{"n":"BOURICE","p":"Coralie St\u00e9phanie","a":"2 b rue Emile Ritou"},{"n":"FOSSY","p":"Gr\u00e9gory S\u00e9bastien","a":"2 b rue Emile Ritou"},{"n":"FRANCOIS \u00e9p/RAFOUGILET","p":"Marie Lisette","a":"16 rue Emile Ritou"},{"n":"GRONDIN","p":"Danika Jeanne Marie-Inola","a":"9 rue Emile Ritou"},{"n":"IMOUCHA","p":"Bryanna","a":"9 rue Emile Ritou"},{"n":"ROBERT","p":"Louis Etienne","a":"19 rue Emile Ritou"}]},{"rue":"RUE DES ARUMS","personnes":[{"n":"CR\u00c9MIEUX","p":"Sophie Marion","a":"50 rue des arums"},{"n":"LOWINSKY","p":"Chrisla Marie Nadia","a":"2 b rue des arums"},{"n":"LOWINSKY","p":"Jo\u00eblle Marie-Fran\u00e7oise","a":"4 rue des arums"}]},{"rue":"RUE DES SONGES","personnes":[{"n":"PALERE SOMPOULLE","p":"Jo\u00e9","a":"3 rue des songes"}]},{"rue":"RUE DUREAU","personnes":[{"n":"CHEVREUIL Vve/CASTRO","p":"Monique Marie-Th\u00e9r\u00e8se","a":"70 rue Dureau"},{"n":"COCHARD \u00e9p/GALLISSIAZ","p":"Marie Ang\u00e9lique","a":"20 bis rue Dureau"},{"n":"NATIVEL \u00e9p/ de FONDAUMIERE","p":"Laurence Paule Camille","a":"4 rue Dureau"},{"n":"THEVENIN \u00e9p/TANDRAYEN","p":"Marie Dominique","a":"27 rue Dureau"},{"n":"de FONDAUMIERE","p":"Dominique Joseph","a":"4 rue Dureau"}]}]}]}};
+
+const PAP_BUREAU_NAMES = {
+  'B1': 'CENTRE', 'B2': 'RITOU', 'B3': 'CULTUREL',
+  'B4': 'CENTRE-SUD', 'B5': 'P.PLAINE', 'B6': 'CALUMETS'
+};
+const PAP_BUREAU_ICONS = { 'B1': '🏛️', 'B2': '🏘️', 'B3': '🎭', 'B4': '🌳', 'B5': '🌴', 'B6': '⛰️' };
+
+let papSonActif = true;
+let papEtatActuel = { bureau: null, division: null, rue: null };
+let papFromPAP = false; // flag to know if saisie was opened from PAP
+
+// Voice synthesis
+function papParler(texte) {
+  if (!papSonActif) return;
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(texte);
+    u.lang = 'fr-FR';
+    u.rate = 1.05;
+    u.pitch = 1.1;
+    const voix = speechSynthesis.getVoices().filter(v => v.lang.startsWith('fr'));
+    if (voix.length) u.voice = voix[0];
+    speechSynthesis.speak(u);
+  } catch(e) {}
+}
+
+// PAP Alert popup with optional voice
+function papAlert(icon, titre, msg, voiceMsg, callback) {
+  // Remove old alerts
+  document.querySelectorAll('.pap-alert, .pap-alert-overlay').forEach(e => e.remove());
+
+  const overlay = document.createElement('div');
+  overlay.className = 'pap-alert-overlay';
+
+  const box = document.createElement('div');
+  box.className = 'pap-alert';
+  box.innerHTML = '<div class="pap-alert-icon">' + icon + '</div>' +
+    '<div class="pap-alert-title">' + titre + '</div>' +
+    '<div class="pap-alert-msg">' + msg + '</div>' +
+    '<button class="pap-alert-btn" onclick="fermerPapAlert()">OK 👍</button>';
+
+  document.body.appendChild(overlay);
+  document.body.appendChild(box);
+
+  if (voiceMsg) papParler(voiceMsg);
+
+  // Auto close after 4s
+  setTimeout(fermerPapAlert, 4000);
+
+  overlay.onclick = fermerPapAlert;
+}
+
+function fermerPapAlert() {
+  document.querySelectorAll('.pap-alert, .pap-alert-overlay').forEach(e => {
+    e.style.transition = 'opacity .2s';
+    e.style.opacity = '0';
+    setTimeout(() => e.remove(), 200);
+  });
+}
+
+// Count visited for a person in PAP list
+function papGetStatut(nom, prenom) {
+  if (!toutesPersonnes.length) return '';
+  const n = nom.toUpperCase().trim();
+  const p = prenom.toUpperCase().trim();
+  for (let i = 0; i < toutesPersonnes.length; i++) {
+    const pNom = (toutesPersonnes[i][1] || '').toUpperCase().trim();
+    const pPrenom = (toutesPersonnes[i][2] || '').toUpperCase().trim();
+    if (pNom === n && pPrenom === p) return toutesPersonnes[i][3] || 'Non visité';
+    // Try partial match (nom contains)
+    if (pNom.includes(n) && pPrenom.includes(p)) return toutesPersonnes[i][3] || 'Non visité';
+    if (n.includes(pNom) && p.includes(pPrenom) && pNom.length > 2) return toutesPersonnes[i][3] || 'Non visité';
+  }
+  return 'Non visité';
+}
+
+function papTrouverPersonne(nom, prenom) {
+  if (!toutesPersonnes.length) return null;
+  const n = nom.toUpperCase().trim();
+  const p = prenom.toUpperCase().trim();
+  // Exact match first
+  for (let i = 0; i < toutesPersonnes.length; i++) {
+    const pNom = (toutesPersonnes[i][1] || '').toUpperCase().trim();
+    const pPrenom = (toutesPersonnes[i][2] || '').toUpperCase().trim();
+    if (pNom === n && pPrenom === p) return toutesPersonnes[i][0];
+  }
+  // Partial match
+  for (let i = 0; i < toutesPersonnes.length; i++) {
+    const pNom = (toutesPersonnes[i][1] || '').toUpperCase().trim();
+    const pPrenom = (toutesPersonnes[i][2] || '').toUpperCase().trim();
+    if ((pNom.includes(n) || n.includes(pNom)) && (pPrenom.includes(p) || p.includes(pPrenom)) && pNom.length > 2) return toutesPersonnes[i][0];
+  }
+  return null;
+}
+
+// Stats for a division
+function papStatsDivision(div) {
+  let total = 0, done = 0;
+  div.rues.forEach(r => {
+    r.personnes.forEach(p => {
+      total++;
+      const s = papGetStatut(p.n, p.p);
+      if (s !== 'Non visité') done++;
+    });
+  });
+  return { total, done, restant: total - done };
+}
+
+// Stats for a rue
+function papStatsRue(rue) {
+  let total = 0, done = 0;
+  rue.personnes.forEach(p => {
+    total++;
+    const s = papGetStatut(p.n, p.p);
+    if (s !== 'Non visité') done++;
+  });
+  return { total, done, restant: total - done };
+}
+
+// Stats for a bureau
+function papStatsBureau(bureau) {
+  const b = PAP_DATA[bureau];
+  if (!b) return { total: 0, done: 0, restant: 0 };
+  let total = 0, done = 0;
+  b.divisions.forEach(d => {
+    const s = papStatsDivision(d);
+    total += s.total;
+    done += s.done;
+  });
+  return { total, done, restant: total - done };
+}
+
+// Add PAP tab
+function ajouterOngletPAP() {
+  if (document.querySelector('.tab[data-page="pap"]')) return;
+  const tab = document.createElement('div');
+  tab.className = 'tab';
+  tab.dataset.page = 'pap';
+  tab.textContent = '🚪 PAP';
+  tab.onclick = () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    $('page-pap').classList.add('active');
+    afficherPapAccueil();
+  };
+  // Insert after Saisie tab
+  const saisieTab = document.querySelector('.tab[data-page="saisie"]');
+  if (saisieTab && saisieTab.nextSibling) {
+    saisieTab.parentNode.insertBefore(tab, saisieTab.nextSibling);
+  } else {
+    $('tabsBar').appendChild(tab);
+  }
+}
+
+// MAIN VIEW: 6 bureau buttons
+function afficherPapAccueil() {
+  papEtatActuel = { bureau: null, division: null, rue: null };
+
+  let html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">' +
+    '<div style="font-family:' + "'" + 'Bebas Neue' + "'" + ',sans-serif;font-size:22px;color:var(--bleu);">🚪 Porte à Porte</div>' +
+    '<button class="pap-son-toggle" onclick="papToggleSon()">' + (papSonActif ? '🔊 Son ON' : '🔇 Son OFF') + '</button>' +
+    '</div>';
+
+  // Resumé si on était quelque part
+  const saved = localStorage.getItem('pap_last_position');
+  if (saved) {
+    try {
+      const pos = JSON.parse(saved);
+      html += '<div style="background:linear-gradient(135deg,#fff3cd,#ffeaa7);border-radius:12px;padding:14px;margin-bottom:12px;cursor:pointer;" onclick="papReprendre()">' +
+        '<div style="font-size:13px;font-weight:700;color:#856404;">👉 Reprendre où tu étais</div>' +
+        '<div style="font-size:12px;color:#856404;margin-top:4px;">' + (pos.divLabel || '') + ' - ' + (pos.rue || '') + '</div></div>';
+    } catch(e) {}
+  }
+
+  // Global progress
+  let totalGlobal = 0, doneGlobal = 0;
+  Object.keys(PAP_DATA).sort().forEach(b => {
+    const s = papStatsBureau(b);
+    totalGlobal += s.total;
+    doneGlobal += s.done;
+  });
+  const pctGlobal = totalGlobal > 0 ? Math.round(doneGlobal / totalGlobal * 100) : 0;
+
+  html += '<div style="background:linear-gradient(135deg,var(--bleu),var(--bleu-clair));border-radius:12px;padding:14px;color:white;margin-bottom:14px;text-align:center;">' +
+    '<div style="font-family:' + "'" + 'Bebas Neue' + "'" + ',sans-serif;font-size:32px;">' + doneGlobal + ' / ' + totalGlobal + '</div>' +
+    '<div style="font-size:12px;opacity:.8;">NOUVEAUX INSCRITS VISITÉS</div>' +
+    '<div class="pap-progress" style="margin-top:10px;background:rgba(255,255,255,0.2);"><div class="pap-progress-fill" style="width:' + pctGlobal + '%;background:var(--vert);"></div></div>' +
+    '<div style="font-size:11px;margin-top:4px;opacity:.7;">' + pctGlobal + '%</div></div>';
+
+  // 6 bureau buttons
+  html += '<div class="pap-bureaux">';
+  Object.keys(PAP_DATA).sort().forEach(b => {
+    const data = PAP_DATA[b];
+    const stats = papStatsBureau(b);
+    const pct = stats.total > 0 ? Math.round(stats.done / stats.total * 100) : 0;
+    const icon = PAP_BUREAU_ICONS[b] || '📋';
+    html += '<div class="pap-bureau-btn" onclick="papOuvrirBureau(' + "'" + b + "'" + ')">' +
+      '<div class="pap-bureau-num">' + icon + ' ' + b + '</div>' +
+      '<div class="pap-bureau-secteur">' + data.secteurs.join(', ') + '</div>' +
+      '<div class="pap-bureau-count">' + stats.done + '/' + stats.total + ' (' + pct + '%)</div>' +
+      '<div class="pap-progress"><div class="pap-progress-fill" style="width:' + pct + '%;background:' + (pct >= 100 ? 'var(--vert)' : 'var(--bleu-clair)') + ';"></div></div>' +
+      '</div>';
+  });
+  html += '</div>';
+
+  $('papContenu').innerHTML = html;
+
+  // Welcome voice
+  if (toutesPersonnes.length && doneGlobal > 0) {
+    papParler('Bienvenue ! ' + doneGlobal + ' visites sur ' + totalGlobal + '. ' + (pctGlobal >= 50 ? 'Super travail !' : 'Courage !'));
+  }
+}
+
+// BUREAU VIEW: show divisions
+function papOuvrirBureau(bureau) {
+  papEtatActuel.bureau = bureau;
+  const data = PAP_DATA[bureau];
+  if (!data) return;
+
+  const stats = papStatsBureau(bureau);
+  const pct = stats.total > 0 ? Math.round(stats.done / stats.total * 100) : 0;
+
+  let html = '<button class="btn-retour" onclick="afficherPapAccueil()">← Retour</button>';
+
+  html += '<div style="background:linear-gradient(135deg,var(--bleu),var(--bleu-clair));border-radius:12px;padding:14px;color:white;margin-bottom:14px;">' +
+    '<div style="font-family:' + "'" + 'Bebas Neue' + "'" + ',sans-serif;font-size:22px;">' + (PAP_BUREAU_ICONS[bureau] || '') + ' ' + bureau + ' - ' + (PAP_BUREAU_NAMES[bureau] || '') + '</div>' +
+    '<div style="display:flex;justify-content:space-around;margin-top:10px;text-align:center;">' +
+    '<div><div style="font-family:' + "'" + 'Bebas Neue' + "'" + ',sans-serif;font-size:28px;">' + stats.done + '</div><div style="font-size:10px;opacity:.7;">VISITÉS</div></div>' +
+    '<div><div style="font-family:' + "'" + 'Bebas Neue' + "'" + ',sans-serif;font-size:28px;">' + stats.restant + '</div><div style="font-size:10px;opacity:.7;">RESTANTS</div></div>' +
+    '<div><div style="font-family:' + "'" + 'Bebas Neue' + "'" + ',sans-serif;font-size:28px;">' + pct + '%</div><div style="font-size:10px;opacity:.7;">PROGRESSION</div></div></div>' +
+    '<div class="pap-progress" style="margin-top:10px;background:rgba(255,255,255,0.2);"><div class="pap-progress-fill" style="width:' + pct + '%;background:var(--vert);"></div></div></div>';
+
+  html += '<div class="section-title">📋 Divisions - ' + data.divisions.length + ' listes</div>';
+
+  data.divisions.forEach((div, idx) => {
+    const ds = papStatsDivision(div);
+    const dp = ds.total > 0 ? Math.round(ds.done / ds.total * 100) : 0;
+    const complete = ds.restant === 0 && ds.total > 0;
+    html += '<div class="pap-division-card" style="' + (complete ? 'border-left:4px solid var(--vert);opacity:.7;' : '') + '" onclick="papOuvrirDivision(' + "'" + bureau + "'" + ',' + idx + ')">' +
+      '<div style="flex:1;">' +
+      '<div style="font-weight:700;font-size:14px;">' + (complete ? '✅ ' : '📋 ') + div.label + '</div>' +
+      '<div style="font-size:12px;color:var(--texte2);margin-top:2px;">' + div.rues.length + ' rues · ' + ds.done + '/' + ds.total + ' visités</div>' +
+      '<div class="pap-progress"><div class="pap-progress-fill" style="width:' + dp + '%;background:' + (complete ? 'var(--vert)' : 'var(--bleu-clair)') + ';"></div></div>' +
+      '</div><div style="font-family:' + "'" + 'Bebas Neue' + "'" + ',sans-serif;font-size:24px;color:' + (complete ? 'var(--vert)' : 'var(--bleu-clair)') + ';">' + dp + '%</div></div>';
+  });
+
+  $('papContenu').innerHTML = html;
+  papParler(bureau + '. ' + stats.restant + ' personnes restantes.');
+}
+
+// DIVISION VIEW: show streets and persons
+function papOuvrirDivision(bureau, divIdx) {
+  papEtatActuel.bureau = bureau;
+  papEtatActuel.division = divIdx;
+
+  const div = PAP_DATA[bureau].divisions[divIdx];
+  if (!div) return;
+
+  const ds = papStatsDivision(div);
+  const dp = ds.total > 0 ? Math.round(ds.done / ds.total * 100) : 0;
+
+  let html = '<button class="btn-retour" onclick="papOuvrirBureau(' + "'" + bureau + "'" + ')">← ' + bureau + '</button>';
+
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">' +
+    '<div style="font-family:' + "'" + 'Bebas Neue' + "'" + ',sans-serif;font-size:20px;color:var(--bleu);">📋 ' + div.label + '</div>' +
+    '<button class="pap-son-toggle" onclick="papToggleSon()">' + (papSonActif ? '🔊' : '🔇') + '</button></div>';
+
+  html += '<div style="background:linear-gradient(135deg,var(--bleu),var(--bleu-clair));border-radius:12px;padding:12px;color:white;margin-bottom:14px;display:flex;justify-content:space-around;text-align:center;">' +
+    '<div><div style="font-family:' + "'" + 'Bebas Neue' + "'" + ',sans-serif;font-size:26px;">' + ds.done + '</div><div style="font-size:10px;opacity:.7;">VISITÉS</div></div>' +
+    '<div><div style="font-family:' + "'" + 'Bebas Neue' + "'" + ',sans-serif;font-size:26px;">' + ds.restant + '</div><div style="font-size:10px;opacity:.7;">RESTANTS</div></div>' +
+    '<div><div style="font-family:' + "'" + 'Bebas Neue' + "'" + ',sans-serif;font-size:26px;">' + dp + '%</div><div style="font-size:10px;opacity:.7;">PROGRESSION</div></div></div>';
+
+  // List streets with persons
+  div.rues.forEach((rue, rueIdx) => {
+    const rs = papStatsRue(rue);
+    const rp = rs.total > 0 ? Math.round(rs.done / rs.total * 100) : 0;
+    const rComplete = rs.restant === 0 && rs.total > 0;
+
+    html += '<div class="pap-rue-header" style="' + (rComplete ? 'background:linear-gradient(135deg,var(--vert),#2ecc71);' : '') + '">' +
+      (rComplete ? '✅ ' : '📍 ') + rue.rue +
+      '<span style="float:right;font-size:12px;opacity:.8;">' + rs.done + '/' + rs.total + '</span></div>';
+
+    html += '<div class="pap-progress" style="margin:-4px 0 8px;"><div class="pap-progress-fill" style="width:' + rp + '%;background:' + (rComplete ? 'var(--vert)' : 'var(--bleu-clair)') + ';"></div></div>';
+
+    rue.personnes.forEach(p => {
+      const statut = papGetStatut(p.n, p.p);
+      const isDone = statut !== 'Non visité';
+      const statutClass = statut === 'Visité' ? 'visite' : statut === 'Absent' ? 'absent' : statut === 'Opposition' ? 'opposition' : '';
+      const statutIcon = statut === 'Visité' ? '✅' : statut === 'Absent' ? '🚪' : statut === 'Opposition' ? '🚫' : '⬜';
+
+      html += '<div class="pap-personne ' + statutClass + '" onclick="papCliquerPersonne(' + "'" + escapeQuotes(p.n) + "'" + ',' + "'" + escapeQuotes(p.p) + "'" + ',' + "'" + bureau + "'" + ',' + divIdx + ',' + rueIdx + ')">' +
+        '<div style="font-size:18px;">' + statutIcon + '</div>' +
+        '<div style="flex:1;">' +
+        '<div style="font-weight:600;font-size:14px;">' + p.n + ' ' + p.p + '</div>' +
+        '<div style="font-size:11px;color:var(--texte2);">' + p.a + '</div></div></div>';
+    });
+  });
+
+  $('papContenu').innerHTML = html;
+
+  // Save position
+  localStorage.setItem('pap_last_position', JSON.stringify({
+    bureau: bureau,
+    divIdx: divIdx,
+    divLabel: div.label,
+    rue: div.rues[0] ? div.rues[0].rue : ''
+  }));
+
+  papParler(div.label + '. ' + ds.restant + ' personnes restantes.');
+}
+
+function escapeQuotes(s) {
+  return s.replace(/'/g, "\\'").replace(/"/g, '\\"');
+}
+
+// Click on a person -> find in main DB and open Saisie
+function papCliquerPersonne(nom, prenom, bureau, divIdx, rueIdx) {
+  const id = papTrouverPersonne(nom, prenom);
+  if (!id) {
+    showToast('❌ Personne non trouvée dans la base', 'erreur');
+    papParler('Personne non trouvée dans la base');
+    return;
+  }
+
+  // Save state for return
+  papFromPAP = true;
+  papEtatActuel = { bureau, division: divIdx, rue: rueIdx };
+  localStorage.setItem('pap_last_position', JSON.stringify({
+    bureau, divIdx, divLabel: PAP_DATA[bureau].divisions[divIdx].label,
+    rue: PAP_DATA[bureau].divisions[divIdx].rues[rueIdx] ? PAP_DATA[bureau].divisions[divIdx].rues[rueIdx].rue : ''
+  }));
+
+  // Open the person's file in Saisie tab
+  selectionnerPersonne(id);
+}
+
+// Reprendre from saved position
+function papReprendre() {
+  try {
+    const pos = JSON.parse(localStorage.getItem('pap_last_position'));
+    if (pos && pos.bureau && pos.divIdx !== undefined) {
+      papOuvrirDivision(pos.bureau, pos.divIdx);
+    }
+  } catch(e) {
+    afficherPapAccueil();
+  }
+}
+
+function papToggleSon() {
+  papSonActif = !papSonActif;
+  localStorage.setItem('pap_son', papSonActif ? '1' : '0');
+  // Update all toggle buttons
+  document.querySelectorAll('.pap-son-toggle').forEach(btn => {
+    btn.innerHTML = papSonActif ? '🔊 Son ON' : '🔇 Son OFF';
+  });
+  showToast(papSonActif ? '🔊 Son activé' : '🔇 Son désactivé');
+}
+
+// Override retourRecherche to handle PAP return
+const originalRetourRecherche = retourRecherche;
+
+function retourPAP() {
+  papFromPAP = false;
+  // Check if the person was just saved - show motivation alert
+  if (currentPersonne) {
+    const statut = papGetStatut(currentPersonne.nom, currentPersonne.prenom);
+    if (statut !== 'Non visité' && papEtatActuel.bureau && papEtatActuel.division !== null) {
+      const div = PAP_DATA[papEtatActuel.bureau].divisions[papEtatActuel.division];
+      if (div && papEtatActuel.rue !== null) {
+        const rue = div.rues[papEtatActuel.rue];
+        if (rue) {
+          const rs = papStatsRue(rue);
+          const ds = papStatsDivision(div);
+
+          if (rs.restant === 0) {
+            // Street complete!
+            papAlert('🏆', 'RUE TERMINÉE !', rue.rue + ' : ' + rs.total + '/' + rs.total + ' ✅<br>Passe à la rue suivante !',
+              'Rue terminée ! Excellent travail ! Passe à la rue suivante.');
+          } else if (rs.restant === 1) {
+            papAlert('⚡', 'DERNIÈRE PERSONNE !', 'Plus que 1 personne dans<br>' + rue.rue + ' !',
+              'Dernière personne dans cette rue ! Allez, encore un effort !');
+          } else if (rs.done === Math.ceil(rs.total / 2)) {
+            papAlert('💪', 'MOITIÉ FAITE !', 'Déjà ' + rs.done + ' sur ' + rs.total + ' dans<br>' + rue.rue,
+              'Déjà la moitié ! Plus que ' + rs.restant + ' personnes !');
+          } else {
+            papAlert('👏', 'BRAVO !', 'Encore ' + rs.restant + ' personne' + (rs.restant > 1 ? 's' : '') + ' dans<br>' + rue.rue,
+              'Bravo ! Encore ' + rs.restant + ' personne' + (rs.restant > 1 ? 's' : '') + ' dans cette rue.');
+          }
+
+          if (ds.restant === 0) {
+            setTimeout(() => {
+              papAlert('⭐', 'DIVISION COMPLÈTE !', div.label + ' : ' + ds.total + '/' + ds.total + ' ✅<br>🎊 Excellent travail !',
+                'Division complète ! Tu es un champion !');
+            }, 4500);
+          }
+        }
+      }
+    }
+  }
+
+  // Return to PAP division view
+  showPage('pap');
+  if (papEtatActuel.bureau && papEtatActuel.division !== null) {
+    papOuvrirDivision(papEtatActuel.bureau, papEtatActuel.division);
+  } else {
+    afficherPapAccueil();
+  }
+}
+
 // =====================================================
 // INITIALISATION
 // =====================================================
@@ -1884,6 +2411,11 @@ document.addEventListener('DOMContentLoaded', () => {
   chargerMilitants();
   initTabs();
   initRecherche();
+  // Load son preference
+  const sonPref = localStorage.getItem('pap_son');
+  if (sonPref === '0') papSonActif = false;
+  // Pre-load voices
+  if (speechSynthesis) speechSynthesis.getVoices();
   setTimeout(() => passerSplash(), 2000);
 });
 </script>
