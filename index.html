@@ -261,7 +261,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v13</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v14</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;">📜</button>
@@ -575,7 +575,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v13';
+const APP_VERSION = 'Firebase v14';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -1533,6 +1533,23 @@ function afficherTestAlertes() {
     '<button onclick="speechSynthesis.cancel();showToast(\'⏹ Arrêté\')" style="background:rgba(255,255,255,0.2);border:none;color:white;padding:8px 16px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;">⏹ Stop</button>' +
     '</div></div>';
 
+  // Sélecteur de voix
+  const voixDispo = speechSynthesis.getVoices().filter(v => v.lang.startsWith('fr'));
+  if (voixDispo.length > 1) {
+    html += '<div style="background:white;border-radius:12px;padding:14px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,0.07);">' +
+      '<div style="font-size:12px;font-weight:700;color:var(--bleu);margin-bottom:8px;">🎙️ CHOISIR LA VOIX</div>' +
+      '<div style="font-size:11px;color:var(--texte2);margin-bottom:8px;">Voix actuelle : <strong id="voixActuelle">' + (papVoixChoisie ? papVoixChoisie.name : 'Auto') + '</strong></div>' +
+      '<div style="display:flex;flex-direction:column;gap:6px;">';
+    voixDispo.forEach((v, i) => {
+      const isCurrent = papVoixChoisie && papVoixChoisie.name === v.name;
+      html += '<div style="display:flex;align-items:center;gap:8px;">' +
+        '<button onclick="papChangerVoix(' + i + ')" style="background:' + (isCurrent ? 'var(--vert)' : '#f0f2f5') + ';color:' + (isCurrent ? 'white' : 'var(--texte)') + ';border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;flex:1;text-align:left;">' +
+        (isCurrent ? '✅ ' : '') + v.name + '</button>' +
+        '<button onclick="papTesterVoix(' + i + ')" style="background:var(--bleu-clair);color:white;border:none;border-radius:50%;width:32px;height:32px;font-size:14px;cursor:pointer;">▶</button></div>';
+    });
+    html += '</div></div>';
+  }
+
   alertes.forEach(cat => {
     html += '<div style="font-size:12px;font-weight:700;color:var(--texte2);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px;">' + cat.cat + '</div>';
     cat.items.forEach((a, i) => {
@@ -1591,6 +1608,31 @@ function testAlertePAP(catIdx, itemIdx) {
   papSonActif = true;
   const alerte = ALERTES_TEST_DATA[catIdx] && ALERTES_TEST_DATA[catIdx][itemIdx];
   if (alerte) papParler(alerte.voix);
+}
+
+function papTesterVoix(idx) {
+  const voix = speechSynthesis.getVoices().filter(v => v.lang.startsWith('fr'));
+  if (!voix[idx]) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance('Bonjour, je suis ' + voix[idx].name.split(' ')[0] + '. Bravo, encore 3 personnes dans cette rue !');
+  u.lang = 'fr-FR';
+  u.rate = 0.92;
+  u.pitch = 1.0;
+  u.volume = 0.9;
+  u.voice = voix[idx];
+  speechSynthesis.speak(u);
+}
+
+function papChangerVoix(idx) {
+  const voix = speechSynthesis.getVoices().filter(v => v.lang.startsWith('fr'));
+  if (!voix[idx]) return;
+  papVoixChoisie = voix[idx];
+  localStorage.setItem('pap_voix', voix[idx].name);
+  showToast('✅ Voix : ' + voix[idx].name, 'succes');
+  // Rafraîchir l'écran test
+  afficherTestAlertes();
+  // Tester la nouvelle voix
+  setTimeout(() => papParler('Voix changée. Je suis prête !'), 300);
 }
 
 function ouvrirAjoutMilitant() { ouvrirModal('modalAjoutMilitant'); $('nouveauNom').value = ''; $('nouveauPin').value = String(Math.floor(1000 + Math.random() * 9000)); $('nouveauRole').value = 'militant'; $('nouveauEmail').value = ''; }
@@ -2005,17 +2047,69 @@ let papSonActif = true;
 let papEtatActuel = { bureau: null, division: null, rue: null };
 let papFromPAP = false; // flag to know if saisie was opened from PAP
 
-// Voice synthesis
+// Voice synthesis — voix douce et naturelle
+let papVoixChoisie = null;
+
+function papChoisirMeilleureVoix() {
+  const toutes = speechSynthesis.getVoices();
+  const fr = toutes.filter(v => v.lang.startsWith('fr'));
+  if (!fr.length) return null;
+
+  // Priorité : voix naturelles/premium (Google, Microsoft, Apple)
+  // Les voix "Enhanced", "Premium", "Neural", "Natural" sont plus douces
+  const motsClesDoux = ['amelie', 'thomas', 'google', 'microsoft', 'neural', 'enhanced', 'premium', 'natural', 'audrey', 'aurélie', 'marie', 'lea', 'chloe'];
+
+  // D'abord chercher une voix féminine douce (souvent plus agréable)
+  for (const v of fr) {
+    const nom = v.name.toLowerCase();
+    if (motsClesDoux.some(m => nom.includes(m))) return v;
+  }
+
+  // Sinon, préférer les voix non-"compact" et non-"espeak" (plus naturelles)
+  const pasRobot = fr.filter(v => {
+    const nom = v.name.toLowerCase();
+    return !nom.includes('espeak') && !nom.includes('compact') && !nom.includes('mbrola');
+  });
+  if (pasRobot.length) return pasRobot[0];
+
+  // En dernier recours
+  return fr[0];
+}
+
+// Charger les voix (async sur certains navigateurs)
+function papInitVoix() {
+  const saved = localStorage.getItem('pap_voix');
+  if (saved) {
+    const toutes = speechSynthesis.getVoices();
+    const found = toutes.find(v => v.name === saved);
+    if (found) { papVoixChoisie = found; return; }
+  }
+  papVoixChoisie = papChoisirMeilleureVoix();
+  if (!papVoixChoisie) {
+    speechSynthesis.addEventListener('voiceschanged', () => {
+      const saved2 = localStorage.getItem('pap_voix');
+      if (saved2) {
+        const found2 = speechSynthesis.getVoices().find(v => v.name === saved2);
+        if (found2) { papVoixChoisie = found2; return; }
+      }
+      papVoixChoisie = papChoisirMeilleureVoix();
+    });
+  }
+}
+
 function papParler(texte) {
   if (!papSonActif) return;
   try {
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(texte);
     u.lang = 'fr-FR';
-    u.rate = 1.05;
-    u.pitch = 1.1;
-    const voix = speechSynthesis.getVoices().filter(v => v.lang.startsWith('fr'));
-    if (voix.length) u.voice = voix[0];
+    u.rate = 0.92;   // Plus lent = plus naturel et doux
+    u.pitch = 1.0;   // Pitch normal, pas aigu
+    u.volume = 0.9;  // Légèrement moins fort = plus doux
+
+    if (!papVoixChoisie) papVoixChoisie = papChoisirMeilleureVoix();
+    if (papVoixChoisie) u.voice = papVoixChoisie;
+
     speechSynthesis.speak(u);
   } catch(e) {}
 }
@@ -2629,8 +2723,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // Load son preference
   const sonPref = localStorage.getItem('pap_son');
   if (sonPref === '0') papSonActif = false;
-  // Pre-load voices
-  if (speechSynthesis) speechSynthesis.getVoices();
+  // Charger la meilleure voix française
+  if (speechSynthesis) papInitVoix();
   setTimeout(() => passerSplash(), 2000);
 });
 </script>
