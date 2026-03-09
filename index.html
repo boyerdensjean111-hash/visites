@@ -253,7 +253,7 @@
 </div>
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v24</span> 🔥</div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v25</span> 🔥</div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -302,7 +302,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v24</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v25</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;">📜</button>
@@ -616,7 +616,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v24';
+const APP_VERSION = 'Firebase v25';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -2204,6 +2204,17 @@ function fermerPapAlert() {
   }
 }
 
+// Alertes tutoriel (first-time only)
+function papTutoAlert(etape, icon, titre, msg, voix) {
+  var vus = JSON.parse(localStorage.getItem('pap_tuto_vus') || '[]');
+  if (vus.indexOf(etape) !== -1) return;
+  vus.push(etape);
+  localStorage.setItem('pap_tuto_vus', JSON.stringify(vus));
+  setTimeout(function() {
+    papAlert(icon, titre, msg, voix, null, 'Compris ! 👍');
+  }, 600);
+}
+
 // =====================================================
 // RAPPROCHEMENT PROFOND PAP ↔ BASE
 // =====================================================
@@ -2775,7 +2786,10 @@ function papAfficherVerification(trouvees, total, nonTrouvees) {
     if (elRue) elRue.innerHTML = '✅ ' + total + '/' + total + ' rues localisées';
     if (elDist) elDist.textContent = '✓';
     if (elUnit) elUnit.textContent = '';
-    papParler(total + ' rues trouvées ! Carte prête.');
+    // Tuto carte
+    papTutoAlert('carte', '🗺️', 'TA CARTE',
+      'Chaque <b>numéro</b> = 1 rue à visiter.<br>👆 Clique sur un marqueur pour voir les personnes.<br>◀ ▶ pour naviguer entre les étapes.<br>📍 pour activer ton GPS.',
+      'Voici ta carte ! Clique sur un marqueur pour voir les personnes.');
     setTimeout(function() {
       if (papEtapes.length > 0) papMajGpsBar(papEtapes[0], null);
     }, 3000);
@@ -2966,6 +2980,11 @@ function papOuvrirPanelRue(etape) {
   document.querySelector('.pap-carte-overlay').appendChild(panel);
 
   papParler(etape.nom + '. ' + rs.restant + ' personnes restantes.');
+
+  // Tuto panel personnes
+  papTutoAlert('panel', '👆', 'LISTE DES PERSONNES',
+    'Clique sur une personne pour ouvrir sa fiche.<br>Après l\'enregistrement, tu reviens <b>automatiquement</b> sur la carte.',
+    'Clique sur une personne pour enregistrer ta visite.');
 }
 
 function papFermerPanel() {
@@ -3028,6 +3047,11 @@ function retourCarte() {
       }
     }
   }
+
+  // Tuto retour carte
+  papTutoAlert('retour', '🔄', 'RETOUR AUTOMATIQUE',
+    'La personne est enregistrée ! ✅<br>Continue avec les autres de la rue, ou passe au <b>marqueur suivant</b>.',
+    'Continue avec les autres personnes.');
 
   // Réafficher la carte
   var overlay = document.querySelector('.pap-carte-overlay');
@@ -3109,6 +3133,11 @@ function papOuvrirDivision(bureau, divIdx) {
     divLabel: div.label,
     rue: div.rues[0] ? div.rues[0].rue : ''
   }));
+
+  // Tuto première ouverture division
+  papTutoAlert('division', '📋', 'COMMENT ÇA MARCHE',
+    'Clique sur le bouton rouge <b>🗺️ Carte</b> pour voir ton itinéraire sur la carte satellite.<br><br>Tu peux aussi cliquer directement sur une personne.',
+    'Clique sur le bouton carte rouge pour voir ton itinéraire.');
 
   // Alerte carte itineraire automatique
   const nbRues = div.rues.length;
