@@ -2528,7 +2528,10 @@ function papOuvrirDivision(bureau, divIdx) {
 
   html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">' +
     '<div style="font-family:' + "'" + 'Bebas Neue' + "'" + ',sans-serif;font-size:20px;color:var(--bleu);">📋 ' + div.label + '</div>' +
-    '<button class="pap-son-toggle" onclick="papToggleSon()">' + (papSonActif ? '🔊' : '🔇') + '</button></div>';
+    '<div style="display:flex;gap:8px;">' +
+    '<button class="pap-son-toggle" onclick="papOuvrirCarte(' + "'" + bureau + "'" + ',' + divIdx + ')" style="background:var(--bleu-clair);color:white;">🗺️ Carte</button>' +
+    '<button class="pap-son-toggle" onclick="papToggleSon()">' + (papSonActif ? '🔊' : '🔇') + '</button>' +
+    '</div></div>';
 
   html += '<div style="background:linear-gradient(135deg,var(--bleu),var(--bleu-clair));border-radius:12px;padding:12px;color:white;margin-bottom:14px;display:flex;justify-content:space-around;text-align:center;">' +
     '<div><div style="font-family:' + "'" + 'Bebas Neue' + "'" + ',sans-serif;font-size:26px;">' + ds.done + '</div><div style="font-size:10px;opacity:.7;">VISITÉS</div></div>' +
@@ -2574,14 +2577,30 @@ function papOuvrirDivision(bureau, divIdx) {
   // Alerte carte itineraire automatique
   const nbRues = div.rues.length;
   const voixMsg = div.label + '! ' + nbRues + ' rues a visiter, ' + ds.restant + ' personnes t\'attendent. C\'est parti!';
-  papAlert(
-    '🗺️',
-    'TON ITINÉRAIRE',
-    '<b>' + div.label + '</b><br>' + nbRues + ' rues à visiter · ' + ds.restant + ' personnes restantes',
-    voixMsg,
-    function() { papOuvrirCarte(bureau, divIdx); },
-    "C'est parti ! 🚀"
-  );
+  papAlertCarte(bureau, divIdx, div.label, nbRues, ds.restant, voixMsg);
+}
+
+// Alerte spéciale carte avec bouton qui ouvre Google Maps directement (évite blocage popup)
+function papAlertCarte(bureau, divIdx, label, nbRues, restant, voixMsg) {
+  document.querySelectorAll('.pap-alert, .pap-alert-overlay').forEach(e => e.remove());
+
+  const overlay = document.createElement('div');
+  overlay.className = 'pap-alert-overlay';
+
+  const box = document.createElement('div');
+  box.className = 'pap-alert';
+  box.innerHTML = '<div class="pap-alert-icon">🗺️</div>' +
+    '<div class="pap-alert-title">TON ITINÉRAIRE</div>' +
+    '<div class="pap-alert-msg"><b>' + label + '</b><br>' + nbRues + ' rues à visiter · ' + restant + ' personnes restantes</div>' +
+    '<button class="pap-alert-btn" style="background:var(--vert);width:100%;padding:14px;" onclick="fermerPapAlert();papOuvrirCarte(\'' + bureau + '\',' + divIdx + ')">🗺️ Voir la carte 🚀</button>' +
+    '<button class="pap-alert-btn" style="background:var(--gris);color:var(--texte);width:100%;padding:12px;margin-top:8px;font-size:13px;" onclick="fermerPapAlert()">Plus tard</button>';
+
+  document.body.appendChild(overlay);
+  document.body.appendChild(box);
+
+  if (voixMsg) papParler(voixMsg);
+
+  overlay.onclick = function() { fermerPapAlert(); };
 }
 
 function escapeQuotes(s) {
