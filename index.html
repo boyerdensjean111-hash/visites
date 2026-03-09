@@ -150,6 +150,16 @@
   .splash-loader-bar { height:100%; width:0%; background:white; border-radius:2px; animation:splashLoad 3s linear forwards; }
   @keyframes splashLoad { 0%{width:0%} 100%{width:100%} }
   @keyframes pulseBtn { 0%,100%{transform:scale(1);} 50%{transform:scale(1.05);} }
+  /* Carte Leaflet fullscreen */
+  .pap-carte-overlay { position:fixed; inset:0; z-index:800; background:white; display:flex; flex-direction:column; }
+  .pap-carte-header { background:var(--bleu); color:white; padding:12px 16px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+  .pap-carte-header h3 { font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:1px; margin:0; }
+  .pap-carte-fermer { background:rgba(255,255,255,0.2); border:none; color:white; font-size:14px; font-weight:700; padding:8px 16px; border-radius:10px; cursor:pointer; }
+  .pap-carte-legende { background:white; padding:8px 12px; display:flex; gap:12px; flex-wrap:wrap; align-items:center; border-bottom:2px solid var(--gris); flex-shrink:0; font-size:12px; }
+  .pap-carte-legende span { display:flex; align-items:center; gap:4px; font-weight:600; }
+  #papMapContainer { flex:1; min-height:0; }
+  .pap-marker-label { background:var(--rouge); color:white; font-family:'Bebas Neue',sans-serif; font-size:18px; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:3px solid white; box-shadow:0 3px 10px rgba(0,0,0,0.4); }
+  .pap-marker-name { background:white; color:var(--bleu); font-family:'DM Sans',sans-serif; font-size:11px; font-weight:700; padding:3px 8px; border-radius:6px; box-shadow:0 2px 6px rgba(0,0,0,0.2); white-space:nowrap; border:2px solid var(--bleu); }
   .btn-legal { position:absolute; bottom:20px; right:20px; background:rgba(255,255,255,0.15); color:rgba(255,255,255,0.7); border:none; padding:8px 14px; border-radius:20px; font-size:11px; cursor:pointer; }
   .firebase-badge { background:linear-gradient(135deg,#FF9800,#F44336); color:white; font-size:9px; font-weight:700; padding:2px 6px; border-radius:4px; margin-left:4px; letter-spacing:.5px; }
   .csv-list { list-style:none; padding:0; }
@@ -195,6 +205,9 @@
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+<!-- Leaflet Map -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
@@ -213,7 +226,7 @@
 </div>
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v16</span> 🔥</div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v17</span> 🔥</div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -262,7 +275,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v16</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v17</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;">📜</button>
@@ -576,7 +589,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v16';
+const APP_VERSION = 'Firebase v17';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -2488,29 +2501,124 @@ function papOuvrirBureau(bureau) {
   papParler(bureau + '. ' + stats.restant + ' personnes restantes.');
 }
 
-// CARTE: ouvre Google Maps itinéraire à pied pour la division
+// CARTE: affiche carte Leaflet fullscreen avec les rues de la division
+let papMapInstance = null;
+
 function papOuvrirCarte(bureau, divIdx) {
   const div = PAP_DATA[bureau].divisions[divIdx];
   if (!div || !div.rues || div.rues.length === 0) return;
 
-  // Collecter 1 adresse par rue (juste le nom de rue + ville)
-  const rues = [];
-  div.rues.forEach(rue => {
-    if (rue.rue) rues.push(rue.rue + ', La Plaine-des-Palmistes, La Reunion');
+  // Supprimer ancienne carte si existe
+  document.querySelectorAll('.pap-carte-overlay').forEach(e => e.remove());
+
+  // Créer overlay fullscreen
+  const overlay = document.createElement('div');
+  overlay.className = 'pap-carte-overlay';
+  overlay.innerHTML =
+    '<div class="pap-carte-header">' +
+      '<h3>🗺️ ' + div.label + '</h3>' +
+      '<button class="pap-carte-fermer" onclick="papFermerCarte()">✕ Fermer</button>' +
+    '</div>' +
+    '<div class="pap-carte-legende">' +
+      '<span>📍 <b>' + div.rues.length + ' rues</b></span>' +
+      '<span style="color:var(--rouge);">● Étapes</span>' +
+      '<span style="color:var(--bleu);">— Itinéraire</span>' +
+    '</div>' +
+    '<div id="papMapContainer"></div>';
+
+  document.body.appendChild(overlay);
+
+  // Init Leaflet map centré sur La Plaine-des-Palmistes
+  setTimeout(function() {
+    papMapInstance = L.map('papMapContainer', { zoomControl: true }).setView([-21.137, 55.594], 15);
+
+    // Tuile OpenStreetMap propre (pas de POI commercial)
+    L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap',
+      maxZoom: 19
+    }).addTo(papMapInstance);
+
+    // Géocoder chaque rue et placer les marqueurs
+    papGeocoderRues(div.rues);
+  }, 100);
+}
+
+function papFermerCarte() {
+  if (papMapInstance) { papMapInstance.remove(); papMapInstance = null; }
+  document.querySelectorAll('.pap-carte-overlay').forEach(e => e.remove());
+}
+
+function papGeocoderRues(rues) {
+  const resultats = [];
+  let termine = 0;
+
+  rues.forEach(function(rue, idx) {
+    const query = rue.rue + ', La Plaine-des-Palmistes, La Réunion';
+    const url = 'https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(query) + '&limit=1';
+
+    setTimeout(function() {
+      fetch(url)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data && data.length > 0) {
+            resultats.push({ idx: idx, lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon), nom: rue.rue, total: rue.personnes.length });
+          }
+          termine++;
+          if (termine === rues.length) papAfficherMarqueurs(resultats);
+        })
+        .catch(function() {
+          termine++;
+          if (termine === rues.length) papAfficherMarqueurs(resultats);
+        });
+    }, idx * 300); // 300ms entre chaque requête (respect rate limit Nominatim)
+  });
+}
+
+function papAfficherMarqueurs(resultats) {
+  if (!papMapInstance || resultats.length === 0) return;
+
+  // Trier par index original
+  resultats.sort(function(a, b) { return a.idx - b.idx; });
+
+  const points = [];
+
+  resultats.forEach(function(r, i) {
+    var latlng = [r.lat, r.lng];
+    points.push(latlng);
+
+    // Marqueur numéroté gros et visible
+    var numIcon = L.divIcon({
+      className: '',
+      html: '<div class="pap-marker-label">' + (i + 1) + '</div>',
+      iconSize: [32, 32],
+      iconAnchor: [16, 16]
+    });
+
+    var marker = L.marker(latlng, { icon: numIcon }).addTo(papMapInstance);
+
+    // Tooltip avec nom de rue toujours visible
+    marker.bindTooltip('<b>' + (i + 1) + '.</b> ' + r.nom + ' <span style="color:#888;">(' + r.total + ' pers.)</span>', {
+      permanent: true,
+      direction: 'right',
+      offset: [18, 0],
+      className: 'pap-marker-name'
+    });
   });
 
-  if (rues.length === 0) return;
+  // Tracer l'itinéraire (ligne bleue entre les points)
+  if (points.length > 1) {
+    L.polyline(points, { color: '#1a3a6b', weight: 4, opacity: 0.8, dashArray: '10, 8' }).addTo(papMapInstance);
+  }
 
-  // Google Maps Directions API URL - mode marche, itinéraire seulement
-  const origin = encodeURIComponent(rues[0]);
-  const dest = encodeURIComponent(rues[rues.length - 1]);
-  const waypoints = rues.length > 2 ? rues.slice(1, -1).map(r => encodeURIComponent(r)).join('|') : '';
-
-  let url = 'https://www.google.com/maps/dir/?api=1&origin=' + origin + '&destination=' + dest + '&travelmode=walking';
-  if (waypoints) url += '&waypoints=' + waypoints;
-
-  window.open(url, '_blank');
+  // Zoom sur tous les marqueurs
+  var group = L.featureGroup(papMapInstance._layers ? Object.values(papMapInstance._layers).filter(function(l) { return l.getLatLng; }) : []);
+  if (group.getLayers().length > 0) {
+    papMapInstance.fitBounds(group.getBounds().pad(0.15));
+  } else if (points.length > 0) {
+    papMapInstance.fitBounds(L.latLngBounds(points).pad(0.15));
+  }
 }
+
 
 // DIVISION VIEW: show streets and persons
 function papOuvrirDivision(bureau, divIdx) {
