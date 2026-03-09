@@ -261,7 +261,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v12</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v13</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;">📜</button>
@@ -575,7 +575,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v12';
+const APP_VERSION = 'Firebase v13';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -687,6 +687,7 @@ function demarrerListenersFirebase() {
     activerRecherche();
     updateLastSync();
     setSyncIndicator(false);
+    papResetCache(); // Reset PAP matching cache on data update
 
     // Rafraîchir la recherche en cours
     const qNom = $('searchNom')?.value;
@@ -2053,39 +2054,179 @@ function fermerPapAlert() {
   });
 }
 
-// Count visited for a person in PAP list
-function papGetStatut(nom, prenom) {
-  if (!toutesPersonnes.length) return '';
-  const n = nom.toUpperCase().trim();
-  const p = prenom.toUpperCase().trim();
-  for (let i = 0; i < toutesPersonnes.length; i++) {
-    const pNom = (toutesPersonnes[i][1] || '').toUpperCase().trim();
-    const pPrenom = (toutesPersonnes[i][2] || '').toUpperCase().trim();
-    if (pNom === n && pPrenom === p) return toutesPersonnes[i][3] || 'Non visité';
-    // Try partial match (nom contains)
-    if (pNom.includes(n) && pPrenom.includes(p)) return toutesPersonnes[i][3] || 'Non visité';
-    if (n.includes(pNom) && p.includes(pPrenom) && pNom.length > 2) return toutesPersonnes[i][3] || 'Non visité';
-  }
-  return 'Non visité';
+// =====================================================
+// RAPPROCHEMENT PROFOND PAP ↔ BASE
+// =====================================================
+// Normaliser : enlever accents, tirets, espaces, ponctuation
+function papNorm(s) {
+  return (s || '').toUpperCase().trim()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // accents
+    .replace(/['\-\/\\.,;:!?()]/g, ' ')  // ponctuation → espace
+    .replace(/\s+/g, ' ').trim();
 }
 
+// Extraire les variantes de nom (gère ép/, née, ep/)
+// Ex: "BERIL EP/SAINT-GILLES" → ["BERIL EP SAINT GILLES", "BERIL", "SAINT GILLES", "SAINT-GILLES"]
+function papVariantesNom(nomBrut) {
+  const norm = papNorm(nomBrut);
+  const variantes = [norm];
+
+  // Séparer sur ép/ ep/ née/ EP NEE
+  const separateurs = [' EP ', ' EP/', '/EP ', ' NEE ', ' EPOUSE '];
+  for (const sep of separateurs) {
+    if (norm.includes(sep)) {
+      const parts = norm.split(sep);
+      parts.forEach(p => { if (p.trim().length > 1) variantes.push(p.trim()); });
+    }
+  }
+  // Aussi séparer sur / seul
+  if (norm.includes('/')) {
+    norm.split('/').forEach(p => { if (p.trim().length > 1) variantes.push(p.trim()); });
+  }
+  // Aussi séparer sur "DE " pour noms composés (JUPPIN DE FONDAUMIERE)
+  // garder le nom complet, pas de split
+
+  return [...new Set(variantes)];
+}
+
+// Extraire variantes prénom (premier prénom seul + complet)
+function papVariantesPrenom(prenomBrut) {
+  const norm = papNorm(prenomBrut);
+  const variantes = [norm];
+  // Premier prénom seul
+  const parts = norm.split(' ');
+  if (parts.length > 1) {
+    variantes.push(parts[0]); // premier prénom
+    variantes.push(parts.slice(0, 2).join(' ')); // 2 premiers
+  }
+  // Aussi sans tiret
+  if (norm.includes('-')) {
+    variantes.push(norm.replace(/-/g, ' '));
+    variantes.push(norm.split('-')[0]);
+  }
+  return [...new Set(variantes)];
+}
+
+// Score de similarité entre 2 strings (0 à 1)
+function papSimilarite(a, b) {
+  if (a === b) return 1;
+  if (!a || !b) return 0;
+  // L'un contient l'autre
+  if (a.includes(b)) return b.length / a.length;
+  if (b.includes(a)) return a.length / b.length;
+  // Mots en commun
+  const motsA = a.split(' ').filter(m => m.length > 1);
+  const motsB = b.split(' ').filter(m => m.length > 1);
+  let communs = 0;
+  for (const m of motsA) {
+    if (motsB.some(mb => mb === m || mb.includes(m) || m.includes(mb))) communs++;
+  }
+  const total = Math.max(motsA.length, motsB.length);
+  return total > 0 ? communs / total : 0;
+}
+
+// Cache de rapprochement pour performance
+let papCacheMatch = {};
+function papResetCache() { papCacheMatch = {}; }
+
+// TROUVER une personne : rapprochement profond multi-niveaux
 function papTrouverPersonne(nom, prenom) {
   if (!toutesPersonnes.length) return null;
-  const n = nom.toUpperCase().trim();
-  const p = prenom.toUpperCase().trim();
-  // Exact match first
+
+  const cacheKey = nom + '|||' + prenom;
+  if (papCacheMatch[cacheKey] !== undefined) return papCacheMatch[cacheKey];
+
+  const varNom = papVariantesNom(nom);
+  const varPrenom = papVariantesPrenom(prenom);
+
+  let meilleurScore = 0;
+  let meilleurId = null;
+
   for (let i = 0; i < toutesPersonnes.length; i++) {
-    const pNom = (toutesPersonnes[i][1] || '').toUpperCase().trim();
-    const pPrenom = (toutesPersonnes[i][2] || '').toUpperCase().trim();
-    if (pNom === n && pPrenom === p) return toutesPersonnes[i][0];
+    const p = toutesPersonnes[i];
+    const dbNom = papNorm(p[1] || '');
+    const dbPrenom = papNorm(p[2] || '');
+    const dbNomUsage = papNorm(p[8] || '');
+
+    // NIVEAU 1 : Match exact normalisé (score 100)
+    for (const vn of varNom) {
+      for (const vp of varPrenom) {
+        if (vn === dbNom && vp === dbPrenom) {
+          papCacheMatch[cacheKey] = p[0];
+          return p[0];
+        }
+      }
+    }
+
+    // NIVEAU 2 : Match avec nomUsage (score 95)
+    if (dbNomUsage) {
+      for (const vn of varNom) {
+        for (const vp of varPrenom) {
+          if ((vn === dbNomUsage || dbNomUsage === vn) && vp === dbPrenom) {
+            papCacheMatch[cacheKey] = p[0];
+            return p[0];
+          }
+        }
+      }
+    }
+
+    // NIVEAU 3 : Nom contient ou est contenu + prénom exact (score 90)
+    for (const vn of varNom) {
+      if (vn.length < 3) continue;
+      const nomMatch = dbNom.includes(vn) || vn.includes(dbNom) || (dbNomUsage && (dbNomUsage.includes(vn) || vn.includes(dbNomUsage)));
+      if (nomMatch) {
+        for (const vp of varPrenom) {
+          if (dbPrenom === vp || dbPrenom.includes(vp) || vp.includes(dbPrenom)) {
+            const score = 90;
+            if (score > meilleurScore) { meilleurScore = score; meilleurId = p[0]; }
+          }
+        }
+      }
+    }
+
+    // NIVEAU 4 : Similarité mots nom + premier prénom identique (score 80)
+    for (const vn of varNom) {
+      if (vn.length < 3) continue;
+      const simNom = papSimilarite(vn, dbNom);
+      const simNomUsage = dbNomUsage ? papSimilarite(vn, dbNomUsage) : 0;
+      const bestSimNom = Math.max(simNom, simNomUsage);
+      if (bestSimNom >= 0.5) {
+        // Vérifier prénom : au moins premier prénom match
+        const premierPrenomPAP = papNorm(prenom).split(' ')[0];
+        const premierPrenomDB = dbPrenom.split(' ')[0];
+        if (premierPrenomPAP === premierPrenomDB || premierPrenomDB.includes(premierPrenomPAP) || premierPrenomPAP.includes(premierPrenomDB)) {
+          const score = 80 + bestSimNom * 10;
+          if (score > meilleurScore) { meilleurScore = score; meilleurId = p[0]; }
+        }
+      }
+    }
+
+    // NIVEAU 5 : Nom exact variante + prénom partiel premier mot (score 70)
+    for (const vn of varNom) {
+      if (vn.length < 3) continue;
+      if (vn === dbNom || vn === dbNomUsage) {
+        const premierPrenomPAP = papNorm(prenom).split(' ')[0];
+        const prenomDB_mots = dbPrenom.split(' ');
+        if (prenomDB_mots.some(m => m === premierPrenomPAP || (m.length > 2 && (m.includes(premierPrenomPAP) || premierPrenomPAP.includes(m))))) {
+          const score = 75;
+          if (score > meilleurScore) { meilleurScore = score; meilleurId = p[0]; }
+        }
+      }
+    }
   }
-  // Partial match
-  for (let i = 0; i < toutesPersonnes.length; i++) {
-    const pNom = (toutesPersonnes[i][1] || '').toUpperCase().trim();
-    const pPrenom = (toutesPersonnes[i][2] || '').toUpperCase().trim();
-    if ((pNom.includes(n) || n.includes(pNom)) && (pPrenom.includes(p) || p.includes(pPrenom)) && pNom.length > 2) return toutesPersonnes[i][0];
-  }
-  return null;
+
+  // Retourner si score suffisant (>= 70)
+  const result = meilleurScore >= 70 ? meilleurId : null;
+  papCacheMatch[cacheKey] = result;
+  return result;
+}
+
+// GET STATUT via le rapprochement profond
+function papGetStatut(nom, prenom) {
+  const id = papTrouverPersonne(nom, prenom);
+  if (id === null) return 'Non visité';
+  const p = toutesPersonnes.find(x => x[0] == id);
+  return p ? (p[3] || 'Non visité') : 'Non visité';
 }
 
 // Stats for a division
@@ -2309,13 +2450,87 @@ function escapeQuotes(s) {
   return s.replace(/'/g, "\\'").replace(/"/g, '\\"');
 }
 
+// Afficher un choix quand plusieurs candidats matchent
+function papAfficherChoixMultiple(candidats, nomPAP, prenomPAP, bureau, divIdx, rueIdx) {
+  document.querySelectorAll('.pap-alert, .pap-alert-overlay').forEach(e => e.remove());
+  const overlay = document.createElement('div');
+  overlay.className = 'pap-alert-overlay';
+  const box = document.createElement('div');
+  box.className = 'pap-alert';
+  box.style.maxWidth = '380px';
+  let html = '<div class="pap-alert-icon">🔍</div>' +
+    '<div class="pap-alert-title">Plusieurs résultats</div>' +
+    '<div style="font-size:13px;color:var(--texte2);margin-bottom:12px;">Pour <strong>' + nomPAP + ' ' + prenomPAP + '</strong></div>';
+  candidats.forEach(c => {
+    html += '<div onclick="papChoisirCandidat(' + c.id + ',\'' + bureau + '\',' + divIdx + ',' + rueIdx + ')" style="background:#f8f9fa;border:1.5px solid #e0e4ea;border-radius:10px;padding:12px;margin-bottom:8px;cursor:pointer;text-align:left;">' +
+      '<div style="font-weight:700;font-size:14px;">' + c.nom + ' ' + c.prenom + '</div>' +
+      (c.nomUsage ? '<div style="font-size:11px;color:#8e44ad;">Usage : ' + c.nomUsage + '</div>' : '') +
+      '<div style="font-size:11px;color:#888;">ID ' + c.id + '</div></div>';
+  });
+  html += '<button class="pap-alert-btn" style="background:#95a5a6;" onclick="fermerPapAlert()">Annuler</button>';
+  box.innerHTML = html;
+  document.body.appendChild(overlay);
+  document.body.appendChild(box);
+  overlay.onclick = fermerPapAlert;
+  papParler(candidats.length + ' résultats trouvés. Choisis la bonne personne.');
+}
+
+function papChoisirCandidat(id, bureau, divIdx, rueIdx) {
+  fermerPapAlert();
+  papFromPAP = true;
+  papEtatActuel = { bureau, division: divIdx, rue: rueIdx };
+  localStorage.setItem('pap_last_position', JSON.stringify({
+    bureau, divIdx, divLabel: PAP_DATA[bureau].divisions[divIdx].label,
+    rue: PAP_DATA[bureau].divisions[divIdx].rues[rueIdx] ? PAP_DATA[bureau].divisions[divIdx].rues[rueIdx].rue : ''
+  }));
+  selectionnerPersonne(id);
+}
+
 // Click on a person -> find in main DB and open Saisie
 function papCliquerPersonne(nom, prenom, bureau, divIdx, rueIdx) {
-  const id = papTrouverPersonne(nom, prenom);
+  let id = papTrouverPersonne(nom, prenom);
   if (!id) {
-    showToast('❌ Personne non trouvée dans la base', 'erreur');
-    papParler('Personne non trouvée dans la base');
-    return;
+    // DERNIER RECOURS : recherche par nom seul dans toute la base
+    const normNom = papNorm(nom);
+    const variantes = papVariantesNom(nom);
+    const premierPrenom = papNorm(prenom).split(' ')[0];
+    let candidats = [];
+    for (let i = 0; i < toutesPersonnes.length; i++) {
+      const p = toutesPersonnes[i];
+      const dbNom = papNorm(p[1] || '');
+      const dbNomUsage = papNorm(p[8] || '');
+      const dbPrenom = papNorm(p[2] || '');
+      for (const vn of variantes) {
+        if (vn.length < 3) continue;
+        // Même nom OU nom d'usage + premier prénom commence pareil
+        if (dbNom === vn || dbNomUsage === vn || dbNom.includes(vn) || vn.includes(dbNom)) {
+          if (premierPrenom.length >= 2 && (dbPrenom.startsWith(premierPrenom.substring(0,3)) || premierPrenom.startsWith(dbPrenom.substring(0,3)))) {
+            candidats.push({ id: p[0], nom: p[1], prenom: p[2], nomUsage: p[8] || '' });
+          }
+        }
+      }
+    }
+    if (candidats.length === 1) {
+      // Un seul candidat → on le prend
+      id = candidats[0].id;
+      showToast('🔍 Trouvé : ' + candidats[0].nom + ' ' + candidats[0].prenom, 'succes');
+    } else if (candidats.length > 1) {
+      // Plusieurs candidats → proposer choix
+      papAfficherChoixMultiple(candidats, nom, prenom, bureau, divIdx, rueIdx);
+      return;
+    } else {
+      // Vraiment pas trouvé → pré-remplir la recherche
+      showToast('❌ ' + nom + ' ' + prenom + ' non trouvé. Recherche lancée...', 'erreur');
+      papParler('Personne non trouvée. Recherche lancée.');
+      // Basculer sur recherche avec le nom pré-rempli
+      showPage('recherche');
+      const sNom = $('searchNom');
+      const sPrenom = $('searchPrenom');
+      if (sNom) sNom.value = variantes[variantes.length > 1 ? 1 : 0] || nom;
+      if (sPrenom) sPrenom.value = premierPrenom;
+      setTimeout(rechercher, 100);
+      return;
+    }
   }
 
   // Save state for return
