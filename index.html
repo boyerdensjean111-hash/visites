@@ -242,7 +242,7 @@
 </div>
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v20</span> 🔥</div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v21</span> 🔥</div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -291,7 +291,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v20</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v21</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;">📜</button>
@@ -605,7 +605,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v20';
+const APP_VERSION = 'Firebase v21';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -2751,10 +2751,31 @@ function papGeocoderRues(rues) {
   });
 }
 
+// Algorithme plus proche voisin : trie les étapes pour éviter les croisements
+function papTrierPlusProche(resultats) {
+  if (resultats.length <= 2) return resultats;
+  var trie = [resultats[0]];
+  var reste = resultats.slice(1);
+
+  while (reste.length > 0) {
+    var dernier = trie[trie.length - 1];
+    var plusProche = 0;
+    var distMin = Infinity;
+    for (var i = 0; i < reste.length; i++) {
+      var d = Math.sqrt(Math.pow(reste[i].lat - dernier.lat, 2) + Math.pow(reste[i].lng - dernier.lng, 2));
+      if (d < distMin) { distMin = d; plusProche = i; }
+    }
+    trie.push(reste[plusProche]);
+    reste.splice(plusProche, 1);
+  }
+  return trie;
+}
+
 function papAfficherMarqueurs(resultats) {
   if (!papMapInstance || resultats.length === 0) return;
 
-  resultats.sort(function(a, b) { return a.idx - b.idx; });
+  // Trier par plus proche voisin pour un parcours logique sans croisement
+  resultats = papTrierPlusProche(resultats);
   papEtapes = resultats;
 
   const points = [];
@@ -2773,7 +2794,6 @@ function papAfficherMarqueurs(resultats) {
 
     var marker = L.marker(latlng, { icon: numIcon }).addTo(papMapInstance);
 
-    // Tooltip nom de rue (fond blanc, bien visible sur satellite)
     marker.bindTooltip('<b>' + (i + 1) + '.</b> ' + r.nom + ' <span style="color:#888;">(' + r.total + ')</span>', {
       permanent: true,
       direction: i % 2 === 0 ? 'right' : 'left',
@@ -2782,10 +2802,9 @@ function papAfficherMarqueurs(resultats) {
     });
   });
 
-  // Itinéraire : ligne blanche épaisse + ligne rouge par-dessus
+  // Tracer la route RÉELLE via OSRM (suit les vraies rues)
   if (points.length > 1) {
-    L.polyline(points, { color: '#ffffff', weight: 6, opacity: 0.9 }).addTo(papMapInstance);
-    L.polyline(points, { color: '#e74c3c', weight: 3, opacity: 1 }).addTo(papMapInstance);
+    papTracerRouteReelle(points);
   }
 
   // Zoom sur tout
@@ -2799,6 +2818,34 @@ function papAfficherMarqueurs(resultats) {
     document.getElementById('papGpsDist').textContent = '→';
     document.getElementById('papGpsUnit').textContent = 'GO';
   }
+}
+
+// Appel OSRM pour tracer la route réelle sur les rues
+function papTracerRouteReelle(points) {
+  // Construire les coordonnées pour OSRM (lng,lat;lng,lat;...)
+  var coords = points.map(function(p) { return p[1] + ',' + p[0]; }).join(';');
+  var url = 'https://router.project-osrm.org/route/v1/foot/' + coords + '?overview=full&geometries=geojson';
+
+  fetch(url)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data && data.routes && data.routes.length > 0) {
+        var routeCoords = data.routes[0].geometry.coordinates.map(function(c) { return [c[1], c[0]]; });
+
+        // Ligne blanche épaisse (fond) + ligne bleue par-dessus (route réelle)
+        L.polyline(routeCoords, { color: '#ffffff', weight: 8, opacity: 0.9 }).addTo(papMapInstance);
+        L.polyline(routeCoords, { color: '#3498db', weight: 4, opacity: 1 }).addTo(papMapInstance);
+      } else {
+        // Fallback: lignes droites si OSRM échoue
+        L.polyline(points, { color: '#ffffff', weight: 6, opacity: 0.9 }).addTo(papMapInstance);
+        L.polyline(points, { color: '#e74c3c', weight: 3, opacity: 1 }).addTo(papMapInstance);
+      }
+    })
+    .catch(function() {
+      // Fallback: lignes droites
+      L.polyline(points, { color: '#ffffff', weight: 6, opacity: 0.9 }).addTo(papMapInstance);
+      L.polyline(points, { color: '#e74c3c', weight: 3, opacity: 1 }).addTo(papMapInstance);
+    });
 }
 
 
