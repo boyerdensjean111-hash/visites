@@ -242,7 +242,7 @@
 </div>
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v18</span> 🔥</div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v20</span> 🔥</div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -291,7 +291,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v18</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v20</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;">📜</button>
@@ -605,7 +605,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v18';
+const APP_VERSION = 'Firebase v20';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -680,7 +680,7 @@ function afficherMentionsLegales() { ouvrirModal('modalLegal'); }
 // =====================================================
 // VÉRIFICATION MISE À JOUR
 // =====================================================
-async function verifierMiseAJour() { if (updateDismissed) return; try { const resp = await fetch(VERSION_CHECK_URL + '?t=' + Date.now(), { cache: 'no-store' }); const html = await resp.text(); const match = html.match(/APP_VERSION\s*=\s*['"]([^'"]+)['"]/); if (match && match[1] && match[1] !== APP_VERSION) afficherPopupMaj(match[1]); } catch(e) {} }
+async function verifierMiseAJour() { if (updateDismissed) return; try { const resp = await fetch(VERSION_CHECK_URL + '?t=' + Date.now(), { cache: 'no-store' }); const html = await resp.text(); const match = html.match(/APP_VERSION\s*=\s*['"]([^'"]+)['"]/); if (match && match[1] && match[1] !== APP_VERSION) { const remoteNum = parseInt((match[1].match(/v(\d+)/i) || [])[1] || '0'); const localNum = parseInt((APP_VERSION.match(/v(\d+)/i) || [])[1] || '0'); if (remoteNum > localNum) afficherPopupMaj(match[1]); } } catch(e) {} }
 function afficherPopupMaj(v) { const popup = $('popupMiseAJour'); if (popup) { popup.querySelector('div > div:nth-child(2)').textContent = 'Nouvelle version ' + v + ' disponible !'; popup.style.display = 'flex'; } }
 function rafraichirPage() { try { if (currentPersonne && currentPersonne.id) { localStorage.setItem('visites_fiche_encours', JSON.stringify({ id: currentPersonne.id, nom: currentPersonne.nom, prenom: currentPersonne.prenom })); } } catch(e) {} location.reload(true); }
 function demarrerVerificationMaj() { setTimeout(verifierMiseAJour, 10000); updateCheckTimer = setInterval(verifierMiseAJour, VERSION_CHECK_INTERVAL); }
@@ -2524,6 +2524,8 @@ let papMapInstance = null;
 let papGpsWatchId = null;
 let papGpsMarker = null;
 let papGpsPulse = null;
+let papGpsTrace = null; // polyline du parcours réel
+let papGpsPositions = []; // positions GPS enregistrées
 let papEtapes = [];
 let papEtapeActuelle = 0;
 let papTuileSat = null;
@@ -2605,6 +2607,7 @@ function papSwitchTuile(type) {
 
 function papFermerCarte() {
   if (papGpsWatchId) { navigator.geolocation.clearWatch(papGpsWatchId); papGpsWatchId = null; }
+  papGpsMarker = null; papGpsPulse = null; papGpsTrace = null; papGpsPositions = []; papLigneVersEtape = null;
   if (papMapInstance) { papMapInstance.remove(); papMapInstance = null; }
   document.querySelectorAll('.pap-carte-overlay').forEach(e => e.remove());
 }
@@ -2623,11 +2626,15 @@ function papToggleGps() {
   if (!navigator.geolocation) { alert('GPS non disponible'); return; }
 
   document.getElementById('papBtnGps').classList.add('active');
+  papGpsPositions = [];
 
   papGpsWatchId = navigator.geolocation.watchPosition(function(pos) {
     var lat = pos.coords.latitude;
     var lng = pos.coords.longitude;
     var latlng = [lat, lng];
+
+    // Enregistrer la position pour le tracé
+    papGpsPositions.push(latlng);
 
     // Position marker (point bleu)
     if (!papGpsMarker) {
@@ -2635,17 +2642,27 @@ function papToggleGps() {
       papGpsMarker = L.marker(latlng, { icon: posIcon, zIndexOffset: 1000 }).addTo(papMapInstance);
       var pulseIcon = L.divIcon({ className: '', html: '<div class="pap-gps-pos-pulse"></div>', iconSize: [40, 40], iconAnchor: [20, 20] });
       papGpsPulse = L.marker(latlng, { icon: pulseIcon, zIndexOffset: 999 }).addTo(papMapInstance);
+      // Créer la polyline du tracé réel (vert fluo épais)
+      papGpsTrace = L.polyline(papGpsPositions, { color: '#2ecc71', weight: 5, opacity: 0.9 }).addTo(papMapInstance);
       papMapInstance.setView(latlng, 17);
     } else {
       papGpsMarker.setLatLng(latlng);
       if (papGpsPulse) papGpsPulse.setLatLng(latlng);
+      // Mettre à jour le tracé avec la nouvelle position
+      if (papGpsTrace) papGpsTrace.addLatLng(latlng);
     }
+
+    // Suivre la position (centrer la carte)
+    papMapInstance.panTo(latlng);
 
     // Distance vers étape actuelle
     if (papEtapes.length > 0 && papEtapeActuelle < papEtapes.length) {
       var etape = papEtapes[papEtapeActuelle];
       var dist = papMapInstance.distance(latlng, [etape.lat, etape.lng]);
       papMajGpsBar(etape, dist);
+
+      // Tracer une ligne pointillée vers la prochaine étape
+      papMajLigneVersEtape(latlng, [etape.lat, etape.lng]);
 
       // Auto-avancer si < 50m de l'étape
       if (dist < 50 && papEtapeActuelle < papEtapes.length - 1) {
@@ -2656,7 +2673,16 @@ function papToggleGps() {
   }, function(err) {
     alert('Erreur GPS: ' + err.message);
     document.getElementById('papBtnGps').classList.remove('active');
-  }, { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 });
+  }, { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 });
+}
+
+// Ligne pointillée entre position actuelle et prochaine étape
+let papLigneVersEtape = null;
+function papMajLigneVersEtape(posActuelle, posEtape) {
+  if (papLigneVersEtape) papMapInstance.removeLayer(papLigneVersEtape);
+  papLigneVersEtape = L.polyline([posActuelle, posEtape], {
+    color: '#f39c12', weight: 3, opacity: 0.8, dashArray: '8, 12'
+  }).addTo(papMapInstance);
 }
 
 function papMajGpsBar(etape, dist) {
