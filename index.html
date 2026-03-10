@@ -302,7 +302,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v34</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v35</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;">📜</button>
@@ -509,25 +509,57 @@
   <div class="modal-box" style="max-width:420px;max-height:85vh;overflow-y:auto;">
     <h3>➕ Ajouter un militant</h3>
     <div class="field" style="margin-bottom:10px;">
-      <label>Nom complet</label>
-      <input type="text" id="nouveauNom" placeholder="Ex: Dupont Marie">
+      <label><span id="indExp">❌</span> Email expéditeur <span style="font-weight:400;color:#888;font-size:11px;">(votre adresse)</span></label>
+      <input type="email" id="emailExpediteur" placeholder="votre@email.com" oninput="majIndicateurs()">
+    </div>
+    <div style="border-top:2px solid #e0e4ea;margin:12px 0;"></div>
+    <div class="field" style="margin-bottom:10px;">
+      <label><span id="indNom">❌</span> Nom complet</label>
+      <input type="text" id="nouveauNom" placeholder="Ex: Dupont Marie" oninput="majIndicateurs()">
     </div>
     <div class="field" style="margin-bottom:10px;">
-      <label>PIN (4 chiffres)</label>
-      <input type="text" id="nouveauPin" placeholder="1234" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" style="font-family:monospace;font-size:18px;letter-spacing:4px;text-align:center;">
+      <label><span id="indPin">❌</span> PIN (4 chiffres)</label>
+      <input type="text" id="nouveauPin" placeholder="1234" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" style="font-family:monospace;font-size:18px;letter-spacing:4px;text-align:center;" oninput="majIndicateurs()">
     </div>
     <div class="field" style="margin-bottom:10px;">
-      <label>Rôle</label>
+      <label><span id="indRole">✅</span> Rôle</label>
       <select id="nouveauRole"><option value="militant">militant</option><option value="manager">manager</option><option value="responsable bureaux">responsable bureaux</option><option value="superviseur">superviseur</option><option value="admin">admin</option></select>
     </div>
     <div class="field" style="margin-bottom:10px;">
-      <label>Email</label>
-      <input type="email" id="nouveauEmail" placeholder="militant@mail.com">
+      <label><span id="indEmail">❌</span> Email du militant <span style="font-weight:400;color:#888;font-size:11px;">(pour envoi auto)</span></label>
+      <input type="email" id="nouveauEmail" placeholder="militant@mail.com" oninput="majIndicateurs()">
+      <div id="alerteEmail" style="display:none;margin-top:4px;padding:6px 10px;border-radius:8px;font-size:12px;font-weight:600;"></div>
+    </div>
+    <div class="field" style="margin-bottom:10px;">
+      <label><span id="indObjet">❌</span> Objet du mail <span style="font-weight:400;color:#888;font-size:11px;">(chargement auto C5)</span></label>
+      <input type="text" id="nouveauObjet" placeholder="Chargement automatique..." oninput="majIndicateurs()">
+    </div>
+    <div class="field" style="margin-bottom:10px;">
+      <label><span id="indScript">❌</span> Script d'instructions <span style="font-weight:400;color:#888;font-size:11px;">(chargement auto C6)</span></label>
+      <textarea id="nouveauScript" rows="3" placeholder="Chargement automatique..." style="font-size:13px;" oninput="majIndicateurs()"></textarea>
+    </div>
+    <div class="field" style="margin-bottom:10px;">
+      <label><span id="indLien">❌</span> Lien application <span style="font-weight:400;color:#888;font-size:11px;">(avec token unique)</span></label>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <input type="text" id="nouveauLien" readonly style="font-size:11px;background:#f0f4f8;flex:1;color:#2755a8;" placeholder="Entrez un nom pour générer...">
+        <button onclick="copierLienMilitant()" style="background:#2755a8;color:white;border:none;border-radius:8px;padding:8px 10px;font-size:13px;cursor:pointer;" title="Copier le lien">📋</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:8px;">
+        <span style="font-size:12px;color:#666;">Lien actif :</span>
+        <label class="toggle" style="margin:0;">
+          <input type="checkbox" id="toggleLienMilitant" checked onchange="majStatutLien()">
+          <span class="toggle-slider"></span>
+        </label>
+        <span id="statutLien" style="font-size:12px;font-weight:600;color:#27ae60;">✅ Activé</span>
+      </div>
     </div>
     <div class="modal-actions" style="flex-direction:column;gap:8px;">
+      <div id="btnEnvoyerMailZone" style="display:none;width:100%;">
+        <button onclick="ajouterEtEnvoyerMail()" style="width:100%;background:#2755a8;color:white;border:none;border-radius:10px;padding:12px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;">📧 Ajouter + Envoyer par Gmail</button>
+      </div>
       <div style="display:flex;gap:8px;width:100%;">
-        <button class="modal-btn-cancel" onclick="fermerModal('modalAjoutMilitant')">Annuler</button>
-        <button class="modal-btn-ok" style="background:#27ae60;" onclick="ajouterMilitantFirebase()">✅ Ajouter</button>
+        <button class="modal-btn-cancel" onclick="annulerAjoutMilitant()">Annuler</button>
+        <button class="modal-btn-ok" style="background:#e67e22;" onclick="sauvegarderBrouillon()">📝 Créer un brouillon</button>
       </div>
     </div>
   </div>
@@ -616,7 +648,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v34';
+const APP_VERSION = 'Firebase v35';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -1743,26 +1775,67 @@ function papChangerVoix(idx) {
   setTimeout(() => papParler('Voix changée. Je suis prête !'), 300);
 }
 
-function ouvrirAjoutMilitant() { ouvrirModal('modalAjoutMilitant'); $('nouveauNom').value = ''; $('nouveauPin').value = String(Math.floor(1000 + Math.random() * 9000)); $('nouveauRole').value = 'militant'; $('nouveauEmail').value = ''; }
+// v34: Fonctions ajout militant complètes (depuis v183)
+function genererPinAleatoire() { return String(Math.floor(1000 + Math.random() * 9000)); }
+function genererTokenAleatoire() { var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'; var token = ''; for (var i = 0; i < 16; i++) token += chars.charAt(Math.floor(Math.random() * chars.length)); return token; }
 
-async function ajouterMilitantFirebase() {
-  const nom = $('nouveauNom').value.trim();
-  const pin = $('nouveauPin').value.trim();
-  const role = $('nouveauRole').value;
-  const email = $('nouveauEmail').value.trim();
+function ouvrirAjoutMilitant() { ouvrirModal('modalAjoutMilitant'); setTimeout(function() { var nom = $('nouveauNom'); var pin = $('nouveauPin'); var role = $('nouveauRole'); var email = $('nouveauEmail'); var script = $('nouveauScript'); var objet = $('nouveauObjet'); var lien = $('nouveauLien'); var emailExp = $('emailExpediteur'); var toggle = $('toggleLienMilitant'); var alerte = $('alerteEmail'); if (nom) nom.value = ''; if (pin) pin.value = genererPinAleatoire(); if (role) role.value = 'militant'; if (email) email.value = ''; if (script) script.value = ''; if (objet) objet.value = ''; if (alerte) alerte.style.display = 'none'; var newToken = genererTokenAleatoire(); if (lien) { lien.dataset.nom = ''; lien.dataset.token = newToken; lien.value = 'https://boyerdensjean111-hash.github.io/visites/?t=' + newToken; } if (toggle) toggle.checked = true; majStatutLien(); var savedEmail = localStorage.getItem('visites_email_expediteur'); if (emailExp && savedEmail) emailExp.value = savedEmail; $('btnEnvoyerMailZone').style.display = 'none'; scriptModele = ''; objetModele = ''; majIndicateurs(); chargerScriptServeur(); }, 50); }
+
+function verifierEmailValide(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); }
+
+function majIndicateurs() { var nom = ($('nouveauNom') ? $('nouveauNom').value : '').trim(); var pin = ($('nouveauPin') ? $('nouveauPin').value : '').trim(); var email = ($('nouveauEmail') ? $('nouveauEmail').value : '').trim(); var emailExp = ($('emailExpediteur') ? $('emailExpediteur').value : '').trim(); if (scriptModele) majScriptAvecVariables(); if (objetModele) majObjetAvecVariables(); var script = ($('nouveauScript') ? $('nouveauScript').value : '').trim(); var objet = ($('nouveauObjet') ? $('nouveauObjet').value : '').trim(); var indExp = $('indExp'); var indNom = $('indNom'); var indPin = $('indPin'); var indRole = $('indRole'); var indEmail = $('indEmail'); var indScript = $('indScript'); var indObjet = $('indObjet'); var indLien = $('indLien'); var alerteDiv = $('alerteEmail'); if (indExp) indExp.textContent = (emailExp && verifierEmailValide(emailExp)) ? '✅' : '❌'; if (indNom) indNom.textContent = nom ? '✅' : '❌'; if (indPin) indPin.textContent = /^\d{4}$/.test(pin) ? '✅' : '❌'; if (indRole) indRole.textContent = '✅'; if (indObjet) indObjet.textContent = objet ? '✅' : '❌'; if (indScript) indScript.textContent = script ? '✅' : '❌'; var lienInput = $('nouveauLien'); if (indLien) indLien.textContent = (lienInput && lienInput.dataset.token) ? '✅' : '❌'; var emailOk = false; if (alerteDiv) { alerteDiv.style.display = 'none'; if (email) { if (!verifierEmailValide(email)) { alerteDiv.style.display = 'block'; alerteDiv.style.background = '#fadbd8'; alerteDiv.style.color = '#c0392b'; alerteDiv.textContent = '❌ Format email invalide'; } else { var doublon = listeMilitants.find(function(m) { return m.mail && m.mail.toLowerCase() === email.toLowerCase(); }); if (doublon) { alerteDiv.style.display = 'block'; alerteDiv.style.background = '#fef3e2'; alerteDiv.style.color = '#e67e22'; alerteDiv.textContent = '⚠️ Email déjà utilisé par : ' + doublon.nom; } else { emailOk = true; } } } } if (indEmail) indEmail.textContent = (email && verifierEmailValide(email)) ? (emailOk ? '✅' : '⚠️') : '❌'; var btnZone = $('btnEnvoyerMailZone'); if (btnZone) btnZone.style.display = (nom && /^\d{4}$/.test(pin) && email && verifierEmailValide(email) && emailExp && verifierEmailValide(emailExp)) ? 'block' : 'none'; if (emailExp) localStorage.setItem('visites_email_expediteur', emailExp); }
+
+function majStatutLien() { var toggle = $('toggleLienMilitant'); var statut = $('statutLien'); if (toggle && statut) { if (toggle.checked) { statut.textContent = '✅ Activé'; statut.style.color = '#27ae60'; } else { statut.textContent = '❌ Désactivé'; statut.style.color = '#c0392b'; } } }
+
+function copierLienMilitant() { var lien = $('nouveauLien'); if (!lien || !lien.value) { showToast('❌ Aucun lien à copier', 'erreur'); return; } if (navigator.clipboard) { navigator.clipboard.writeText(lien.value).then(function() { showToast('📋 Lien copié !', 'succes'); }).catch(function() { lien.select(); document.execCommand('copy'); showToast('📋 Lien copié !', 'succes'); }); } else { lien.select(); document.execCommand('copy'); showToast('📋 Lien copié !', 'succes'); } }
+
+var scriptModele = '';
+var objetModele = '';
+
+async function chargerScriptServeur() { try { var resp = await fetch(SYNC_SHEET_URL + '?action=getScriptAppel'); var data = await resp.json(); if (data.script) { scriptModele = data.script; } if (data.objet) { objetModele = data.objet; } majScriptAvecVariables(); majObjetAvecVariables(); majIndicateurs(); } catch(e) {} }
+
+function majObjetAvecVariables() { if (!objetModele) return; var nom = ($('nouveauNom') ? $('nouveauNom').value : '').trim(); var pin = ($('nouveauPin') ? $('nouveauPin').value : '').trim(); var lien = ($('nouveauLien') ? $('nouveauLien').value : ''); var objet = objetModele; objet = objet.replace(/\{nom\}/gi, nom || '___'); objet = objet.replace(/\{pin\}/gi, pin || '____'); objet = objet.replace(/\{lien\}/gi, lien || '___'); objet = objet.replace(/\{role\}/gi, ($('nouveauRole') ? $('nouveauRole').value : 'militant')); $('nouveauObjet').value = objet; }
+
+function majScriptAvecVariables() { if (!scriptModele) return; var nom = ($('nouveauNom') ? $('nouveauNom').value : '').trim(); var pin = ($('nouveauPin') ? $('nouveauPin').value : '').trim(); var lien = ($('nouveauLien') ? $('nouveauLien').value : ''); var script = scriptModele; script = script.replace(/\{nom\}/gi, nom || '___'); script = script.replace(/\{pin\}/gi, pin || '____'); script = script.replace(/\{lien\}/gi, lien || '___'); script = script.replace(/\{role\}/gi, ($('nouveauRole') ? $('nouveauRole').value : 'militant')); $('nouveauScript').value = script; }
+
+function ouvrirGmail() { var nom = $('nouveauNom').value.trim(); var pin = $('nouveauPin').value.trim(); var email = $('nouveauEmail').value.trim(); var script = $('nouveauScript').value.trim(); var objet = $('nouveauObjet').value.trim(); var lien = ($('nouveauLien') ? $('nouveauLien').value : '') || 'https://boyerdensjean111-hash.github.io/visites/'; var sujet = encodeURIComponent(objet || 'Visites Électorales - Vos identifiants'); var corps = encodeURIComponent(script || ('Bonjour ' + nom + ',\n\nVoici vos identifiants :\n🔗 Lien : ' + lien + '\n👤 Nom : ' + nom + '\n🔑 PIN : ' + pin + '\n\nCordialement,\n' + currentMilitant)); var gmailUrl = 'https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent(email) + '&su=' + sujet + '&body=' + corps; window.open(gmailUrl, '_blank'); }
+
+function annulerAjoutMilitant() { var nom = ($('nouveauNom') ? $('nouveauNom').value : '').trim(); var email = ($('nouveauEmail') ? $('nouveauEmail').value : '').trim(); if (nom || email) { if (!confirm('⚠️ Vous n\'avez pas terminé !\n\nLe militant n\'a pas été ajouté.\nVoulez-vous vraiment quitter ?')) return; } localStorage.removeItem('visites_brouillon_militant'); fermerModal('modalAjoutMilitant'); }
+
+function sauvegarderBrouillon() { var nom = ($('nouveauNom') ? $('nouveauNom').value : '').trim(); var pin = ($('nouveauPin') ? $('nouveauPin').value : '').trim(); var email = ($('nouveauEmail') ? $('nouveauEmail').value : '').trim(); var role = ($('nouveauRole') ? $('nouveauRole').value : 'militant'); var token = ($('nouveauLien') ? $('nouveauLien').dataset.token : '') || ''; var lien = ($('nouveauLien') ? $('nouveauLien').value : '') || ''; var emailExp = ($('emailExpediteur') ? $('emailExpediteur').value : '').trim(); if (!nom) { showToast('❌ Entrez au moins un nom', 'erreur'); return; } var brouillon = { nom: nom, pin: pin, role: role, email: email, token: token, lien: lien, emailExp: emailExp, date: new Date().toLocaleString('fr-FR') }; localStorage.setItem('visites_brouillon_militant', JSON.stringify(brouillon)); fermerModal('modalAjoutMilitant'); showToast('📝 Brouillon sauvegardé !', 'succes'); }
+
+function verifierBrouillon() { try { var raw = localStorage.getItem('visites_brouillon_militant'); if (!raw) return; var b = JSON.parse(raw); if (!b.nom) return; setTimeout(function() { if (confirm('📝 Brouillon en attente !\n\n👤 ' + b.nom + '\n🔑 PIN : ' + b.pin + '\n' + (b.email ? '📧 ' + b.email + '\n' : '') + '📅 Sauvegardé le ' + b.date + '\n\nVoulez-vous reprendre ce brouillon ?')) { restaurerBrouillon(b); } else { if (confirm('Supprimer ce brouillon ?')) { localStorage.removeItem('visites_brouillon_militant'); showToast('🗑️ Brouillon supprimé', 'succes'); } } }, 1000); } catch(e) {} }
+
+function restaurerBrouillon(b) { ouvrirGestion(); setTimeout(function() { ouvrirSectionGestion('militants'); setTimeout(function() { ouvrirAjoutMilitant(); setTimeout(function() { if (b.nom) $('nouveauNom').value = b.nom; if (b.pin) $('nouveauPin').value = b.pin; if (b.role) $('nouveauRole').value = b.role; if (b.email) $('nouveauEmail').value = b.email; if (b.emailExp) $('emailExpediteur').value = b.emailExp; if (b.token && $('nouveauLien')) { $('nouveauLien').dataset.token = b.token; $('nouveauLien').value = b.lien || ('https://boyerdensjean111-hash.github.io/visites/?t=' + b.token); } majIndicateurs(); showToast('📝 Brouillon restauré !', 'succes'); }, 500); }, 300); }, 300); }
+
+async function ajouterEtEnvoyerMail() {
+  var nom = $('nouveauNom').value.trim();
+  var pin = $('nouveauPin').value.trim();
+  var role = $('nouveauRole').value;
+  var email = $('nouveauEmail').value.trim();
+  var actif = $('toggleLienMilitant') ? $('toggleLienMilitant').checked !== false : true;
+  var token = ($('nouveauLien') ? $('nouveauLien').dataset.token : '') || '';
+  var lien = ($('nouveauLien') ? $('nouveauLien').value : '') || '';
 
   if (!nom) { showToast('❌ Entrez un nom', 'erreur'); return; }
   if (!/^\d{4}$/.test(pin)) { showToast('❌ PIN doit être 4 chiffres', 'erreur'); return; }
-  if (listeMilitants.some(m => m.nom.toLowerCase() === nom.toLowerCase())) { showToast('❌ Ce nom existe déjà', 'erreur'); return; }
+  if (!email || !verifierEmailValide(email)) { showToast('❌ Email militant invalide', 'erreur'); return; }
+  if (listeMilitants.some(function(m) { return m.nom.toLowerCase() === nom.toLowerCase(); })) { showToast('❌ Ce nom existe déjà', 'erreur'); return; }
 
+  fermerModal('modalAjoutMilitant');
+  showToast('⏳ Ajout en cours...', '');
   try {
     await db.ref('militants/' + sanitizeKey(nom)).set({
-      nom: nom, pin: pin, role: role, actif: true, mail: email || '', token: '', lien: ''
+      nom: nom, pin: pin, role: role, actif: actif, mail: email, token: token, lien: lien
     });
-    // 📊 Sync vers Google Sheets
-    syncVersGoogleSheets({ action: 'ajout_militant', nom: nom, pin: pin, role: role, actif: true, mail: email || '' });
-    fermerModal('modalAjoutMilitant');
-    showToast('✅ Militant ajouté !', 'succes');
+    syncVersGoogleSheets({ action: 'ajout_militant', nom: nom, pin: pin, role: role, actif: actif, mail: email, token: token, lien: lien });
+    listeMilitants.push({ nom: nom, pin: pin, role: role, actif: actif, token: token, mail: email, lien: lien });
+    localStorage.removeItem('visites_brouillon_militant');
+    if (!actif) {
+      try { await db.ref('militants/' + sanitizeKey(nom) + '/actif').set(false); } catch(e) {}
+    }
+    ouvrirGmail();
+    showToast('✅ Militant ajouté + Gmail ouvert !', 'succes');
     afficherGestionMilitants();
   } catch(e) {
     showToast('❌ Erreur: ' + e.message, 'erreur');
