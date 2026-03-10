@@ -253,7 +253,7 @@
 </div>
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v26</span> 🔥</div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v27</span> 🔥</div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -302,7 +302,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v26</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v27</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;">📜</button>
@@ -616,7 +616,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v26';
+const APP_VERSION = 'Firebase v27';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -2794,9 +2794,16 @@ function papGeocoderRues(rues) {
   papRuesNonTrouvees = [];
 
   rues.forEach(function(rue, idx) {
+    // Filtrer : ne garder que les rues avec au moins 1 personne "Non visité" ou "Absent"
+    var aVisiter = rue.personnes.filter(function(p) {
+      var s = papGetStatut(p.n, p.p);
+      return s === 'Non visité' || s === 'Absent';
+    });
+    if (aVisiter.length === 0) return; // Rue complètement visitée/opposition → on skip
+
     var coords = PAP_COORDS[rue.rue];
     if (coords) {
-      resultats.push({ idx: idx, lat: coords[0], lng: coords[1], nom: rue.rue, total: rue.personnes.length, verifie: true });
+      resultats.push({ idx: idx, lat: coords[0], lng: coords[1], nom: rue.rue, total: aVisiter.length, verifie: true });
     } else {
       papRuesNonTrouvees.push(rue.rue);
     }
@@ -2994,17 +3001,33 @@ function papOuvrirPanelRue(etape) {
 
   rueData.personnes.forEach(function(p, pIdx) {
     var statut = papGetStatut(p.n, p.p);
-    var icon = statut === 'Visité' ? '✅' : statut === 'Absent' ? '🚪' : statut === 'Opposition' ? '🚫' : '👤';
-    var done = statut !== 'Non visité';
+    // Ne pas afficher les Visité et Opposition
+    if (statut === 'Visité' || statut === 'Opposition') return;
 
-    html += '<div class="pap-carte-personne" style="' + (done ? 'opacity:.5;' : '') + '" onclick="papOuvrirFicheDepuisCarte(\'' + escapeQuotes(p.n) + '\',\'' + escapeQuotes(p.p) + '\',' + rueIdx + ')">' +
-      '<div class="icon">' + icon + '</div>' +
-      '<div class="info">' +
-        '<div class="nom">' + p.n + ' ' + p.p + '</div>' +
-        '<div class="addr">' + p.a + '</div>' +
-      '</div>' +
-      '<div class="go">' + (done ? '' : '→') + '</div>' +
-    '</div>';
+    var icon = statut === 'Absent' ? '🚪' : '👤';
+    var isAbsent = statut === 'Absent';
+
+    if (isAbsent) {
+      // Absent → alerte de confirmation avant d'ouvrir la fiche
+      html += '<div class="pap-carte-personne" style="background:#fff3cd;border-left:4px solid #ffc107;" onclick="papConfirmerAbsent(\'' + escapeQuotes(p.n) + '\',\'' + escapeQuotes(p.p) + '\',' + rueIdx + ')">' +
+        '<div class="icon">🚪</div>' +
+        '<div class="info">' +
+          '<div class="nom">' + p.n + ' ' + p.p + '</div>' +
+          '<div class="addr" style="color:#856404;">⚠️ Était absent(e)</div>' +
+        '</div>' +
+        '<div class="go">🔄</div>' +
+      '</div>';
+    } else {
+      // Non visité → normal
+      html += '<div class="pap-carte-personne" onclick="papOuvrirFicheDepuisCarte(\'' + escapeQuotes(p.n) + '\',\'' + escapeQuotes(p.p) + '\',' + rueIdx + ')">' +
+        '<div class="icon">👤</div>' +
+        '<div class="info">' +
+          '<div class="nom">' + p.n + ' ' + p.p + '</div>' +
+          '<div class="addr">' + p.a + '</div>' +
+        '</div>' +
+        '<div class="go">→</div>' +
+      '</div>';
+    }
   });
 
   panel.innerHTML = html;
@@ -3018,12 +3041,65 @@ function papOuvrirPanelRue(etape) {
     'Clique sur une personne pour enregistrer ta visite.');
 }
 
+// Alerte confirmation pour personne absente
+function papConfirmerAbsent(nom, prenom, rueIdx) {
+  // Supprimer toute alerte existante
+  document.querySelectorAll('.pap-alert, .pap-alert-overlay').forEach(function(e) { e.remove(); });
+  papAlertCallback = null;
+
+  var overlay = document.createElement('div');
+  overlay.className = 'pap-alert-overlay';
+
+  var box = document.createElement('div');
+  box.className = 'pap-alert';
+  box.innerHTML = '<div class="pap-alert-icon">🚪</div>' +
+    '<div class="pap-alert-title">PERSONNE ABSENTE</div>' +
+    '<div class="pap-alert-msg" style="text-align:left;">' +
+      '<b>' + nom + ' ' + prenom + '</b> était <b>absent(e)</b> lors de la dernière visite.<br><br>' +
+      'Tu veux y retourner ?' +
+    '</div>' +
+    '<div style="display:flex;gap:10px;margin-top:10px;">' +
+      '<button class="pap-alert-btn" style="flex:1;padding:14px;background:#e74c3c;color:#fff;" onclick="fermerPapAlert()">Non ❌</button>' +
+      '<button class="pap-alert-btn" style="flex:1;padding:14px;background:#27ae60;color:#fff;" onclick="fermerPapAlert();papOuvrirFicheDepuisCarte(\'' + escapeQuotes(nom) + '\',\'' + escapeQuotes(prenom) + '\',' + rueIdx + ')">Oui, j\'y vais ! ✅</button>' +
+    '</div>';
+
+  document.body.appendChild(overlay);
+  document.body.appendChild(box);
+  papParler(nom + ' ' + prenom + ' était absent. Tu veux y retourner ?');
+}
+
 function papFermerPanel() {
   document.querySelectorAll('.pap-carte-panel').forEach(function(e) {
     e.style.transition = 'transform .2s';
     e.style.transform = 'translateY(100%)';
     setTimeout(function() { e.remove(); }, 200);
   });
+}
+
+// v27: Alerte confirmation Absent depuis la vue DIVISION (pas la carte)
+function papConfirmerAbsentDiv(nom, prenom, bureau, divIdx, rueIdx) {
+  document.querySelectorAll('.pap-alert, .pap-alert-overlay').forEach(function(e) { e.remove(); });
+  papAlertCallback = null;
+
+  var overlay = document.createElement('div');
+  overlay.className = 'pap-alert-overlay';
+
+  var box = document.createElement('div');
+  box.className = 'pap-alert';
+  box.innerHTML = '<div class="pap-alert-icon">🚪</div>' +
+    '<div class="pap-alert-title">PERSONNE ABSENTE</div>' +
+    '<div class="pap-alert-msg" style="text-align:left;">' +
+      '<b>' + nom + ' ' + prenom + '</b> était <b>absent(e)</b> lors de la dernière visite.<br><br>' +
+      'Tu veux y retourner ?' +
+    '</div>' +
+    '<div style="display:flex;gap:10px;margin-top:10px;">' +
+      '<button class="pap-alert-btn" style="flex:1;padding:14px;background:#e74c3c;color:#fff;" onclick="fermerPapAlert()">Non ❌</button>' +
+      '<button class="pap-alert-btn" style="flex:1;padding:14px;background:#27ae60;color:#fff;" onclick="fermerPapAlert();papCliquerPersonne(\'' + escapeQuotes(nom) + '\',\'' + escapeQuotes(prenom) + '\',\'' + bureau + '\',' + divIdx + ',' + rueIdx + ')">Oui, j\'y vais ! ✅</button>' +
+    '</div>';
+
+  document.body.appendChild(overlay);
+  document.body.appendChild(box);
+  papParler(nom + ' ' + prenom + ' était absent. Tu veux y retourner ?');
 }
 
 // Ouvre la fiche d'une personne depuis la carte (masque la carte, ouvre saisie)
@@ -3129,29 +3205,48 @@ function papOuvrirDivision(bureau, divIdx) {
     '<div><div style="font-family:' + "'" + 'Bebas Neue' + "'" + ',sans-serif;font-size:26px;">' + ds.restant + '</div><div style="font-size:10px;opacity:.7;">RESTANTS</div></div>' +
     '<div><div style="font-family:' + "'" + 'Bebas Neue' + "'" + ',sans-serif;font-size:26px;">' + dp + '%</div><div style="font-size:10px;opacity:.7;">PROGRESSION</div></div></div>';
 
-  // List streets with persons
+  // v27: List streets with persons — filtrage intelligent
   div.rues.forEach((rue, rueIdx) => {
     const rs = papStatsRue(rue);
     const rp = rs.total > 0 ? Math.round(rs.done / rs.total * 100) : 0;
     const rComplete = rs.restant === 0 && rs.total > 0;
 
-    html += '<div class="pap-rue-header" style="' + (rComplete ? 'background:linear-gradient(135deg,var(--vert),#2ecc71);' : '') + '">' +
-      (rComplete ? '✅ ' : '📍 ') + rue.rue +
-      '<span style="float:right;font-size:12px;opacity:.8;">' + rs.done + '/' + rs.total + '</span></div>';
+    // v27: Rue 100% complète (tout Visité/Opposition) → on la masque
+    if (rComplete) return;
 
-    html += '<div class="pap-progress" style="margin:-4px 0 8px;"><div class="pap-progress-fill" style="width:' + rp + '%;background:' + (rComplete ? 'var(--vert)' : 'var(--bleu-clair)') + ';"></div></div>';
+    // v27: Compter les personnes restantes (Non visité + Absent)
+    const restants = rue.personnes.filter(p => {
+      const s = papGetStatut(p.n, p.p);
+      return s === 'Non visité' || s === 'Absent';
+    });
+
+    html += '<div class="pap-rue-header">📍 ' + rue.rue +
+      '<span style="float:right;font-size:12px;opacity:.8;">' + rs.done + '/' + rs.total + ' · ' + restants.length + ' restant' + (restants.length > 1 ? 's' : '') + '</span></div>';
+
+    html += '<div class="pap-progress" style="margin:-4px 0 8px;"><div class="pap-progress-fill" style="width:' + rp + '%;background:var(--bleu-clair);"></div></div>';
 
     rue.personnes.forEach(p => {
       const statut = papGetStatut(p.n, p.p);
-      const isDone = statut !== 'Non visité';
-      const statutClass = statut === 'Visité' ? 'visite' : statut === 'Absent' ? 'absent' : statut === 'Opposition' ? 'opposition' : '';
-      const statutIcon = statut === 'Visité' ? '✅' : statut === 'Absent' ? '🚪' : statut === 'Opposition' ? '🚫' : '⬜';
 
-      html += '<div class="pap-personne ' + statutClass + '" onclick="papCliquerPersonne(' + "'" + escapeQuotes(p.n) + "'" + ',' + "'" + escapeQuotes(p.p) + "'" + ',' + "'" + bureau + "'" + ',' + divIdx + ',' + rueIdx + ')">' +
-        '<div style="font-size:18px;">' + statutIcon + '</div>' +
-        '<div style="flex:1;">' +
-        '<div style="font-weight:600;font-size:14px;">' + p.n + ' ' + p.p + '</div>' +
-        '<div style="font-size:11px;color:var(--texte2);">' + p.a + '</div></div></div>';
+      // v27: Masquer Visité et Opposition
+      if (statut === 'Visité' || statut === 'Opposition') return;
+
+      if (statut === 'Absent') {
+        // v27: Absent → fond jaune + bandeau + alerte confirmation
+        html += '<div class="pap-personne" style="border-left-color:var(--orange);background:#fff3cd;" onclick="papConfirmerAbsentDiv(\'' + escapeQuotes(p.n) + '\',\'' + escapeQuotes(p.p) + '\',\'' + bureau + '\',' + divIdx + ',' + rueIdx + ')">' +
+          '<div style="font-size:18px;">🔄</div>' +
+          '<div style="flex:1;">' +
+          '<div style="font-weight:600;font-size:14px;">' + p.n + ' ' + p.p + '</div>' +
+          '<div style="font-size:11px;color:#856404;font-weight:600;">⚠️ Était absent(e)</div>' +
+          '<div style="font-size:11px;color:var(--texte2);">' + p.a + '</div></div></div>';
+      } else {
+        // Non visité → affichage normal
+        html += '<div class="pap-personne" onclick="papCliquerPersonne(\'' + escapeQuotes(p.n) + '\',\'' + escapeQuotes(p.p) + '\',\'' + bureau + '\',' + divIdx + ',' + rueIdx + ')">' +
+          '<div style="font-size:18px;">👤</div>' +
+          '<div style="flex:1;">' +
+          '<div style="font-weight:600;font-size:14px;">' + p.n + ' ' + p.p + '</div>' +
+          '<div style="font-size:11px;color:var(--texte2);">' + p.a + '</div></div></div>';
+      }
     });
   });
 
