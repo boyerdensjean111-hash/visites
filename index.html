@@ -253,7 +253,7 @@
 </div>
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v25</span> 🔥</div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v26</span> 🔥</div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -302,7 +302,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v25</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v26</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;">📜</button>
@@ -616,7 +616,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v25';
+const APP_VERSION = 'Firebase v26';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -901,6 +901,14 @@ function seConnecter() {
   chargerToutesPersonnes();
   demarrerListenersFirebase();
   demarrerVerificationMaj();
+
+  // Tuto recherche à la première connexion
+  papTutoAlert('recherche', '🔍', 'BIENVENUE !',
+    '<b>1.</b> Tape un <b>nom</b>, <b>prénom</b> ou <b>adresse</b> dans les champs de recherche<br>' +
+    '<b>2.</b> Les résultats s\'affichent automatiquement<br>' +
+    '<b>3.</b> Clique sur un résultat pour ouvrir sa <b>fiche</b><br><br>' +
+    '🚪 L\'onglet <b>PAP</b> te donne une liste par rue avec la carte !',
+    'Bienvenue ! Tape un nom pour rechercher un électeur.');
 }
 
 function mettreAJourOnglets() {
@@ -1057,6 +1065,17 @@ function afficherFiche(p) {
   const btnRetourHtml = isFicheSecondaire ? '' : (papFromCarte ? '<button class="btn-retour" onclick="retourCarte()">← Retour Carte 🗺️</button>' : (papFromPAP ? '<button class="btn-retour" onclick="retourPAP()">← Retour PAP</button>' : '<button class="btn-retour" onclick="retourRecherche()">← Retour</button>'));
   const btnRetourPrincipale = isFicheSecondaire ? '<button onclick="retourFichePrincipale()" style="display:block;width:100%;margin-top:10px;background:var(--bleu);color:white;border:none;border-radius:10px;padding:10px 16px;font-size:14px;font-weight:700;cursor:pointer;">🏠 Retour fiche principale</button>' : '';
   $('saisieContenu').innerHTML = btnRetourHtml + conflitInfo + '<div class="fiche"><div class="fiche-header" style="background:' + headerBg + ';"><div style="display:flex;justify-content:space-between;align-items:flex-start;"><div class="nom">' + p.nom + '</div><div style="font-size:14px;color:white;font-weight:600;">ID — ' + p.id + '</div></div><div class="prenom">' + p.prenom + '</div>' + (p.nomUsage && p.nomUsage !== p.nom ? '<div class="nom-usage">Usage : ' + p.nomUsage + '</div>' : '') + (isVisite ? '<div class="badge-deja-visite">✅ Visité' + (p.militant ? ' par ' + p.militant.split(' ').pop() : '') + (p.candidatActuel ? ' · ' + p.candidatActuel : '') + '</div>' : '') + btnRetourPrincipale + '</div><div class="fiche-body">' + (p.sexe ? '<div class="fiche-row"><span class="label">Sexe</span><span class="value">' + (p.sexe === 'M' ? '👨 Masculin' : '👩 Féminin') + '</span></div>' : '') + (p.age ? '<div class="fiche-row"><span class="label">Âge</span><span class="value">' + p.age + ' ans</span></div>' : '') + '<div class="fiche-row"><span class="label">Adresse</span><span class="value">' + adresse + '</span></div><div class="fiche-row"><span class="label">Bureau 🏢</span><span class="value">' + (p.bureau || '—') + '</span></div><div class="fiche-row"><span class="label">Statut</span><span class="value"><span class="statut-badge ' + (p.statut === 'Visité' ? 'statut-visite' : 'statut-non') + '">' + (p.statut === 'Visité' ? '✓ Visité' : p.statut === 'Absent' ? '🚪 Absent' : p.statut === 'Opposition' ? '🚫 Opposition' : 'Non visité') + '</span></span></div>' + (p.dateDerniereVisite ? '<div class="fiche-row"><span class="label">Dernière visite</span><span class="value">' + p.dateDerniereVisite + '</span></div>' : '') + '</div></div>' + (isFicheSecondaire ? '' : genererCoResidents(p)) + '<div class="form-section"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--gris);"><h3 style="font-size:13px;font-weight:700;color:var(--bleu);text-transform:uppercase;letter-spacing:.5px;margin:0;padding:0;border:none;">✏️ Enregistrer une visite</h3>' + ((currentRole === 'admin' || currentRole === 'superviseur' || currentRole === 'responsable bureaux' || currentRole === 'manager') ? '<button onclick="demanderReinitialisation()" style="background:#c0392b;color:white;border:none;border-radius:8px;width:36px;height:36px;font-size:18px;cursor:pointer;" title="Réinitialiser">🗑️</button>' : '') + '</div><div class="field"><label>Statut</label><select id="fStatut"><option value="Visité" ' + (p.statut === 'Visité' ? 'selected' : '') + '>✅ Visité</option><option value="Non visité" ' + (p.statut === 'Non visité' || !p.statut ? 'selected' : '') + '>❌ Non visité</option><option value="Absent" ' + (p.statut === 'Absent' ? 'selected' : '') + '>🚪 Absent</option><option value="Opposition" ' + (p.statut === 'Opposition' ? 'selected' : '') + '>🚫 Opposition</option></select></div><div class="field"><label>Candidat soutenu</label><select id="fCandidat">' + cOpts + '</select></div><div class="field"><label>Notes</label><textarea id="fNotes" placeholder="Remarques...">' + (p.notes || '') + '</textarea></div><div class="field"><label>📇 Contact</label><div style="display:flex;gap:8px;"><div style="flex:1;"><input type="email" id="fMail" placeholder="📧 Mail" value="' + (p.mail || '') + '"></div><div style="flex:1;"><input type="tel" id="fTel" placeholder="📞 Tél" value="' + (p.tel || '') + '"></div></div></div>' + ((currentRole === 'admin' || currentRole === 'superviseur') ? '<div class="field"><label>Observation</label><textarea id="fObservation" placeholder="Observation...">' + (p.observation || '') + '</textarea></div>' : '') + '<button class="btn-vert" onclick="enregistrerVisite()">✅ Enregistrer</button></div>';
+  // Tuto fiche
+  papTutoAlert('fiche', '✏️', 'FICHE ÉLECTEUR',
+    '<b>1.</b> Vérifie les infos : nom, adresse, bureau<br>' +
+    '<b>2.</b> Descends vers <b>Enregistrer une visite</b><br>' +
+    '<b>3.</b> Choisis le <b>statut</b> :<br>' +
+    '&nbsp;&nbsp;✅ Visité · 🚪 Absent · 🚫 Opposition<br>' +
+    '<b>4.</b> Sélectionne le <b>candidat</b> soutenu<br>' +
+    '<b>5.</b> Ajoute des <b>notes</b> et un <b>contact</b> (mail/tél) si possible<br>' +
+    '<b>6.</b> Clique <b>✅ Enregistrer</b> en bas<br><br>' +
+    '🏠 Les <b>co-résidents</b> à la même adresse s\'affichent aussi !',
+    'Vérifie les infos, choisis le statut et le candidat, puis clique enregistrer.');
 }
 
 // =====================================================
@@ -2204,14 +2223,26 @@ function fermerPapAlert() {
   }
 }
 
-// Alertes tutoriel (first-time only)
+// Alertes tutoriel (first-time only, pas d'auto-close, que bouton Compris)
 function papTutoAlert(etape, icon, titre, msg, voix) {
   var vus = JSON.parse(localStorage.getItem('pap_tuto_vus') || '[]');
   if (vus.indexOf(etape) !== -1) return;
   vus.push(etape);
   localStorage.setItem('pap_tuto_vus', JSON.stringify(vus));
   setTimeout(function() {
-    papAlert(icon, titre, msg, voix, null, 'Compris ! 👍');
+    document.querySelectorAll('.pap-alert, .pap-alert-overlay').forEach(function(e) { e.remove(); });
+    papAlertCallback = null;
+    var overlay = document.createElement('div');
+    overlay.className = 'pap-alert-overlay';
+    var box = document.createElement('div');
+    box.className = 'pap-alert';
+    box.innerHTML = '<div class="pap-alert-icon">' + icon + '</div>' +
+      '<div class="pap-alert-title">' + titre + '</div>' +
+      '<div class="pap-alert-msg" style="text-align:left;">' + msg + '</div>' +
+      '<button class="pap-alert-btn" style="width:100%;padding:14px;margin-top:4px;" onclick="fermerPapAlert()">Compris ! 👍</button>';
+    document.body.appendChild(overlay);
+    document.body.appendChild(box);
+    if (voix) papParler(voix);
   }, 600);
 }
 
