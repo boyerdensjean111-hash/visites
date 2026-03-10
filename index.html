@@ -302,7 +302,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v43</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v45</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;">📜</button>
@@ -648,7 +648,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v43';
+const APP_VERSION = 'Firebase v45';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -1607,7 +1607,7 @@ function afficherMenuGestion() {
   $('gestionTitre').textContent = '⚙️ Gestion';
   $('gestionBtnRetour').style.display = 'none';
   $('gestionBtnAjouter').style.display = 'none';
-  $('gestionContenu').innerHTML = '<div style="display:flex;flex-direction:column;gap:10px;"><button onclick="ouvrirSectionGestion(\'militants\')" style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:14px;width:100%;"><span style="font-size:28px;">👥</span><div><div style="font-weight:700;font-size:14px;color:#1a3a6b;">Militants</div><div style="font-size:12px;color:#888;">Gérer les militants</div></div></button><button onclick="ouvrirSectionGestion(\'export\')" style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:14px;width:100%;"><span style="font-size:28px;">📊</span><div><div style="font-weight:700;font-size:14px;color:#1a3a6b;">Export / Stats</div><div style="font-size:12px;color:#888;">Statistiques avancées</div></div></button><button onclick="ouvrirSectionGestion(\'testalertes\')" style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:14px;width:100%;"><span style="font-size:28px;">🔊</span><div><div style="font-weight:700;font-size:14px;color:#1a3a6b;">Alertes Vocales PAP</div><div style="font-size:12px;color:#888;">Tester toutes les alertes</div></div></button></div>';
+  $('gestionContenu').innerHTML = '<div style="display:flex;flex-direction:column;gap:10px;"><button onclick="ouvrirSectionGestion(\'militants\')" style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:14px;width:100%;"><span style="font-size:28px;">👥</span><div><div style="font-weight:700;font-size:14px;color:#1a3a6b;">Militants</div><div style="font-size:12px;color:#888;">Gérer les militants</div></div></button><button onclick="ouvrirSectionGestion(\'export\')" style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:14px;width:100%;"><span style="font-size:28px;">📊</span><div><div style="font-weight:700;font-size:14px;color:#1a3a6b;">Export / Stats</div><div style="font-size:12px;color:#888;">Statistiques avancées</div></div></button><button onclick="ouvrirSectionGestion(\'testalertes\')" style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:14px;width:100%;"><span style="font-size:28px;">🔊</span><div><div style="font-weight:700;font-size:14px;color:#1a3a6b;">Alertes Vocales PAP</div><div style="font-size:12px;color:#888;">Tester toutes les alertes</div></div></button><button onclick="ouvrirSectionGestion(\'syncsheet\')" style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:14px;width:100%;"><span style="font-size:28px;">🔄</span><div><div style="font-weight:700;font-size:14px;color:#1a3a6b;">Sync Google Sheets</div><div style="font-size:12px;color:#888;">Synchroniser toutes les données Firebase → Sheets</div></div></button></div>';
 }
 
 function ouvrirSectionGestion(section) {
@@ -1623,6 +1623,9 @@ function ouvrirSectionGestion(section) {
   } else if (section === 'testalertes') {
     $('gestionTitre').textContent = '🔊 Alertes Vocales';
     afficherTestAlertes();
+  } else if (section === 'syncsheet') {
+    $('gestionTitre').textContent = '🔄 Sync Google Sheets';
+    afficherSyncSheet();
   }
 }
 
@@ -2201,7 +2204,101 @@ function parseCSVLine(line) {
 }
 
 // =====================================================
-// SYNC → GOOGLE SHEETS (v43 : TOUTES les données)
+// SYNC COMPLÈTE — Firebase → Google Sheets (admin)
+// =====================================================
+
+function afficherSyncSheet() {
+  var div = $('gestionContenu');
+  div.innerHTML = '<div style="background:white;border-radius:12px;padding:20px;border:1.5px solid #e0e4ea;">' +
+    '<div style="font-weight:700;font-size:16px;color:#1a3a6b;margin-bottom:12px;">🔄 Synchronisation complète</div>' +
+    '<p style="font-size:13px;color:#666;margin-bottom:16px;">Envoie TOUTES les données de Firebase vers Google Sheets.<br>Utilisez si Google Sheets n\'est pas à jour.</p>' +
+    '<div id="syncProgress" style="display:none;margin-bottom:12px;"><div style="background:#e0e4ea;border-radius:8px;height:20px;overflow:hidden;"><div id="syncProgressBar" style="background:#27ae60;height:100%;width:0%;transition:width 0.3s;border-radius:8px;"></div></div><div id="syncProgressText" style="font-size:12px;color:#888;margin-top:4px;text-align:center;"></div></div>' +
+    '<button id="btnSyncComplet" onclick="lancerSyncComplet()" style="background:#1a3a6b;color:white;border:none;border-radius:10px;padding:14px 24px;font-size:14px;font-weight:700;cursor:pointer;width:100%;">🚀 Lancer la sync complète</button>' +
+    '<div id="syncResultat" style="margin-top:12px;font-size:13px;"></div>' +
+    '</div>';
+}
+
+async function lancerSyncComplet() {
+  if (!SYNC_SHEET_URL) { showToast('❌ SYNC_SHEET_URL non configurée', 'erreur'); return; }
+
+  var btn = $('btnSyncComplet');
+  btn.disabled = true;
+  btn.textContent = '⏳ Synchronisation en cours...';
+  btn.style.opacity = '0.6';
+  $('syncProgress').style.display = 'block';
+  $('syncProgressBar').style.width = '10%';
+  $('syncProgressText').textContent = 'Lecture de Firebase...';
+
+  try {
+    // 1. Lire toutes les personnes depuis Firebase
+    var snap = await db.ref('personnes').once('value');
+    var data = snap.val();
+    if (!data) { showToast('❌ Aucune donnée dans Firebase', 'erreur'); return; }
+
+    $('syncProgressBar').style.width = '30%';
+    $('syncProgressText').textContent = 'Préparation des données...';
+
+    // 2. Formater les données
+    var personnes = [];
+    var keys = Object.keys(data);
+    for (var i = 0; i < keys.length; i++) {
+      var p = data[keys[i]];
+      personnes.push({
+        id: String(keys[i]),
+        statut: p.statut || 'Non visité',
+        dateVisite: p.dateVisite || '',
+        candidat: p.candidat || '',
+        notes: p.notes || '',
+        militant: p.militant || '',
+        observation: p.observation || '',
+        mail: p.mail || '',
+        tel: p.tel || ''
+      });
+    }
+
+    $('syncProgressBar').style.width = '50%';
+    $('syncProgressText').textContent = 'Envoi de ' + personnes.length + ' personnes vers Google Sheets...';
+
+    // 3. Envoyer par lots de 500 pour éviter timeout
+    var BATCH_SIZE = 500;
+    var nbTotal = personnes.length;
+    var nbEnvoye = 0;
+
+    for (var start = 0; start < nbTotal; start += BATCH_SIZE) {
+      var lot = personnes.slice(start, start + BATCH_SIZE);
+      var payload = JSON.stringify({ action: 'syncComplet', personnes: lot });
+
+      var resp = await fetch(SYNC_SHEET_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: payload,
+        redirect: 'follow'
+      });
+      var txt = await resp.text();
+      nbEnvoye += lot.length;
+
+      var pct = 50 + Math.round((nbEnvoye / nbTotal) * 50);
+      $('syncProgressBar').style.width = pct + '%';
+      $('syncProgressText').textContent = nbEnvoye + ' / ' + nbTotal + ' personnes envoyées...';
+    }
+
+    $('syncProgressBar').style.width = '100%';
+    $('syncProgressText').textContent = '✅ Terminé !';
+    $('syncResultat').innerHTML = '<div style="background:#d4edda;color:#155724;padding:12px;border-radius:8px;">✅ <strong>' + nbTotal + ' personnes</strong> synchronisées vers Google Sheets !</div>';
+    showToast('✅ Sync complète : ' + nbTotal + ' personnes', 'succes');
+
+  } catch(err) {
+    $('syncResultat').innerHTML = '<div style="background:#f8d7da;color:#721c24;padding:12px;border-radius:8px;">❌ Erreur : ' + err.message + '</div>';
+    showToast('❌ Erreur sync : ' + err.message, 'erreur');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🚀 Relancer la sync complète';
+    btn.style.opacity = '1';
+  }
+}
+
+// =====================================================
+// SYNC → GOOGLE SHEETS (v44 : TOUTES les données)
 // Enregistrements, réinitialisations, logs, militants,
 // PIN, comparaison, mentions — tout est synchronisé !
 // =====================================================
