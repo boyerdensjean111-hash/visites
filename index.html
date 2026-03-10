@@ -253,7 +253,7 @@
 </div>
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v29</span> 🔥</div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v30</span> 🔥</div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -302,7 +302,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v29</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v30</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;">📜</button>
@@ -616,7 +616,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v29';
+const APP_VERSION = 'Firebase v30';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -1564,38 +1564,76 @@ function afficherExport() {
   div.innerHTML = '<div style="font-weight:700;margin-bottom:10px;">👥 Visites par militant</div>' + sorted.map(([nom, nb]) => '<div style="background:white;border:1px solid #e0e4ea;border-radius:10px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;"><span style="font-weight:600;">' + nom + '</span><span style="font-family:\'Bebas Neue\';font-size:20px;color:#1a3a6b;">' + nb + '</span></div>').join('');
 }
 
+// v30: Alertes vocales — données par défaut (modifiables via Firebase)
+const ALERTES_DEFAUT = [
+  { cat: '🏠 PENDANT LA VISITE', id: 'visite', items: [
+    { id: 'premiere', icon: '👏', titre: 'Première visite', texte: 'C\'est parti ! Encore {restant} personnes dans cette rue !', voix: 'C\'est parti ! Encore {restant} personnes dans cette rue !' },
+    { id: 'moitie', icon: '💪', titre: 'Moitié faite', texte: 'Déjà {done} sur {total} dans cette rue. Continue !', voix: 'Déjà la moitié ! Plus que {restant} personnes !' },
+    { id: 'bravo', icon: '👏', titre: 'Visite enregistrée', texte: 'Bravo ! Encore {restant} personnes dans cette rue', voix: 'Bravo ! Encore {restant} personnes dans cette rue.' },
+    { id: 'avantderniere', icon: '⚡', titre: 'Avant-dernière', texte: 'Plus que 1 personne dans cette rue !', voix: 'Dernière personne dans cette rue ! Allez, encore un effort !' },
+    { id: 'rueterminee', icon: '🏆', titre: 'Rue terminée', texte: '{rue} : {total}/{total}. Passe à la rue suivante !', voix: 'Rue terminée ! Excellent travail ! Passe à la rue suivante.' },
+  ]},
+  { cat: '📋 DIVISIONS ET BUREAUX', id: 'divisions', items: [
+    { id: 'divcomplete', icon: '⭐', titre: 'Division complète', texte: '{division} : {total}/{total}. Excellent travail !', voix: 'Division complète ! Tu es un champion !' },
+    { id: 'bureautermine', icon: '🏅', titre: 'Bureau terminé', texte: 'Bureau {bureau} : {total}/{total}. Félicitations !', voix: 'Bureau terminé ! Félicitations ! Tu es un champion !' },
+  ]},
+  { cat: '🚪 NAVIGATION PAP', id: 'navigation', items: [
+    { id: 'accueil', icon: '🚪', titre: 'Accueil PAP', texte: 'Bienvenue ! {done} visites sur {total}. Courage !', voix: 'Bienvenue ! {done} visites sur {total}. Courage !' },
+    { id: 'bureau', icon: '🏘️', titre: 'Ouverture bureau', texte: '{bureau}. {restant} personnes restantes.', voix: '{bureau}. {restant} personnes restantes.' },
+    { id: 'division', icon: '📋', titre: 'Ouverture division', texte: '{division}. {restant} personnes restantes.', voix: '{division}. {restant} personnes restantes.' },
+    { id: 'absent', icon: '🚪', titre: 'Alerte absent', texte: '{nom} était absent(e) lors de la dernière visite. Tu veux y retourner ?', voix: '{nom} était absent. Tu veux y retourner ?' },
+  ]},
+  { cat: '🎯 MOTIVATION SPÉCIALE', id: 'motivation', items: [
+    { id: 'pct10', icon: '🔥', titre: 'Encouragement 10%', texte: 'Déjà 10% du bureau ! Continue comme ça !', voix: 'Déjà 10 pourcent du bureau ! Continue comme ça !' },
+    { id: 'pct50', icon: '🚀', titre: 'Encouragement 50%', texte: 'La moitié du bureau est faite ! Tu gères !', voix: 'La moitié du bureau est faite ! Tu gères !' },
+    { id: 'pct90', icon: '🎊', titre: 'Encouragement 90%', texte: 'Presque fini ! Plus que quelques personnes !', voix: 'Presque fini ! Plus que quelques personnes !' },
+    { id: 'termine', icon: '🥇', titre: 'Tout terminé', texte: 'TOUT EST FAIT ! Tu es le meilleur militant !', voix: 'Tout est fait ! Tu es le meilleur militant ! Félicitations !' },
+  ]},
+];
+
+// v30: Textes personnalisés chargés depuis Firebase
+let alertesPerso = {};
+
+async function chargerAlertesPerso() {
+  try {
+    const snap = await db.ref('config/alertes').once('value');
+    alertesPerso = snap.val() || {};
+  } catch(e) {}
+}
+
+function getAlertTexte(catId, itemId, champ) {
+  if (alertesPerso[catId] && alertesPerso[catId][itemId] && alertesPerso[catId][itemId][champ]) {
+    return alertesPerso[catId][itemId][champ];
+  }
+  for (const cat of ALERTES_DEFAUT) {
+    if (cat.id === catId) {
+      for (const item of cat.items) {
+        if (item.id === itemId) return item[champ];
+      }
+    }
+  }
+  return '';
+}
+
+async function sauverAlerteTexte(catId, itemId, champ, val) {
+  if (!alertesPerso[catId]) alertesPerso[catId] = {};
+  if (!alertesPerso[catId][itemId]) alertesPerso[catId][itemId] = {};
+  alertesPerso[catId][itemId][champ] = val;
+  try {
+    await db.ref('config/alertes/' + catId + '/' + itemId + '/' + champ).set(val);
+    showToast('💾 Sauvegardé !', 'succes');
+  } catch(e) {
+    showToast('❌ Erreur sauvegarde', 'erreur');
+  }
+}
+
 function afficherTestAlertes() {
   const div = $('gestionContenu');
-  const alertes = [
-    { cat: '🏠 PENDANT LA VISITE D\'UNE RUE', items: [
-      { icon: '👏', titre: 'Première visite', texte: 'C\'est parti ! Encore 5 personnes dans cette rue !', voix: 'C\'est parti ! Encore 5 personnes dans cette rue !' },
-      { icon: '💪', titre: 'Moitié faite', texte: 'Déjà 3 sur 6 dans cette rue. Continue !', voix: 'Déjà la moitié ! Plus que 3 personnes !' },
-      { icon: '👏', titre: 'Visite enregistrée', texte: 'Bravo ! Encore 2 personnes dans cette rue', voix: 'Bravo ! Encore 2 personnes dans cette rue.' },
-      { icon: '⚡', titre: 'Avant-dernière', texte: 'Plus que 1 personne dans cette rue !', voix: 'Dernière personne dans cette rue ! Allez, encore un effort !' },
-      { icon: '🏆', titre: 'Rue terminée', texte: 'Rue des Sorbiers : 6/6. Passe à la rue suivante !', voix: 'Rue terminée ! Excellent travail ! Passe à la rue suivante.' },
-    ]},
-    { cat: '📋 DIVISIONS ET BUREAUX', items: [
-      { icon: '⭐', titre: 'Division complète', texte: 'RITOU 1 : 19/19. Excellent travail !', voix: 'Division complète ! Tu es un champion !' },
-      { icon: '🏅', titre: 'Bureau terminé', texte: 'Bureau B2 RITOU : 84/84. Félicitations !', voix: 'Bureau terminé ! Félicitations ! Tu es un champion !' },
-    ]},
-    { cat: '🚪 NAVIGATION PAP', items: [
-      { icon: '🚪', titre: 'Accueil PAP', texte: 'Bienvenue ! 12 visites sur 498. Courage !', voix: 'Bienvenue ! 12 visites sur 498. Courage !' },
-      { icon: '🏘️', titre: 'Ouverture bureau', texte: 'B2. 84 personnes restantes.', voix: 'Bureau 2. 84 personnes restantes.' },
-      { icon: '📋', titre: 'Ouverture division', texte: 'RITOU 1. 19 personnes restantes.', voix: 'RITOU 1. 19 personnes restantes.' },
-      { icon: '👋', titre: 'Bon retour', texte: 'Bon retour ! Tu étais sur Rue des Sorbiers, il reste 2 personnes.', voix: 'Bon retour ! Tu étais sur Rue des Sorbiers. Il reste 2 personnes.' },
-    ]},
-    { cat: '🎯 MOTIVATION SPÉCIALE', items: [
-      { icon: '🔥', titre: 'Encouragement 10%', texte: 'Déjà 10% du bureau ! Continue comme ça !', voix: 'Déjà 10 pourcent du bureau ! Continue comme ça !' },
-      { icon: '🚀', titre: 'Encouragement 50%', texte: 'La moitié du bureau est faite ! Tu gères !', voix: 'La moitié du bureau est faite ! Tu gères !' },
-      { icon: '🎊', titre: 'Encouragement 90%', texte: 'Presque fini ! Plus que quelques personnes !', voix: 'Presque fini ! Plus que quelques personnes !' },
-      { icon: '🥇', titre: 'Tout terminé', texte: 'TOUT EST FAIT ! Tu es le meilleur militant !', voix: 'Tout est fait ! Tu es le meilleur militant ! Félicitations !' },
-    ]},
-  ];
 
   let html = '<div style="background:linear-gradient(135deg,#8e44ad,#9b59b6);border-radius:12px;padding:14px;color:white;text-align:center;margin-bottom:14px;">' +
     '<div style="font-size:36px;margin-bottom:6px;">🔊</div>' +
-    '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:20px;">Test Alertes Vocales PAP</div>' +
-    '<div style="font-size:12px;opacity:.8;margin-top:4px;">Clique sur ▶ pour écouter chaque alerte</div>' +
+    '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:20px;">Alertes Vocales PAP</div>' +
+    '<div style="font-size:12px;opacity:.8;margin-top:4px;">Modifie les textes puis clique 💾 · Teste avec ▶</div>' +
     '<div style="margin-top:10px;display:flex;justify-content:center;gap:10px;">' +
     '<button onclick="papSonActif=true;showToast(\'🔊 Son activé\',\'succes\')" style="background:rgba(255,255,255,0.2);border:none;color:white;padding:8px 16px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;">🔊 Activer son</button>' +
     '<button onclick="speechSynthesis.cancel();showToast(\'⏹ Arrêté\')" style="background:rgba(255,255,255,0.2);border:none;color:white;padding:8px 16px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;">⏹ Stop</button>' +
@@ -1618,64 +1656,39 @@ function afficherTestAlertes() {
     html += '</div></div>';
   }
 
-  alertes.forEach(cat => {
+  // v30: Alertes avec champs modifiables
+  ALERTES_DEFAUT.forEach(cat => {
     html += '<div style="font-size:12px;font-weight:700;color:var(--texte2);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px;">' + cat.cat + '</div>';
-    cat.items.forEach((a, i) => {
-      html += '<div style="background:white;border-radius:12px;padding:12px;margin-bottom:8px;box-shadow:0 1px 4px rgba(0,0,0,0.07);">' +
+    cat.items.forEach(a => {
+      const texteActuel = getAlertTexte(cat.id, a.id, 'texte');
+      const voixActuelle = getAlertTexte(cat.id, a.id, 'voix');
+      html += '<div style="background:white;border-radius:12px;padding:12px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.07);">' +
         '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">' +
         '<div style="font-size:24px;">' + a.icon + '</div>' +
         '<div style="flex:1;"><div style="font-weight:700;font-size:14px;color:var(--bleu);">' + a.titre + '</div></div>' +
-        '<button onclick="testAlertePAP(' + alertes.indexOf(cat) + ',' + i + ')" style="background:var(--bleu-clair);color:white;border:none;border-radius:50%;width:40px;height:40px;font-size:18px;cursor:pointer;flex-shrink:0;">▶</button>' +
+        '<button onclick="papSonActif=true;papParler(document.getElementById(\'voix_' + cat.id + '_' + a.id + '\').value)" style="background:var(--bleu-clair);color:white;border:none;border-radius:50%;width:40px;height:40px;font-size:18px;cursor:pointer;flex-shrink:0;">▶</button>' +
         '</div>' +
-        '<div style="font-size:13px;color:var(--texte2);line-height:1.5;background:#f8f9fa;border-radius:8px;padding:10px;"><strong>Texte :</strong> ' + a.texte + '</div>' +
-        '<div style="font-size:12px;color:#8e44ad;margin-top:6px;background:#f3e8ff;border-radius:8px;padding:8px;"><strong>🔊 Voix :</strong> <em>' + a.voix + '</em></div>' +
-        '</div>';
+        '<div style="margin-bottom:6px;"><label style="font-size:11px;font-weight:600;color:var(--texte2);">📝 Texte affiché :</label>' +
+        '<input type="text" id="texte_' + cat.id + '_' + a.id + '" value="' + texteActuel.replace(/"/g, '&quot;') + '" style="width:100%;padding:8px 10px;border:1.5px solid #e0e4ea;border-radius:8px;font-size:13px;margin-top:4px;"></div>' +
+        '<div style="margin-bottom:6px;"><label style="font-size:11px;font-weight:600;color:#8e44ad;">🔊 Texte voix :</label>' +
+        '<input type="text" id="voix_' + cat.id + '_' + a.id + '" value="' + voixActuelle.replace(/"/g, '&quot;') + '" style="width:100%;padding:8px 10px;border:1.5px solid #d5b8ff;border-radius:8px;font-size:13px;margin-top:4px;background:#faf5ff;"></div>' +
+        '<div style="display:flex;gap:6px;">' +
+        '<button onclick="sauverAlerteTexte(\'' + cat.id + '\',\'' + a.id + '\',\'texte\',document.getElementById(\'texte_' + cat.id + '_' + a.id + '\').value);sauverAlerteTexte(\'' + cat.id + '\',\'' + a.id + '\',\'voix\',document.getElementById(\'voix_' + cat.id + '_' + a.id + '\').value)" style="flex:1;background:var(--vert);color:white;border:none;border-radius:8px;padding:8px;font-size:12px;font-weight:600;cursor:pointer;">💾 Sauvegarder</button>' +
+        '<button onclick="papSonActif=true;papAlert(\'' + a.icon + '\',\'' + a.titre.toUpperCase() + '\',document.getElementById(\'texte_' + cat.id + '_' + a.id + '\').value,document.getElementById(\'voix_' + cat.id + '_' + a.id + '\').value)" style="flex:1;background:var(--orange);color:white;border:none;border-radius:8px;padding:8px;font-size:12px;font-weight:600;cursor:pointer;">🎬 Test complet</button>' +
+        '</div></div>';
     });
   });
-
-  // Bouton test alerte visuelle complète
-  html += '<div style="margin-top:16px;"><div style="font-size:12px;font-weight:700;color:var(--texte2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">🎬 TEST COMPLET (VISUEL + VOCAL)</div>';
-  html += '<div style="display:flex;flex-direction:column;gap:8px;">';
-  html += '<button onclick="papAlert(\'👏\',\'BRAVO !\',\'Encore 3 personnes dans<br>Rue des Sorbiers\',\'Bravo ! Encore 3 personnes dans cette rue.\')" style="background:var(--vert);color:white;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;">▶ Tester : Bravo (visuel + voix)</button>';
-  html += '<button onclick="papAlert(\'🏆\',\'RUE TERMINÉE !\',\'Rue des Sorbiers : 6/6 ✅<br>Passe à la rue suivante !\',\'Rue terminée ! Excellent travail ! Passe à la rue suivante.\')" style="background:var(--orange);color:white;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;">▶ Tester : Rue terminée (visuel + voix)</button>';
-  html += '<button onclick="papAlert(\'⭐\',\'DIVISION COMPLÈTE !\',\'RITOU 1 : 19/19 ✅<br>🎊 Excellent travail !\',\'Division complète ! Tu es un champion !\')" style="background:var(--bleu-clair);color:white;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;">▶ Tester : Division complète (visuel + voix)</button>';
-  html += '<button onclick="papAlert(\'🥇\',\'TOUT TERMINÉ !\',\'498/498 ✅<br>Tu es le meilleur militant !\',\'Tout est fait ! Tu es le meilleur militant ! Félicitations !\')" style="background:#8e44ad;color:white;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;">▶ Tester : Tout terminé (visuel + voix)</button>';
-  html += '</div></div>';
 
   div.innerHTML = html;
 }
 
-// Données alertes pour le test par index
-const ALERTES_TEST_DATA = [
-  [ // cat 0 - Pendant la visite
-    { voix: 'C\'est parti ! Encore 5 personnes dans cette rue !' },
-    { voix: 'Déjà la moitié ! Plus que 3 personnes !' },
-    { voix: 'Bravo ! Encore 2 personnes dans cette rue.' },
-    { voix: 'Dernière personne dans cette rue ! Allez, encore un effort !' },
-    { voix: 'Rue terminée ! Excellent travail ! Passe à la rue suivante.' },
-  ],
-  [ // cat 1 - Divisions
-    { voix: 'Division complète ! Tu es un champion !' },
-    { voix: 'Bureau terminé ! Félicitations ! Tu es un champion !' },
-  ],
-  [ // cat 2 - Navigation
-    { voix: 'Bienvenue ! 12 visites sur 498. Courage !' },
-    { voix: 'Bureau 2. 84 personnes restantes.' },
-    { voix: 'RITOU 1. 19 personnes restantes.' },
-    { voix: 'Bon retour ! Tu étais sur Rue des Sorbiers. Il reste 2 personnes.' },
-  ],
-  [ // cat 3 - Motivation spéciale
-    { voix: 'Déjà 10 pourcent du bureau ! Continue comme ça !' },
-    { voix: 'La moitié du bureau est faite ! Tu gères !' },
-    { voix: 'Presque fini ! Plus que quelques personnes !' },
-    { voix: 'Tout est fait ! Tu es le meilleur militant ! Félicitations !' },
-  ],
-];
-
 function testAlertePAP(catIdx, itemIdx) {
   papSonActif = true;
-  const alerte = ALERTES_TEST_DATA[catIdx] && ALERTES_TEST_DATA[catIdx][itemIdx];
-  if (alerte) papParler(alerte.voix);
+  const cat = ALERTES_DEFAUT[catIdx];
+  if (cat && cat.items[itemIdx]) {
+    const a = cat.items[itemIdx];
+    papParler(getAlertTexte(cat.id, a.id, 'voix'));
+  }
 }
 
 function papTesterVoix(idx) {
@@ -3472,6 +3485,7 @@ function retourPAP() {
 document.addEventListener('DOMContentLoaded', () => {
   chargerMentionsLegales();
   chargerMilitants();
+  chargerAlertesPerso();
   initTabs();
   initRecherche();
   // Load son preference
