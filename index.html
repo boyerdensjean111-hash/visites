@@ -302,7 +302,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v39</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v40</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;">📜</button>
@@ -648,7 +648,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v39';
+const APP_VERSION = 'Firebase v40';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -732,7 +732,7 @@ function afficherMentionsLegales() { ouvrirModal('modalLegal'); }
 // =====================================================
 async function verifierMiseAJour() { if (updateDismissed) return; try { const resp = await fetch(VERSION_CHECK_URL + '?t=' + Date.now(), { cache: 'no-store' }); const html = await resp.text(); const match = html.match(/APP_VERSION\s*=\s*['"]([^'"]+)['"]/); if (match && match[1] && match[1] !== APP_VERSION) { const remoteNum = parseInt((match[1].match(/v(\d+)/i) || [])[1] || '0'); const localNum = parseInt((APP_VERSION.match(/v(\d+)/i) || [])[1] || '0'); if (remoteNum > localNum) afficherPopupMaj(match[1]); } } catch(e) {} }
 function afficherPopupMaj(v) { const popup = $('popupMiseAJour'); if (popup) { popup.querySelector('div > div:nth-child(2)').textContent = 'Nouvelle version ' + v + ' disponible !'; popup.style.display = 'flex'; } }
-function rafraichirPage() { try { if (currentPersonne && currentPersonne.id) { localStorage.setItem('visites_fiche_encours', JSON.stringify({ id: currentPersonne.id, nom: currentPersonne.nom, prenom: currentPersonne.prenom })); } } catch(e) {} location.reload(true); }
+function rafraichirPage() { try { if (currentPersonne && currentPersonne.id) { localStorage.setItem('visites_fiche_encours', JSON.stringify({ id: currentPersonne.id, nom: currentPersonne.nom, prenom: currentPersonne.prenom })); } } catch(e) {} blocageRetourActif = false; window.onbeforeunload = null; location.reload(true); }
 function demarrerVerificationMaj() { setTimeout(verifierMiseAJour, 10000); updateCheckTimer = setInterval(verifierMiseAJour, VERSION_CHECK_INTERVAL); }
 
 // =====================================================
