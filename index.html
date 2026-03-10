@@ -302,7 +302,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v35</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v36</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;">📜</button>
@@ -648,7 +648,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v35';
+const APP_VERSION = 'Firebase v36';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -656,6 +656,13 @@ const VERSION_CHECK_INTERVAL = 60000;
 const SYNC_SHEET_URL = 'https://script.google.com/macros/s/AKfycbyMBmHPmGCSGZLQLC1CzDxDHmLlWK3nxvsLcjq2GQ51hmqkHSjBeRXAxi1xEGWUUc4H/exec';
 const CANDIDATS = ['','Johnny Payet','Sophie Arzal','Amandine Ramaye','Frédéric Azor'];
 const $ = id => document.getElementById(id);
+
+// v36: Token URL pour lien unique militant
+let tokenURL = null;
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('t')) tokenURL = params.get('t');
+})();
 
 // Calculer l'âge à partir de la date de naissance (DD/MM/YYYY)
 function calculerAge(dateStr) {
@@ -821,13 +828,26 @@ function remplirSelectMilitants() {
   const sel = $('loginNom');
   const val = sel.value;
   sel.innerHTML = '<option value="">-- Choisir --</option>';
-  listeMilitants.filter(m => m.actif !== false).forEach(m => {
+  // v36: Si lien unique avec token, afficher seulement ce militant
+  let liste = listeMilitants.filter(m => m.actif !== false);
+  if (tokenURL) {
+    const militantToken = listeMilitants.find(m => m.token === tokenURL && m.actif !== false);
+    if (militantToken) {
+      liste = [militantToken];
+    }
+  }
+  liste.forEach(m => {
     const opt = document.createElement('option');
     opt.value = m.nom;
     opt.textContent = m.nom;
     sel.appendChild(opt);
   });
-  sel.value = val;
+  // v36: Si un seul militant (lien unique), pré-sélectionner automatiquement
+  if (liste.length === 1) {
+    sel.value = liste[0].nom;
+  } else {
+    sel.value = val;
+  }
 }
 
 async function chargerToutesPersonnes() {
