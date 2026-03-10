@@ -302,7 +302,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v41</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v43</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;">📜</button>
@@ -648,7 +648,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v41';
+const APP_VERSION = 'Firebase v43';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -1204,7 +1204,8 @@ async function executerEnregistrement() {
       nom: currentPersonne.nom + ' ' + currentPersonne.prenom
     });
     syncVersGoogleSheets({ action: 'log', date: dateNow, action_type: 'Enregistrement', militant: currentMilitant, id: String(id), nom: currentPersonne.nom + ' ' + currentPersonne.prenom });
-    // ℹ️ Données personne : sync auto par miroir GAS (toutes les 2 min)
+    // v43: Sync des DONNÉES de visite vers Google Sheets (avant = seulement le log)
+    syncVersGoogleSheets({ action: 'enregistrement', id: String(id), statut: statut, dateVisite: dateNow, candidat: candidat, notes: notes, militant: currentMilitant, observation: observation, mail: mail, tel: tel });
 
     // Mise à jour locale
     currentPersonne.statut = statut;
@@ -1263,7 +1264,8 @@ async function confirmerReinitialisation() {
       nom: currentPersonne.nom + ' ' + currentPersonne.prenom
     });
     syncVersGoogleSheets({ action: 'log', date: dateReinit, action_type: 'Suppression', militant: currentMilitant, id: String(currentPersonne.id), nom: currentPersonne.nom + ' ' + currentPersonne.prenom });
-    // ℹ️ Données personne : sync auto par miroir GAS (toutes les 2 min)
+    // v43: Sync de la réinitialisation vers Google Sheets
+    syncVersGoogleSheets({ action: 'reinitialisation', id: String(currentPersonne.id) });
 
     currentPersonne.statut = 'Non visité';
     currentPersonne.candidatActuel = '';
@@ -1395,31 +1397,41 @@ async function chargerComparaison() {
     const objectif = parseNum(config.objectifGagner) || 1362;
     const reserveVoix = totalInscrits - votants2020;
 
-    // v29: Calculer intentions 2026 par candidat TEMPS RÉEL depuis toutesPersonnes
+    // v42: Récupérer TOUTES les stats live depuis Google Sheets (Dashboard)
     const intentionsParCandidat = {};
     CANDIDATS.forEach(c => { if (c) intentionsParCandidat[c] = 0; });
-    toutesPersonnes.forEach(p => {
-      if (p[3] === 'Visité' && p[10]) {
-        const c = p[10];
-        if (!intentionsParCandidat[c]) intentionsParCandidat[c] = 0;
-        intentionsParCandidat[c]++;
-      }
-    });
-
-    // v41: FOYERS = récupérer valeur live B24 depuis Google Sheets
     let foyersJohnny = totalFoyersJohnny || parseNum(config.foyersJohnny) || 0;
+    let resultats2020 = config.resultats2020 || [];
+
     try {
-      const respB24 = await fetch(SYNC_SHEET_URL + '?action=getStatsComparaison');
-      const dataB24 = await respB24.json();
-      if (dataB24 && dataB24.foyersJohnny) {
-        foyersJohnny = parseNum(dataB24.foyersJohnny);
-        // Mettre à jour Firebase pour le cache
+      const respStats = await fetch(SYNC_SHEET_URL + '?action=getStatsComparaison');
+      const statsLive = await respStats.json();
+      if (statsLive && !statsLive.error) {
+        // Foyers Johnny (B24)
+        if (statsLive.foyersJohnny) foyersJohnny = parseNum(statsLive.foyersJohnny);
+        // Intentions 2026 par candidat (B19:C22)
+        if (statsLive.intentions2026 && statsLive.intentions2026.length) {
+          statsLive.intentions2026.forEach(i => {
+            if (i.candidat) intentionsParCandidat[i.candidat.trim()] = parseNum(i.visites);
+          });
+        }
+        // Résultats 2020 (M5:O7)
+        if (statsLive.resultats2020 && statsLive.resultats2020.length) {
+          resultats2020 = statsLive.resultats2020;
+        }
+        // Mettre à jour Firebase cache
         db.ref('config/comparaisonConfig/foyersJohnny').set(foyersJohnny);
       }
-    } catch(e) { /* fallback sur valeur Firebase */ }
-
-    // Résultats 2020 depuis config Firebase
-    const resultats2020 = config.resultats2020 || [];
+    } catch(e) {
+      // Fallback: calcul local depuis Firebase
+      toutesPersonnes.forEach(p => {
+        if (p[3] === 'Visité' && p[10]) {
+          const c = p[10];
+          if (!intentionsParCandidat[c]) intentionsParCandidat[c] = 0;
+          intentionsParCandidat[c]++;
+        }
+      });
+    }
 
     // 2ème ligne compteur (votants 2020, foyers, % foyers)
     const pctFoyers = votants2020 > 0 ? (foyersJohnny / votants2020 * 100) : 0;
@@ -1632,7 +1644,8 @@ async function modifierPin(nom) {
     await db.ref('militants/' + sanitizeKey(nom) + '/pin').set(newPin);
     var m = listeMilitants.find(function(x) { return x.nom === nom; });
     if (m) m.pin = newPin;
-    syncVersGoogleSheets({ action: 'changerPin', nom: nom, pin: newPin });
+    // v43: Correction action changerPin → modif_militant avec pin
+    syncVersGoogleSheets({ action: 'modif_militant', nom: nom, pin: newPin });
     showToast('✅ PIN modifié !', 'succes');
   } catch(e) { showToast('❌ Erreur: ' + e.message, 'erreur'); }
 }
@@ -2188,9 +2201,9 @@ function parseCSVLine(line) {
 }
 
 // =====================================================
-// SYNC → GOOGLE SHEETS (logs, militants, comparaison, mentions uniquement)
-// Les données personnes sont synchronisées automatiquement
-// par le miroir GAS qui lit Firebase toutes les 2 minutes.
+// SYNC → GOOGLE SHEETS (v43 : TOUTES les données)
+// Enregistrements, réinitialisations, logs, militants,
+// PIN, comparaison, mentions — tout est synchronisé !
 // =====================================================
 let syncQueue = [];
 let syncDebounce = null;
