@@ -302,7 +302,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v32</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v34</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;">📜</button>
@@ -616,7 +616,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v32';
+const APP_VERSION = 'Firebase v34';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -1559,8 +1559,28 @@ function afficherGestionMilitants() {
   div.innerHTML = listeMilitants.map(m => {
     const roleOptions = roles.map(r => '<option value="' + r + '" ' + (m.role === r ? 'selected' : '') + '>' + r + '</option>').join('');
     const isAdmin = m.role === 'admin';
-    return '<div style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:14px;margin-bottom:10px;"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;"><div><div style="font-weight:700;font-size:14px;">' + m.nom + '</div><div style="font-size:12px;color:' + (m.actif !== false ? '#27ae60' : '#e74c3c') + ';">' + (m.actif !== false ? '✅ Actif' : '🔴 Désactivé') + '</div></div><div style="display:flex;align-items:center;gap:8px;">' + (!isAdmin ? '<button onclick="confirmerSupprimerMilitant(\'' + m.nom + '\')" style="background:#c0392b;color:white;border:none;border-radius:6px;width:32px;height:32px;font-size:14px;cursor:pointer;">🗑️</button>' : '') + (!isAdmin ? '<label class="toggle"><input type="checkbox" ' + (m.actif !== false ? 'checked' : '') + ' onchange="toggleMilitant(\'' + m.nom + '\', this.checked)"><span class="toggle-slider"></span></label>' : '') + '</div></div><div style="display:flex;align-items:center;gap:10px;"><label style="font-size:12px;color:#666;white-space:nowrap;">Rôle :</label><select onchange="changerRole(\'' + m.nom + '\', this.value)" style="flex:1;padding:8px 10px;border:1.5px solid #e0e4ea;border-radius:8px;font-size:13px;background:white;" ' + (isAdmin ? 'disabled' : '') + '>' + roleOptions + '</select></div></div>';
+    return '<div style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:14px;margin-bottom:10px;"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;"><div><div style="font-weight:700;font-size:14px;">' + m.nom + '</div><div style="font-size:12px;color:' + (m.actif !== false ? '#27ae60' : '#e74c3c') + ';">' + (m.actif !== false ? '✅ Actif' : '🔴 Désactivé') + '</div></div><div style="display:flex;align-items:center;gap:8px;">' + (!isAdmin ? '<button onclick="confirmerSupprimerMilitant(\'' + m.nom + '\')" style="background:#c0392b;color:white;border:none;border-radius:6px;width:32px;height:32px;font-size:14px;cursor:pointer;">🗑️</button>' : '') + (!isAdmin ? '<label class="toggle"><input type="checkbox" ' + (m.actif !== false ? 'checked' : '') + ' onchange="toggleMilitant(\'' + m.nom + '\', this.checked)"><span class="toggle-slider"></span></label>' : '') + '</div></div><div style="display:flex;align-items:center;gap:10px;"><label style="font-size:12px;color:#666;white-space:nowrap;">Rôle :</label><select onchange="changerRole(\'' + m.nom + '\', this.value)" style="flex:1;padding:8px 10px;border:1.5px solid #e0e4ea;border-radius:8px;font-size:13px;background:white;" ' + (isAdmin ? 'disabled' : '') + '>' + roleOptions + '</select></div><div style="display:flex;align-items:center;gap:10px;background:#f8f9fa;padding:10px;border-radius:8px;"><label style="font-size:12px;color:#666;white-space:nowrap;">🔑 PIN :</label><input type="text" id="pin_' + m.nom.replace(/\s/g, '_') + '" value="' + m.pin + '" style="flex:1;padding:8px 10px;border:1.5px solid #e0e4ea;border-radius:8px;font-size:14px;font-family:monospace;font-weight:700;text-align:center;letter-spacing:4px;" maxlength="4" pattern="[0-9]*" inputmode="numeric"><button onclick="modifierPin(\'' + m.nom + '\')" style="background:#2755a8;color:white;border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">💾 Sauver</button><button onclick="reinitialiserPin(\'' + m.nom + '\')" style="background:#e67e22;color:white;border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">🔄</button></div></div>';
   }).join('');
+}
+
+async function modifierPin(nom) {
+  var inputId = 'pin_' + nom.replace(/\s/g, '_');
+  var newPin = $(inputId).value.trim();
+  if (!newPin || newPin.length !== 4 || !/^\d{4}$/.test(newPin)) { showToast('❌ PIN invalide (4 chiffres)', 'erreur'); return; }
+  try {
+    await db.ref('militants/' + sanitizeKey(nom) + '/pin').set(newPin);
+    var m = listeMilitants.find(function(x) { return x.nom === nom; });
+    if (m) m.pin = newPin;
+    syncVersGoogleSheets({ action: 'changerPin', nom: nom, pin: newPin });
+    showToast('✅ PIN modifié !', 'succes');
+  } catch(e) { showToast('❌ Erreur: ' + e.message, 'erreur'); }
+}
+
+function reinitialiserPin(nom) {
+  var newPin = String(Math.floor(1000 + Math.random() * 9000));
+  var inputId = 'pin_' + nom.replace(/\s/g, '_');
+  $(inputId).value = newPin;
+  showToast('🔄 Nouveau PIN généré : ' + newPin + ' (cliquez Sauver)', 'warning');
 }
 
 function afficherExport() {
