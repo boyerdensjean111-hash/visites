@@ -253,7 +253,7 @@
 </div>
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v30</span> 🔥</div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v31</span> 🔥</div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -302,7 +302,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v30</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v32</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;">📜</button>
@@ -616,7 +616,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v30';
+const APP_VERSION = 'Firebase v32';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -941,8 +941,16 @@ function ajouterOnglet(page, label) {
 }
 
 function seDeconnecter() { ouvrirModal('modalDeconnexion'); }
+// v31: Désactiver le blocage retour pour permettre la sortie
+let blocageRetourActif = true;
+function debloquerRetour() {
+  blocageRetourActif = false;
+  window.onbeforeunload = null;
+}
+
 function confirmerDeconnexion() {
   fermerModal('modalDeconnexion');
+  debloquerRetour();
   arreterListenersFirebase();
   if (currentMilitant) db.ref('connectes/' + sanitizeKey(currentMilitant)).remove();
   document.querySelectorAll('.tab[data-page="stats"], .tab[data-page="admin"], .tab[data-page="observations"], .tab[data-page="pap"]').forEach(t => t.remove());
@@ -1346,9 +1354,8 @@ async function chargerComparaison() {
       }
     });
 
-    // v29: FOYERS = nombre réel de visités "Johnny Payet" (temps réel, plus statique)
-    const foyersJohnnyTempsReel = intentionsParCandidat['Johnny Payet'] || 0;
-    const foyersJohnny = foyersJohnnyTempsReel > 0 ? foyersJohnnyTempsReel : (totalFoyersJohnny || parseNum(config.foyersJohnny));
+    // v32: FOYERS = valeur Dashboard B24 (totalFoyersJohnny depuis CSV/config)
+    const foyersJohnny = totalFoyersJohnny || parseNum(config.foyersJohnny) || 0;
 
     // Résultats 2020 depuis config Firebase
     const resultats2020 = config.resultats2020 || [];
@@ -3480,6 +3487,41 @@ function retourPAP() {
 }
 
 // =====================================================
+// v31: BLOCAGE BOUTON RETOUR TÉLÉPHONE (renforcé)
+// La seule façon de quitter = bouton "Quitter"
+// =====================================================
+function initBlocageRetour() {
+  // Pousser PLUSIEURS états dans l'historique pour créer un tampon
+  // Même si popstate rate un événement, il reste des états avant la sortie
+  for (let i = 0; i < 5; i++) {
+    history.pushState({ appBlock: i }, document.title, location.href);
+  }
+
+  // Intercepter TOUT retour arrière — ne fait RIEN, juste bloque
+  window.addEventListener('popstate', function(e) {
+    if (!blocageRetourActif) return;
+    // Re-pousser immédiatement un état → le retour ne fait rien
+    history.pushState({ appBlock: 'trap' }, document.title, location.href);
+  });
+
+  // Bloquer aussi la fermeture d'onglet / navigation externe
+  window.addEventListener('beforeunload', function(e) {
+    if (!blocageRetourActif) return;
+    e.preventDefault();
+    e.returnValue = '';
+    return '';
+  });
+
+  // Relancer le tampon d'historique régulièrement (sécurité supplémentaire)
+  setInterval(function() {
+    if (!blocageRetourActif) return;
+    if (!history.state || history.state.appBlock === undefined) {
+      history.pushState({ appBlock: 'refresh' }, document.title, location.href);
+    }
+  }, 3000);
+}
+
+// =====================================================
 // INITIALISATION
 // =====================================================
 document.addEventListener('DOMContentLoaded', () => {
@@ -3488,6 +3530,7 @@ document.addEventListener('DOMContentLoaded', () => {
   chargerAlertesPerso();
   initTabs();
   initRecherche();
+  initBlocageRetour();
   // Load son preference
   const sonPref = localStorage.getItem('pap_son');
   if (sonPref === '0') papSonActif = false;
