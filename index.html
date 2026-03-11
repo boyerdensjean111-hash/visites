@@ -254,7 +254,7 @@
 </div>
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v63</span> 🔥</div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v64</span> 🔥</div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -303,7 +303,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v63</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v64</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;">📜</button>
@@ -655,7 +655,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v63';
+const APP_VERSION = 'Firebase v64';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -2515,7 +2515,8 @@ function afficherSyncSheet() {
     '<div style="font-weight:700;font-size:16px;color:#1a3a6b;margin-bottom:12px;">🔄 Synchronisation complète</div>' +
     '<p style="font-size:13px;color:#666;margin-bottom:16px;">Envoie TOUTES les données de Firebase vers Google Sheets.<br>Utilisez si Google Sheets n\'est pas à jour.</p>' +
     '<div id="syncProgress" style="display:none;margin-bottom:12px;"><div style="background:#e0e4ea;border-radius:8px;height:20px;overflow:hidden;"><div id="syncProgressBar" style="background:#27ae60;height:100%;width:0%;transition:width 0.3s;border-radius:8px;"></div></div><div id="syncProgressText" style="font-size:12px;color:#888;margin-top:4px;text-align:center;"></div></div>' +
-    '<button id="btnSyncComplet" onclick="lancerSyncComplet()" style="background:#1a3a6b;color:white;border:none;border-radius:10px;padding:14px 24px;font-size:14px;font-weight:700;cursor:pointer;width:100%;">🚀 Lancer la sync complète</button>' +
+    '<button id="btnSyncComplet" onclick="lancerSyncComplet()" style="background:#1a3a6b;color:white;border:none;border-radius:10px;padding:14px 24px;font-size:14px;font-weight:700;cursor:pointer;width:100%;">🚀 Sync Personnes</button>' +
+    '<button id="btnSyncMilitants" onclick="lancerSyncMilitants()" style="background:#8e44ad;color:white;border:none;border-radius:10px;padding:14px 24px;font-size:14px;font-weight:700;cursor:pointer;width:100%;margin-top:10px;">👥 Sync Militants</button>' +
     '<div id="syncResultat" style="margin-top:12px;font-size:13px;"></div>' +
     '</div>';
 }
@@ -2595,6 +2596,71 @@ async function lancerSyncComplet() {
   } finally {
     btn.disabled = false;
     btn.textContent = '🚀 Relancer la sync complète';
+    btn.style.opacity = '1';
+  }
+}
+
+// v64: SYNC MILITANTS — Firebase → Google Sheets
+async function lancerSyncMilitants() {
+  if (!SYNC_SHEET_URL) { showToast('❌ SYNC_SHEET_URL non configurée', 'erreur'); return; }
+
+  var btn = $('btnSyncMilitants');
+  btn.disabled = true;
+  btn.textContent = '⏳ Sync militants en cours...';
+  btn.style.opacity = '0.6';
+  $('syncProgress').style.display = 'block';
+  $('syncProgressBar').style.width = '10%';
+  $('syncProgressText').textContent = 'Lecture des militants depuis Firebase...';
+
+  try {
+    // 1. Lire tous les militants depuis Firebase
+    var snap = await db.ref('militants').once('value');
+    var data = snap.val();
+    if (!data) { showToast('❌ Aucun militant dans Firebase', 'erreur'); return; }
+
+    $('syncProgressBar').style.width = '40%';
+    $('syncProgressText').textContent = 'Préparation des militants...';
+
+    // 2. Formater les données
+    var militants = [];
+    var keys = Object.keys(data);
+    for (var i = 0; i < keys.length; i++) {
+      var m = data[keys[i]];
+      militants.push({
+        nom: m.nom || '',
+        pin: String(m.pin || '0000'),
+        role: m.role || 'militant',
+        actif: m.actif !== false,
+        token: m.token || '',
+        mail: m.mail || '',
+        lien: m.lien || ''
+      });
+    }
+
+    $('syncProgressBar').style.width = '60%';
+    $('syncProgressText').textContent = 'Envoi de ' + militants.length + ' militants vers Google Sheets...';
+
+    // 3. Envoyer tous les militants d'un coup
+    var payload = JSON.stringify({ action: 'syncCompletMilitants', militants: militants });
+    var resp = await fetch(SYNC_SHEET_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: payload,
+      redirect: 'follow'
+    });
+    var txt = await resp.text();
+
+    $('syncProgressBar').style.width = '100%';
+    $('syncProgressText').textContent = '✅ Terminé !';
+    $('syncResultat').innerHTML = '<div style="background:#d4edda;color:#155724;padding:12px;border-radius:8px;">✅ <strong>' + militants.length + ' militants</strong> synchronisés vers Google Sheets !</div>';
+    showToast('✅ Sync militants : ' + militants.length, 'succes');
+
+  } catch(err) {
+    $('syncResultat').innerHTML = '<div style="background:#f8d7da;color:#721c24;padding:12px;border-radius:8px;">❌ Erreur : ' + err.message + '</div>';
+    showToast('❌ Erreur sync militants : ' + err.message, 'erreur');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '👥 Sync Militants';
     btn.style.opacity = '1';
   }
 }
