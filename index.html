@@ -147,7 +147,7 @@
   .splash-legal h3 { color:white; font-size:14px; margin:0 0 12px 0; text-align:center; }
   .splash-legal-content { color:rgba(255,255,255,0.85); font-size:11px; line-height:1.6; white-space:pre-line; }
   .splash-loader { margin-top:20px; width:100px; height:4px; background:rgba(255,255,255,0.2); border-radius:2px; overflow:hidden; }
-  .splash-loader-bar { height:100%; width:0%; background:white; border-radius:2px; animation:splashLoad 10s linear forwards; }
+  .splash-loader-bar { height:100%; width:0%; background:white; border-radius:2px; animation:splashLoad 3s linear forwards; }
   @keyframes splashLoad { 0%{width:0%} 100%{width:100%} }
   @keyframes pulseBtn { 0%,100%{transform:scale(1);} 50%{transform:scale(1.05);} }
   /* Carte Leaflet fullscreen */
@@ -249,12 +249,12 @@
     <div id="splashMentionsContenu" class="splash-legal-content">Chargement...</div>
   </div>
   <div class="splash-loader"><div class="splash-loader-bar"></div></div>
-  <div id="splashCompteur" style="color:rgba(255,255,255,0.6);font-size:12px;margin-top:8px;">10s</div>
+  <div id="splashCompteur" style="color:rgba(255,255,255,0.6);font-size:12px;margin-top:8px;">3s</div>
   <button onclick="passerSplash()" style="margin-top:12px;background:rgba(255,255,255,0.2);border:none;padding:10px 24px;border-radius:20px;color:white;font-size:13px;cursor:pointer;">Passer ➔</button>
 </div>
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v74</span> 🔥</div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v75</span> 🔥</div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -303,7 +303,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v74</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v75</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
@@ -654,7 +654,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v74';
+const APP_VERSION = 'Firebase v75';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -737,7 +737,7 @@ function afficherMentionsLegales() { ouvrirModal('modalLegal'); }
 
 // v53: Compteur splash 10s
 function demarrerCompteurSplash() {
-  var secondes = 10;
+  var secondes = 3;
   var compteur = $('splashCompteur');
   window._splashTimer = setInterval(function() {
     secondes--;
@@ -4237,15 +4237,15 @@ document.addEventListener('DOMContentLoaded', () => {
     initRecherche();
     initBlocageRetour();
   } else {
-    // ═══ PAS DE SESSION → splash 10 secondes ═══
+    // ═══ PAS DE SESSION → splash 3 secondes (ou dès que militants chargés) ═══
     chargerMentionsLegales();
-    chargerMilitants();
+    chargerMilitants().then(function() { passerSplash(); });
     chargerAlertesPerso();
     initTabs();
     initRecherche();
     initBlocageRetour();
     demarrerCompteurSplash();
-    setTimeout(() => passerSplash(), 10000);
+    setTimeout(() => passerSplash(), 3000);
   }
 
   // Load son + tuto preferences
