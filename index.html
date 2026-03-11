@@ -43,7 +43,7 @@
   .sync-indicator { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; background:#27ae60; animation:pulse 2s infinite; }
   .sync-indicator.syncing { background:#e67e22; animation:spin .8s linear infinite; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
-  .tabs { display:flex; background:white; border-bottom:2px solid var(--gris); }
+  .tabs { display:flex; flex-wrap:wrap; background:white; border-bottom:2px solid var(--gris); }
   .tab { flex:1; padding:12px 6px; text-align:center; font-size:12px; font-weight:600; color:var(--texte2); cursor:pointer; border-bottom:3px solid transparent; transition:all .2s; white-space:nowrap; }
   .tab.active { color:var(--bleu-clair); border-bottom-color:var(--bleu-clair); }
   .page { display:none; padding:16px; }
@@ -254,7 +254,7 @@
 </div>
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v72</span> 🔥</div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v73</span> 🔥</div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -303,7 +303,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v72</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v73</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;">📜</button>
@@ -655,7 +655,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v72';
+const APP_VERSION = 'Firebase v73';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -1143,13 +1143,26 @@ function seConnecter() {
 }
 
 function mettreAJourOnglets() {
-  document.querySelectorAll('.tab[data-page="stats"], .tab[data-page="observations"], .tab[data-page="admin"], .tab[data-page="csv"], .tab[data-page="pap"]').forEach(t => t.remove());
+  document.querySelectorAll('.tab[data-page="stats"], .tab[data-page="observations"], .tab[data-page="admin"], .tab[data-page="csv"], .tab[data-page="pap"], .tab-toggle-son, .tab-toggle-tuto').forEach(t => t.remove());
   // PAP tab for everyone
   ajouterOngletPAP();
   if (currentRole === 'superviseur' || currentRole === 'admin' || currentRole === 'responsable bureaux') ajouterOnglet('stats', '📊 Stats');
   if (currentRole === 'superviseur' || currentRole === 'admin') ajouterOnglet('observations', '📝 Obs');
   if (currentRole === 'admin') ajouterOnglet('admin', '👁️ Admin');
   if (currentRole === 'admin') ajouterOnglet('csv', '📥 CSV');
+  // v72: Boutons Son + Tuto dans le menu principal (tous rôles)
+  var btnSon = document.createElement('div');
+  btnSon.className = 'tab tab-toggle-son pap-son-toggle';
+  btnSon.style.cssText = 'flex:0;padding:12px 8px;font-size:11px;cursor:pointer;white-space:nowrap;';
+  btnSon.innerHTML = papSonActif ? '🔊' : '🔇';
+  btnSon.onclick = function() { papToggleSon(); };
+  $('tabsBar').appendChild(btnSon);
+  var btnTuto = document.createElement('div');
+  btnTuto.className = 'tab tab-toggle-tuto pap-tuto-toggle';
+  btnTuto.style.cssText = 'flex:0;padding:12px 8px;font-size:11px;cursor:pointer;white-space:nowrap;';
+  btnTuto.innerHTML = papTutoActif ? '🔊📖' : '🚫';
+  btnTuto.onclick = function() { papToggleTuto(); };
+  $('tabsBar').appendChild(btnTuto);
 }
 
 function ajouterOnglet(page, label) {
@@ -2743,6 +2756,7 @@ const PAP_BUREAU_NAMES = {
 const PAP_BUREAU_ICONS = { 'B1': '🏛️', 'B2': '🏘️', 'B3': '🎭', 'B4': '🌳', 'B5': '🌴', 'B6': '⛰️' };
 
 let papSonActif = true;
+let papTutoActif = true; // v72: toggle tutos ON/OFF
 let papEtatActuel = { bureau: null, division: null, rue: null };
 let papFromPAP = false; // flag to know if saisie was opened from PAP
 let papFromCarte = false; // flag: saisie ouverte depuis la carte
@@ -2861,6 +2875,8 @@ function fermerPapAlert() {
 
 // Alertes tutoriel (first-time only, pas d'auto-close, que bouton Compris)
 function papTutoAlert(etape, icon, titre, msg, voix) {
+  // v72: Si tutos désactivés, on skip complètement
+  if (!papTutoActif) return;
   // v27: Les alertes tuto réapparaissent à chaque navigation
   setTimeout(function() {
     document.querySelectorAll('.pap-alert, .pap-alert-overlay').forEach(function(e) { e.remove(); });
@@ -4083,12 +4099,25 @@ function papReprendre() {
   }
 }
 
+// v72: Toggle tutos ON/OFF
+function papToggleTuto() {
+  papTutoActif = !papTutoActif;
+  localStorage.setItem('pap_tuto', papTutoActif ? '1' : '0');
+  // Mettre à jour icônes menu principal
+  document.querySelectorAll('.tab-toggle-tuto').forEach(btn => { btn.innerHTML = papTutoActif ? '🔊📖' : '🚫'; });
+  showToast(papTutoActif ? '📖 Tutos activés' : '🚫 Tutos désactivés');
+}
+
 function papToggleSon() {
   papSonActif = !papSonActif;
   localStorage.setItem('pap_son', papSonActif ? '1' : '0');
-  // Update all toggle buttons
-  document.querySelectorAll('.pap-son-toggle').forEach(btn => {
+  // Update PAP accueil buttons (texte complet)
+  document.querySelectorAll('.pap-son-toggle:not(.tab-toggle-son)').forEach(btn => {
     btn.innerHTML = papSonActif ? '🔊 Son ON' : '🔇 Son OFF';
+  });
+  // Update menu principal buttons (emoji seul)
+  document.querySelectorAll('.tab-toggle-son').forEach(btn => {
+    btn.innerHTML = papSonActif ? '🔊' : '🔇';
   });
   showToast(papSonActif ? '🔊 Son activé' : '🔇 Son désactivé');
 }
@@ -4214,9 +4243,11 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => passerSplash(), 10000);
   }
 
-  // Load son preference
+  // Load son + tuto preferences
   const sonPref = localStorage.getItem('pap_son');
   if (sonPref === '0') papSonActif = false;
+  const tutoPref = localStorage.getItem('pap_tuto');
+  if (tutoPref === '0') papTutoActif = false;
   // Charger la meilleure voix française
   if (speechSynthesis) papInitVoix();
 });
