@@ -254,7 +254,7 @@
 </div>
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v62</span> 🔥</div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v63</span> 🔥</div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -303,7 +303,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v62</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v63</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;">📜</button>
@@ -655,7 +655,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v62';
+const APP_VERSION = 'Firebase v63';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -1120,7 +1120,7 @@ function seConnecter() {
     '<b>1.</b> Tape un <b>nom</b>, <b>prénom</b> ou <b>adresse</b> dans les champs de recherche<br>' +
     '<b>2.</b> Les résultats s\'affichent automatiquement<br>' +
     '<b>3.</b> Clique sur un résultat pour ouvrir sa <b>fiche</b>',
-    'Bienvenue ! Tape un nom pour rechercher un électeur.');
+    'Bienvenue ! 1. Tape un nom, prénom ou adresse dans les champs de recherche. 2. Les résultats s\'affichent automatiquement. 3. Clique sur un résultat pour ouvrir sa fiche.');
 
   // v56: 2ème message — explication onglet PAP (s'affiche après fermeture du 1er)
   // IMPORTANT: setTimeout 700ms car papTutoAlert a un setTimeout interne de 600ms
@@ -1135,7 +1135,7 @@ function seConnecter() {
         '<b>4.</b> Clique sur un nom pour ouvrir sa <b>fiche</b><br><br>' +
         '🗺️ La <b>carte</b> te guide vers chaque adresse !<br>' +
         '🔊 Le <b>son</b> lit les noms à voix haute',
-        'L\'onglet PAP te permet de faire du porte à porte rue par rue avec la carte.');
+        'Onglet PAP, Porte à Porte ! 1. Choisis ton bureau de vote. 2. Sélectionne une division ou quartier. 3. Choisis une rue pour voir la liste des électeurs. 4. Clique sur un nom pour ouvrir sa fiche. La carte te guide vers chaque adresse ! Le son lit les noms à voix haute.');
     };
   }, 700);
 }
@@ -1384,7 +1384,7 @@ function afficherFiche(p) {
     '<b>5.</b> Ajoute des <b>notes</b> et un <b>contact</b> (mail/tél) si possible<br>' +
     '<b>6.</b> Clique <b>✅ Enregistrer</b> en bas<br><br>' +
     '🏠 Les <b>co-résidents</b> à la même adresse s\'affichent aussi !',
-    'Vérifie les infos, choisis le statut et le candidat, puis clique enregistrer.');
+    'Fiche électeur ! 1. Vérifie les infos, nom, adresse, bureau. 2. Descends vers enregistrer une visite. 3. Choisis le statut, visité, absent, ou opposition. 4. Sélectionne le candidat soutenu. 5. Ajoute des notes et un contact mail ou téléphone si possible. 6. Clique enregistrer en bas. Les co-résidents à la même adresse s\'affichent aussi !');
 
   // v58: 2ème message — explication détaillée des champs
   setTimeout(function() {
@@ -1396,10 +1396,10 @@ function afficherFiche(p) {
         '&nbsp;&nbsp;🚫 <b>Opposition</b> = ne soutient pas<br><br>' +
         '<b>📌 Candidat soutenu :</b> le candidat que la personne soutient<br><br>' +
         '<b>📌 Notes :</b><br>' +
-        '&nbsp;&nbsp;Le nom du <b>militant</b> ou de la <b>personne</b><br>' +
+        '&nbsp;&nbsp;Le nom du <b>militant</b> (toi) ou de la <b>personne</b><br>' +
         '&nbsp;&nbsp;qui a <b>recommandé</b> cet électeur<br><br>' +
         '<b>📌 Contact :</b> mail ou téléphone si donné <i>(facultatifs)</i>',
-        'Dans notes, mets le nom de celui qui a recommandé. Contact est facultatif.');
+        'Remplir les champs ! Statut, c\'est ce que tu as constaté sur le terrain. Visité, tu as parlé à la personne. Absent, personne n\'était là. Opposition, ne soutient pas. Candidat soutenu, le candidat que la personne soutient. Notes, le nom du militant, c\'est à dire toi, ou de la personne qui a recommandé cet électeur. Contact, mail ou téléphone si donné, c\'est facultatif.');
     };
   }, 700);
 }
