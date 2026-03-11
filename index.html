@@ -254,7 +254,7 @@
 </div>
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v56</span> 🔥</div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v62</span> 🔥</div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -303,7 +303,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v56</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v62</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;">📜</button>
@@ -316,7 +316,13 @@
   </div>
   <div class="page active" id="page-recherche">
     <div class="search-box">
-      <label>Rechercher un inscrit <span id="lastSync" style="float:right;font-weight:400;opacity:.6;"></span></label>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <label style="margin:0;">Rechercher un inscrit</label>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span id="lastSync" style="font-weight:400;opacity:.6;font-size:12px;"></span>
+          <button id="btnListeComplete" onclick="afficherListeComplete()" style="background:#27ae60;color:white;border:none;border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer;white-space:nowrap;font-weight:600;" title="Voir toute la liste">📋 Liste</button>
+        </div>
+      </div>
       <div style="display:flex;gap:8px;margin-top:8px;">
         <input type="text" id="searchNom" placeholder="Nom" autocomplete="off" style="flex:1;" disabled>
         <input type="text" id="searchPrenom" placeholder="Prénom" autocomplete="off" style="flex:1;" disabled>
@@ -649,7 +655,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v56';
+const APP_VERSION = 'Firebase v62';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -1199,6 +1205,72 @@ function activerRecherche() { ['searchNom', 'searchNomUsage', 'searchPrenom', 's
 function initRecherche() { ['searchNom', 'searchNomUsage', 'searchPrenom', 'searchId', 'searchNumVoie', 'searchLibVoie'].forEach(id => { const el = $(id); if (el) el.oninput = () => { clearTimeout(searchTimeout); searchTimeout = setTimeout(rechercher, 100); }; }); $('btnReset').onclick = resetRecherche; }
 function resetRecherche() { ['searchNom', 'searchNomUsage', 'searchPrenom', 'searchId', 'searchNumVoie', 'searchLibVoie'].forEach(id => { const el = $(id); if (el) el.value = ''; }); $('resultatsRecherche').innerHTML = ''; }
 
+// v61: Afficher la liste complète des inscrits (par paquets de 200)
+let listeCompletePage = 0;
+function afficherListeComplete() {
+  if (!toutesPersonnes.length) { showToast('⏳ Données pas encore chargées', 'warning'); return; }
+  resetRecherche();
+  listeCompletePage = 0;
+  var triees = toutesPersonnes.slice().sort(function(a, b) {
+    var na = (a[1] || '').toLowerCase(), nb = (b[1] || '').toLowerCase();
+    return na < nb ? -1 : na > nb ? 1 : 0;
+  });
+  window._listeCompleteTri = triees;
+  chargerPageListe(true);
+}
+function chargerPageListe(reset) {
+  var triees = window._listeCompleteTri;
+  if (!triees) return;
+  var parPage = 200;
+  var debut = listeCompletePage * parPage;
+  var fin = Math.min(debut + parPage, triees.length);
+  var batch = triees.slice(debut, fin);
+  var div = $('resultatsRecherche');
+  if (reset) div.innerHTML = '';
+  // Header avec compteur
+  if (reset) {
+    var visites = triees.filter(function(p) { return p[3] === 'Visité'; }).length;
+    div.innerHTML = '<div style="text-align:center;padding:8px 0;font-size:13px;font-weight:600;color:#1a3a6b;">📋 Liste complète — ' + triees.length + ' inscrits · <span style="color:#27ae60;">' + visites + ' visités</span></div>';
+  }
+  // Supprimer l'ancien bouton "Voir plus"
+  var oldBtn = document.getElementById('btnVoirPlus');
+  if (oldBtn) oldBtn.remove();
+  // Ajouter les résultats
+  for (var i = 0; i < batch.length; i++) {
+    var p = batch[i];
+    var statut = p[3] || 'Non visité';
+    var statutClass = statut === 'Visité' ? 'visite' : statut === 'Absent' ? 'absent' : statut === 'Opposition' ? 'opposition' : 'non-visite';
+    var badgeClass = statut === 'Visité' ? 'badge-visite' : statut === 'Absent' ? 'badge-absent' : statut === 'Opposition' ? 'badge-opposition' : 'badge-non';
+    var badgeText = statut === 'Visité' ? '✓ Visité' : statut === 'Absent' ? '🚪 Absent' : statut === 'Opposition' ? '🚫 Opposé' : '—';
+    var sexeIcon = p[4] === 'M' ? '👨' : p[4] === 'F' ? '👩' : '';
+    var age = p[5] ? p[5] + ' ans' : '';
+    var adresse = [p[6], p[7]].filter(Boolean).join(' ');
+    var militant = p[14];
+    var militantInfo = statut === 'Visité' && militant ? ' · <span style="color:#27ae60;font-size:10px;">par ' + militant.split(' ').pop() + '</span>' : '';
+    var el = document.createElement('div');
+    el.className = 'resultat-item ' + statutClass;
+    el.style.cssText = 'display:flex;align-items:center;gap:10px;';
+    el.onclick = (function(id) { return function() { selectionnerPersonne(id); }; })(p[0]);
+    el.innerHTML = '<div style="font-size:16px;font-weight:700;color:#1a1a1a;min-width:55px;">ID→' + p[0] + '</div><div class="ri-info" style="flex:1;"><div class="ri-nom">' + p[1] + ' ' + p[2] + '</div><div class="ri-detail">' + [sexeIcon + (age ? ' ' + age : ''), adresse].filter(Boolean).join(' · ') + militantInfo + '</div></div><span class="ri-badge ' + badgeClass + '">' + badgeText + '</span>';
+    div.appendChild(el);
+  }
+  listeCompletePage++;
+  // Bouton "Voir plus" si reste des résultats
+  if (fin < triees.length) {
+    var btn = document.createElement('button');
+    btn.id = 'btnVoirPlus';
+    btn.style.cssText = 'display:block;width:100%;margin:12px 0;padding:14px;background:linear-gradient(135deg,#2755a8,#3498db);color:white;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;';
+    btn.textContent = '⬇️ Voir plus (' + (triees.length - fin) + ' restants)';
+    btn.onclick = function() { chargerPageListe(false); };
+    div.appendChild(btn);
+  } else {
+    var fin_el = document.createElement('div');
+    fin_el.style.cssText = 'text-align:center;padding:12px;color:#999;font-size:12px;';
+    fin_el.textContent = '✅ Fin de la liste — ' + triees.length + ' inscrits affichés';
+    div.appendChild(fin_el);
+  }
+}
+
 function rechercher() {
   const qNom = ($('searchNom')?.value || '').trim().toLowerCase();
   const qNomUsage = ($('searchNomUsage')?.value || '').trim().toLowerCase();
@@ -1313,6 +1385,23 @@ function afficherFiche(p) {
     '<b>6.</b> Clique <b>✅ Enregistrer</b> en bas<br><br>' +
     '🏠 Les <b>co-résidents</b> à la même adresse s\'affichent aussi !',
     'Vérifie les infos, choisis le statut et le candidat, puis clique enregistrer.');
+
+  // v58: 2ème message — explication détaillée des champs
+  setTimeout(function() {
+    papAlertCallback = function() {
+      papTutoAlert('saisie-champs', '📋', 'REMPLIR LES CHAMPS',
+        '<b>📌 Statut :</b> ce que tu as constaté sur le terrain<br>' +
+        '&nbsp;&nbsp;✅ <b>Visité</b> = tu as parlé à la personne<br>' +
+        '&nbsp;&nbsp;🚪 <b>Absent</b> = personne n\'était là<br>' +
+        '&nbsp;&nbsp;🚫 <b>Opposition</b> = ne soutient pas<br><br>' +
+        '<b>📌 Candidat soutenu :</b> le candidat que la personne soutient<br><br>' +
+        '<b>📌 Notes :</b><br>' +
+        '&nbsp;&nbsp;Le nom du <b>militant</b> ou de la <b>personne</b><br>' +
+        '&nbsp;&nbsp;qui a <b>recommandé</b> cet électeur<br><br>' +
+        '<b>📌 Contact :</b> mail ou téléphone si donné <i>(facultatifs)</i>',
+        'Dans notes, mets le nom de celui qui a recommandé. Contact est facultatif.');
+    };
+  }, 700);
 }
 
 // =====================================================
