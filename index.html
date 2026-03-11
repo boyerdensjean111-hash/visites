@@ -254,7 +254,7 @@
 </div>
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v79</span> 🔥</div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v80</span> 🔥</div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -286,7 +286,7 @@
     <div class="login-erreur" id="loginErreur"></div>
   </div>
   <button class="btn-legal" onclick="afficherMentionsLegales()">📜 M-légales</button>
-  <button onclick="confirmerDeconnexion()" style="background:none;border:none;color:rgba(255,255,255,0.45);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;margin-top:8px;padding:6px 16px;text-decoration:underline;">Déconnexion</button>
+  <button onclick="fermerApplication()" style="background:none;border:none;color:rgba(255,255,255,0.45);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;margin-top:8px;padding:6px 16px;text-decoration:underline;">Déconnexion</button>
 </div>
 <!-- Modal Mentions légales -->
 <div id="modalLegal" class="modal-overlay" style="z-index:600;display:none;">
@@ -303,7 +303,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v79</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v80</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
@@ -654,7 +654,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v79';
+const APP_VERSION = 'Firebase v80';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -1219,13 +1219,14 @@ function confirmerDeconnexion() {
   $('ecranLogin').style.display = 'flex'; $('appPrincipale').style.display = 'none';
   $('saisieContenu').innerHTML = '<div class="vide"><div style="font-size:40px;margin-bottom:10px;">🔍</div>Recherchez d\'abord une personne</div>';
   showPage('recherche');
-  // v78: Forcer la fermeture de l'app
+}
+
+// v79: Bouton Déconnexion page login → fermer l'app et retour bureau
+function fermerApplication() {
   try { window.close(); } catch(e) {}
-  // Fallback PWA / mobile : rediriger vers page vide puis fermer
   setTimeout(function() {
     try { window.open('', '_self', ''); window.close(); } catch(e) {}
   }, 200);
-  // Dernier fallback : page blanche
   setTimeout(function() {
     document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#1a3a6b;color:white;font-family:sans-serif;text-align:center;"><div><div style="font-size:48px;margin-bottom:20px;">👋</div><h2>Application fermée</h2><p style="opacity:0.7;">Vous pouvez fermer cet onglet.</p></div></div>';
     document.title = 'Fermé';
