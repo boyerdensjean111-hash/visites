@@ -254,7 +254,7 @@
 </div>
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v55</span> 🔥</div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v56</span> 🔥</div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -303,7 +303,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v55</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v56</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;">📜</button>
@@ -649,7 +649,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v55';
+const APP_VERSION = 'Firebase v56';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -1116,18 +1116,22 @@ function seConnecter() {
     '<b>3.</b> Clique sur un résultat pour ouvrir sa <b>fiche</b>',
     'Bienvenue ! Tape un nom pour rechercher un électeur.');
 
-  // v54: 2ème message — explication onglet PAP (s'affiche après fermeture du 1er)
-  papAlertCallback = function() {
-    papTutoAlert('pap-intro', '🚪', 'ONGLET PAP',
-      '<b>PAP</b> = <b>Porte-à-Porte</b><br><br>' +
-      '<b>1.</b> Choisis ton <b>bureau de vote</b><br>' +
-      '<b>2.</b> Sélectionne une <b>division</b> (quartier)<br>' +
-      '<b>3.</b> Choisis une <b>rue</b> pour voir la liste des électeurs<br>' +
-      '<b>4.</b> Clique sur un nom pour ouvrir sa <b>fiche</b><br><br>' +
-      '🗺️ La <b>carte</b> te guide vers chaque adresse !<br>' +
-      '🔊 Le <b>son</b> lit les noms à voix haute',
-      'L\'onglet PAP te permet de faire du porte à porte rue par rue avec la carte.');
-  };
+  // v56: 2ème message — explication onglet PAP (s'affiche après fermeture du 1er)
+  // IMPORTANT: setTimeout 700ms car papTutoAlert a un setTimeout interne de 600ms
+  // qui fait papAlertCallback = null — on doit définir APRÈS ce reset
+  setTimeout(function() {
+    papAlertCallback = function() {
+      papTutoAlert('pap-intro', '🚪', 'ONGLET PAP',
+        '<b>PAP</b> = <b>Porte-à-Porte</b><br><br>' +
+        '<b>1.</b> Choisis ton <b>bureau de vote</b><br>' +
+        '<b>2.</b> Sélectionne une <b>division</b> (quartier)<br>' +
+        '<b>3.</b> Choisis une <b>rue</b> pour voir la liste des électeurs<br>' +
+        '<b>4.</b> Clique sur un nom pour ouvrir sa <b>fiche</b><br><br>' +
+        '🗺️ La <b>carte</b> te guide vers chaque adresse !<br>' +
+        '🔊 Le <b>son</b> lit les noms à voix haute',
+        'L\'onglet PAP te permet de faire du porte à porte rue par rue avec la carte.');
+    };
+  }, 700);
 }
 
 function mettreAJourOnglets() {
