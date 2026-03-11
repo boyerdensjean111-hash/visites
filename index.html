@@ -254,7 +254,7 @@
 </div>
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v70</span> 🔥</div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v71</span> 🔥</div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -303,7 +303,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v70</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v71</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;">📜</button>
@@ -655,7 +655,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v70';
+const APP_VERSION = 'Firebase v71';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -2839,6 +2839,8 @@ function papAlert(icon, titre, msg, voiceMsg, callback, btnTexte) {
 let papAlertCallback = null;
 
 function fermerPapAlert() {
+  // v70: Couper la voix immédiatement
+  try { speechSynthesis.cancel(); } catch(e) {}
   document.querySelectorAll('.pap-alert, .pap-alert-overlay').forEach(e => {
     e.style.transition = 'opacity .2s';
     e.style.opacity = '0';
@@ -3817,19 +3819,23 @@ function retourCarte() {
     }
   }
 
-  // Tuto retour carte
+  // v70: Tuto retour PUIS panel (chaînés pour éviter superposition)
   papTutoAlert('retour', '🔄', 'RETOUR AUTOMATIQUE',
     'La personne est enregistrée ! ✅<br>Continue avec les autres de la rue, ou passe au <b>marqueur suivant</b>.',
     'Continue avec les autres personnes.');
 
-  // Réafficher la carte
+  // Réafficher la carte (derrière l'alerte)
   var overlay = document.querySelector('.pap-carte-overlay');
   if (overlay) {
     overlay.style.display = 'flex';
-    // Rafraîchir le panel rue si ouvert
-    if (papEtapes.length > papEtapeActuelle) {
-      papOuvrirPanelRue(papEtapes[papEtapeActuelle]);
-    }
+    // v70: Rafraîchir le panel APRÈS fermeture de l'alerte retour
+    setTimeout(function() {
+      papAlertCallback = function() {
+        if (papEtapes.length > papEtapeActuelle) {
+          papOuvrirPanelRue(papEtapes[papEtapeActuelle]);
+        }
+      };
+    }, 700);
   } else {
     // Carte détruite, rouvrir
     showPage('pap');
@@ -3922,15 +3928,19 @@ function papOuvrirDivision(bureau, divIdx) {
     rue: div.rues[0] ? div.rues[0].rue : ''
   }));
 
-  // Tuto première ouverture division
+  // v70: Tuto division PUIS carte (chaînés pour éviter superposition)
+  const nbRues = div.rues.length;
+  const voixMsg = div.label + '! ' + nbRues + ' rues a visiter, ' + ds.restant + ' personnes t\'attendent. C\'est parti!';
   papTutoAlert('division', '📋', 'COMMENT ÇA MARCHE',
     'Clique sur le bouton rouge <b>🗺️ Carte</b> pour voir ton itinéraire sur la carte satellite.<br><br>Tu peux aussi cliquer directement sur une personne.',
     'Clique sur le bouton carte rouge pour voir ton itinéraire.');
-
-  // Alerte carte itineraire automatique
-  const nbRues = div.rues.length;
-  const voixMsg = div.label + '! ' + nbRues + ' rues a visiter, ' + ds.restant + ' personnes t\'attendent. C\'est parti!';
-  papAlertCarte(bureau, divIdx, div.label, nbRues, ds.restant, voixMsg);
+  // v70: Chaîner l'alerte carte APRÈS fermeture du tuto division
+  var _bureau = bureau, _divIdx = divIdx, _label = div.label, _nbRues = nbRues, _restant = ds.restant, _voixMsg = voixMsg;
+  setTimeout(function() {
+    papAlertCallback = function() {
+      papAlertCarte(_bureau, _divIdx, _label, _nbRues, _restant, _voixMsg);
+    };
+  }, 700);
 }
 
 // Alerte spéciale carte avec bouton qui ouvre Google Maps directement (évite blocage popup)
