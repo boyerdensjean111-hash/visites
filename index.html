@@ -147,7 +147,7 @@
   .splash-legal h3 { color:white; font-size:14px; margin:0 0 12px 0; text-align:center; }
   .splash-legal-content { color:rgba(255,255,255,0.85); font-size:11px; line-height:1.6; white-space:pre-line; }
   .splash-loader { margin-top:20px; width:100px; height:4px; background:rgba(255,255,255,0.2); border-radius:2px; overflow:hidden; }
-  .splash-loader-bar { height:100%; width:0%; background:white; border-radius:2px; animation:splashLoad 3s linear forwards; }
+  .splash-loader-bar { height:100%; width:0%; background:white; border-radius:2px; animation:splashLoad 10s linear forwards; }
   @keyframes splashLoad { 0%{width:0%} 100%{width:100%} }
   @keyframes pulseBtn { 0%,100%{transform:scale(1);} 50%{transform:scale(1.05);} }
   /* Carte Leaflet fullscreen */
@@ -249,11 +249,12 @@
     <div id="splashMentionsContenu" class="splash-legal-content">Chargement...</div>
   </div>
   <div class="splash-loader"><div class="splash-loader-bar"></div></div>
-  <button onclick="passerSplash()" style="margin-top:20px;background:rgba(255,255,255,0.2);border:none;padding:10px 24px;border-radius:20px;color:white;font-size:13px;cursor:pointer;">Passer ➔</button>
+  <div id="splashCompteur" style="color:rgba(255,255,255,0.6);font-size:12px;margin-top:8px;">10s</div>
+  <button onclick="passerSplash()" style="margin-top:12px;background:rgba(255,255,255,0.2);border:none;padding:10px 24px;border-radius:20px;color:white;font-size:13px;cursor:pointer;">Passer ➔</button>
 </div>
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v51</span> 🔥</div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v54</span> 🔥</div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -302,7 +303,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v51</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v52</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;">📜</button>
@@ -648,7 +649,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v51';
+const APP_VERSION = 'Firebase v54';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -724,8 +725,77 @@ function ouvrirModal(id) { $(id).style.display = 'flex'; $(id).classList.add('ou
 function fermerModal(id) { $(id).classList.remove('ouvert'); $(id).style.display = 'none'; }
 function setSyncIndicator(syncing) { const ind = $('syncIndicator'); if (ind) ind.classList.toggle('syncing', syncing); }
 function updateLastSync() { const el = $('lastSync'); if (el) { const now = new Date(); el.textContent = '🔥 ' + now.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}); } }
-function passerSplash() { const splash = $('ecranSplash'); if (splash && splash.style.display !== 'none') { splash.style.transition = 'opacity 0.3s'; splash.style.opacity = '0'; splash.style.pointerEvents = 'none'; setTimeout(() => { splash.remove(); $('ecranLogin').style.display = 'flex'; }, 300); } }
+function passerSplash() { const splash = $('ecranSplash'); if (splash && splash.style.display !== 'none') { splash.style.transition = 'opacity 0.3s'; splash.style.opacity = '0'; splash.style.pointerEvents = 'none'; setTimeout(() => { splash.remove(); $('ecranLogin').style.display = 'flex'; }, 300); } if (window._splashTimer) { clearInterval(window._splashTimer); window._splashTimer = null; } }
 function afficherMentionsLegales() { ouvrirModal('modalLegal'); }
+
+// v53: Compteur splash 10s
+function demarrerCompteurSplash() {
+  var secondes = 10;
+  var compteur = $('splashCompteur');
+  window._splashTimer = setInterval(function() {
+    secondes--;
+    if (compteur) compteur.textContent = secondes + 's';
+    if (secondes <= 0) {
+      clearInterval(window._splashTimer);
+      window._splashTimer = null;
+    }
+  }, 1000);
+}
+
+// v53: Restauration automatique de session (skip splash + login)
+function restaurerSession() {
+  try {
+    var sessionStr = localStorage.getItem('visites_session');
+    if (!sessionStr) return false;
+    var session = JSON.parse(sessionStr);
+    // Vérifier que la session est valide (nom obligatoire, max 24h)
+    if (!session.nom) return false;
+    var age = Date.now() - (session.timestamp || 0);
+    if (age > 24 * 60 * 60 * 1000) {
+      localStorage.removeItem('visites_session');
+      return false;
+    }
+    // Vérifier que le militant existe toujours dans la liste
+    // (listeMilitants est chargée par chargerMilitants() qui est async)
+    // On vérifie après chargement
+    return session;
+  } catch(e) { return false; }
+}
+
+function appliquerSession(session) {
+  // Vérifier que le militant existe dans la liste
+  var militant = listeMilitants.find(function(m) { return m.nom === session.nom; });
+  if (!militant) {
+    // Militant plus dans la liste → supprimer session, afficher login
+    localStorage.removeItem('visites_session');
+    $('ecranLogin').style.display = 'flex';
+    return;
+  }
+
+  currentMilitant = militant.nom;
+  currentRole = militant.role || session.role || 'militant';
+  var prenom = militant.nom.split(' ').pop();
+  $('btnUser').textContent = '👤 ' + prenom + (currentRole === 'admin' ? ' 👑' : '') + ' — Quitter';
+
+  var couleursRole = {'admin': 'var(--role-admin)', 'superviseur': 'var(--role-superviseur)', 'responsable bureaux': 'var(--role-responsable)', 'manager': 'var(--role-manager)', 'militant': 'var(--role-militant)', 'teleoperateur': 'var(--role-teleop)'};
+  $('mainHeader').style.background = couleursRole[currentRole] || 'var(--bleu)';
+
+  mettreAJourOnglets();
+  $('ecranLogin').style.display = 'none';
+  $('appPrincipale').style.display = 'block';
+
+  // Marquer comme connecté dans Firebase
+  var connRef = db.ref('connectes/' + sanitizeKey(currentMilitant));
+  connRef.set({ timestamp: firebase.database.ServerValue.TIMESTAMP, nom: currentMilitant });
+  connRef.onDisconnect().remove();
+
+  chargerToutesPersonnes();
+  demarrerListenersFirebase();
+  demarrerVerificationMaj();
+
+  console.log('[v53] Session restaurée : ' + currentMilitant + ' (' + currentRole + ')');
+  showToast('👋 Bon retour ' + prenom + ' !', 'succes');
+}
 
 // =====================================================
 // VÉRIFICATION MISE À JOUR
@@ -1021,6 +1091,15 @@ function seConnecter() {
   // 📊 Sync log vers Google Sheets
   syncVersGoogleSheets({ action: 'log', date: dateConnexion, action_type: 'Connexion', militant: currentMilitant, id: '', nom: '' });
 
+  // v53: Sauvegarder la session pour reconnexion automatique
+  try {
+    localStorage.setItem('visites_session', JSON.stringify({
+      nom: currentMilitant,
+      role: currentRole,
+      timestamp: Date.now()
+    }));
+  } catch(e) {}
+
   // Marquer comme connecté
   const connRef = db.ref('connectes/' + sanitizeKey(currentMilitant));
   connRef.set({ timestamp: firebase.database.ServerValue.TIMESTAMP, nom: currentMilitant });
@@ -1034,9 +1113,21 @@ function seConnecter() {
   papTutoAlert('recherche', '🔍', 'BIENVENUE !',
     '<b>1.</b> Tape un <b>nom</b>, <b>prénom</b> ou <b>adresse</b> dans les champs de recherche<br>' +
     '<b>2.</b> Les résultats s\'affichent automatiquement<br>' +
-    '<b>3.</b> Clique sur un résultat pour ouvrir sa <b>fiche</b><br><br>' +
-    '🚪 L\'onglet <b>PAP</b> te donne une liste par rue avec la carte !',
+    '<b>3.</b> Clique sur un résultat pour ouvrir sa <b>fiche</b>',
     'Bienvenue ! Tape un nom pour rechercher un électeur.');
+
+  // v54: 2ème message — explication onglet PAP (s'affiche après fermeture du 1er)
+  papAlertCallback = function() {
+    papTutoAlert('pap-intro', '🚪', 'ONGLET PAP',
+      '<b>PAP</b> = <b>Porte-à-Porte</b><br><br>' +
+      '<b>1.</b> Choisis ton <b>bureau de vote</b><br>' +
+      '<b>2.</b> Sélectionne une <b>division</b> (quartier)<br>' +
+      '<b>3.</b> Choisis une <b>rue</b> pour voir la liste des électeurs<br>' +
+      '<b>4.</b> Clique sur un nom pour ouvrir sa <b>fiche</b><br><br>' +
+      '🗺️ La <b>carte</b> te guide vers chaque adresse !<br>' +
+      '🔊 Le <b>son</b> lit les noms à voix haute',
+      'L\'onglet PAP te permet de faire du porte à porte rue par rue avec la carte.');
+  };
 }
 
 function mettreAJourOnglets() {
@@ -1082,6 +1173,8 @@ function confirmerDeconnexion() {
   arreterListenersFirebase();
   // v48: Vider le cache à la déconnexion
   try { localStorage.removeItem('personnesCache'); } catch(e) {}
+  // v53: Supprimer la session persistante
+  try { localStorage.removeItem('visites_session'); } catch(e) {}
   toutesPersonnes = [];
   window.personnesIndex = {};
   if (currentMilitant) db.ref('connectes/' + sanitizeKey(currentMilitant)).remove();
@@ -3913,18 +4006,39 @@ function initBlocageRetour() {
 // INITIALISATION
 // =====================================================
 document.addEventListener('DOMContentLoaded', () => {
-  chargerMentionsLegales();
-  chargerMilitants();
-  chargerAlertesPerso();
-  initTabs();
-  initRecherche();
-  initBlocageRetour();
+  // v53: Vérifier si session persistante existe
+  var session = restaurerSession();
+
+  if (session) {
+    // ═══ SESSION TROUVÉE → skip splash, direct dans l'app ═══
+    const splash = $('ecranSplash');
+    if (splash) splash.remove();
+
+    chargerMentionsLegales();
+    chargerMilitants().then(function() {
+      appliquerSession(session);
+    });
+    chargerAlertesPerso();
+    initTabs();
+    initRecherche();
+    initBlocageRetour();
+  } else {
+    // ═══ PAS DE SESSION → splash 10 secondes ═══
+    chargerMentionsLegales();
+    chargerMilitants();
+    chargerAlertesPerso();
+    initTabs();
+    initRecherche();
+    initBlocageRetour();
+    demarrerCompteurSplash();
+    setTimeout(() => passerSplash(), 10000);
+  }
+
   // Load son preference
   const sonPref = localStorage.getItem('pap_son');
   if (sonPref === '0') papSonActif = false;
   // Charger la meilleure voix française
   if (speechSynthesis) papInitVoix();
-  setTimeout(() => passerSplash(), 2000);
 });
 </script>
 </body>
