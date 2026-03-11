@@ -253,7 +253,7 @@
 </div>
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v31</span> 🔥</div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v49</span> 🔥</div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -302,7 +302,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v48</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v49</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;">📜</button>
@@ -648,7 +648,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v48';
+const APP_VERSION = 'Firebase v49';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -756,6 +756,8 @@ function demarrerListenersFirebase() {
       updateLastSync();
       setSyncIndicator(false);
       console.log('[v47] Cache local : ' + toutesPersonnes.length + ' inscrits (instantané)');
+      // v49: Pré-calculer les stats PAP en arrière-plan depuis le cache
+      setTimeout(function() { papBuildNomIndex(); papPrecalculerStats(); }, 50);
     }
   } catch(e) { console.log('[v47] Pas de cache local'); }
 
@@ -789,6 +791,8 @@ function demarrerListenersFirebase() {
     activerRecherche();
     updateLastSync();
     setSyncIndicator(false);
+    // v49: Rebuilder l'index PAP + recalculer stats en arrière-plan
+    setTimeout(function() { papBuildNomIndex(); papPrecalculerStats(); }, 100);
   });
 
   // 3. Écouter les changements individuels en temps réel
@@ -813,6 +817,8 @@ function demarrerListenersFirebase() {
 
     updateLastSync();
     papResetCache();
+    // v49: Recalculer stats PAP en arrière-plan (papCacheMatch gardé, noms changent pas)
+    setTimeout(papPrecalculerStats, 200);
 
     if (currentPersonne && String(currentPersonne.id) === id) {
       if (newRow[14] && newRow[14] !== currentMilitant && newRow[3] === 'Visité' && currentPersonne.statut !== 'Visité') {
@@ -2629,9 +2635,46 @@ function papSimilarite(a, b) {
 
 // Cache de rapprochement pour performance
 let papCacheMatch = {};
-function papResetCache() { papCacheMatch = {}; }
+let papNomIndex = {};      // v49: index normalisé nom|prenom → id (O(1) lookup)
+let papStatsCache = null;  // v49: cache stats bureaux pré-calculées
+let papStatsReady = false; // v49: flag stats prêtes
 
-// TROUVER une personne : rapprochement profond multi-niveaux
+// v49: Construire l'index nom→ID pour lookups instantanés (O(1) au lieu de O(6000))
+function papBuildNomIndex() {
+  papNomIndex = {};
+  toutesPersonnes.forEach(function(p) {
+    var nom = papNorm(p[1] || '');
+    var prenom = papNorm(p[2] || '');
+    if (nom) {
+      var key = nom + '|' + prenom;
+      papNomIndex[key] = p[0];
+      // Indexer aussi par nom d'usage
+      var nomUsage = papNorm(p[8] || '');
+      if (nomUsage && nomUsage !== nom) {
+        papNomIndex[nomUsage + '|' + prenom] = p[0];
+      }
+    }
+  });
+  papNomIndex._ready = true;
+  console.log('[v49] Index PAP: ' + Object.keys(papNomIndex).length + ' entrées');
+}
+
+// v49: Pré-calculer les stats de tous les bureaux en arrière-plan
+function papPrecalculerStats() {
+  if (!toutesPersonnes.length) return;
+  var t0 = performance.now();
+  papStatsCache = {};
+  Object.keys(PAP_DATA).forEach(function(b) {
+    papStatsCache[b] = papStatsBureau(b);
+  });
+  papStatsReady = true;
+  console.log('[v49] Stats PAP pré-calculées en ' + Math.round(performance.now() - t0) + 'ms');
+}
+
+// v49: Ne plus effacer papCacheMatch (noms ne changent jamais), juste invalider les stats
+function papResetCache() { papStatsCache = null; papStatsReady = false; }
+
+// TROUVER une personne : v49 optimisé avec index O(1) + fuzzy fallback
 function papTrouverPersonne(nom, prenom) {
   if (!toutesPersonnes.length) return null;
 
@@ -2641,6 +2684,20 @@ function papTrouverPersonne(nom, prenom) {
   const varNom = papVariantesNom(nom);
   const varPrenom = papVariantesPrenom(prenom);
 
+  // v49: QUICK INDEX LOOKUP O(1) — couvre 90%+ des cas instantanément
+  if (papNomIndex && papNomIndex._ready) {
+    for (const vn of varNom) {
+      for (const vp of varPrenom) {
+        var idxKey = vn + '|' + vp;
+        if (papNomIndex[idxKey] !== undefined) {
+          papCacheMatch[cacheKey] = papNomIndex[idxKey];
+          return papNomIndex[idxKey];
+        }
+      }
+    }
+  }
+
+  // FUZZY FALLBACK — seulement pour les ~10% de noms qui ne matchent pas exactement
   let meilleurScore = 0;
   let meilleurId = null;
 
@@ -2649,28 +2706,6 @@ function papTrouverPersonne(nom, prenom) {
     const dbNom = papNorm(p[1] || '');
     const dbPrenom = papNorm(p[2] || '');
     const dbNomUsage = papNorm(p[8] || '');
-
-    // NIVEAU 1 : Match exact normalisé (score 100)
-    for (const vn of varNom) {
-      for (const vp of varPrenom) {
-        if (vn === dbNom && vp === dbPrenom) {
-          papCacheMatch[cacheKey] = p[0];
-          return p[0];
-        }
-      }
-    }
-
-    // NIVEAU 2 : Match avec nomUsage (score 95)
-    if (dbNomUsage) {
-      for (const vn of varNom) {
-        for (const vp of varPrenom) {
-          if ((vn === dbNomUsage || dbNomUsage === vn) && vp === dbPrenom) {
-            papCacheMatch[cacheKey] = p[0];
-            return p[0];
-          }
-        }
-      }
-    }
 
     // NIVEAU 3 : Nom contient ou est contenu + prénom exact (score 90)
     for (const vn of varNom) {
@@ -2693,7 +2728,6 @@ function papTrouverPersonne(nom, prenom) {
       const simNomUsage = dbNomUsage ? papSimilarite(vn, dbNomUsage) : 0;
       const bestSimNom = Math.max(simNom, simNomUsage);
       if (bestSimNom >= 0.5) {
-        // Vérifier prénom : au moins premier prénom match
         const premierPrenomPAP = papNorm(prenom).split(' ')[0];
         const premierPrenomDB = dbPrenom.split(' ')[0];
         if (premierPrenomPAP === premierPrenomDB || premierPrenomDB.includes(premierPrenomPAP) || premierPrenomPAP.includes(premierPrenomDB)) {
@@ -2723,11 +2757,11 @@ function papTrouverPersonne(nom, prenom) {
   return result;
 }
 
-// GET STATUT via le rapprochement profond
+// GET STATUT via le rapprochement profond — v49: personnesIndex O(1)
 function papGetStatut(nom, prenom) {
   const id = papTrouverPersonne(nom, prenom);
   if (id === null) return 'Non visité';
-  const p = toutesPersonnes.find(x => x[0] == id);
+  const p = window.personnesIndex[String(id)];  // v49: O(1) au lieu de find() O(n)
   return p ? (p[3] || 'Non visité') : 'Non visité';
 }
 
@@ -2791,9 +2825,14 @@ function ajouterOngletPAP() {
   }
 }
 
-// MAIN VIEW: 6 bureau buttons
+// MAIN VIEW: 6 bureau buttons — v49: utilise stats pré-calculées (INSTANTANÉ)
 function afficherPapAccueil() {
   papEtatActuel = { bureau: null, division: null, rue: null };
+
+  // v49: Pré-calculer les stats si pas encore fait
+  if (!papStatsCache && toutesPersonnes.length) {
+    papPrecalculerStats();
+  }
 
   let html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">' +
     '<div style="font-family:' + "'" + 'Bebas Neue' + "'" + ',sans-serif;font-size:22px;color:var(--bleu);">🚪 Porte à Porte</div>' +
@@ -2811,10 +2850,14 @@ function afficherPapAccueil() {
     } catch(e) {}
   }
 
-  // Global progress
+  // v49: Utiliser le cache stats — calculer UNE SEULE FOIS pour tous les bureaux
+  var bureauKeys = Object.keys(PAP_DATA).sort();
+  var allStats = {};
   let totalGlobal = 0, doneGlobal = 0;
-  Object.keys(PAP_DATA).sort().forEach(b => {
-    const s = papStatsBureau(b);
+  bureauKeys.forEach(function(b) {
+    var s = papStatsCache ? papStatsCache[b] : papStatsBureau(b);
+    if (!s) s = { total: 0, done: 0, restant: 0 };
+    allStats[b] = s;
     totalGlobal += s.total;
     doneGlobal += s.done;
   });
@@ -2826,13 +2869,13 @@ function afficherPapAccueil() {
     '<div class="pap-progress" style="margin-top:10px;background:rgba(255,255,255,0.2);"><div class="pap-progress-fill" style="width:' + pctGlobal + '%;background:var(--vert);"></div></div>' +
     '<div style="font-size:11px;margin-top:4px;opacity:.7;">' + pctGlobal + '%</div></div>';
 
-  // 6 bureau buttons
+  // v49: 6 bureau buttons — réutilise allStats (pas de recalcul !)
   html += '<div class="pap-bureaux">';
-  Object.keys(PAP_DATA).sort().forEach(b => {
-    const data = PAP_DATA[b];
-    const stats = papStatsBureau(b);
-    const pct = stats.total > 0 ? Math.round(stats.done / stats.total * 100) : 0;
-    const icon = PAP_BUREAU_ICONS[b] || '📋';
+  bureauKeys.forEach(function(b) {
+    var data = PAP_DATA[b];
+    var stats = allStats[b];
+    var pct = stats.total > 0 ? Math.round(stats.done / stats.total * 100) : 0;
+    var icon = PAP_BUREAU_ICONS[b] || '📋';
     html += '<div class="pap-bureau-btn" onclick="papOuvrirBureau(' + "'" + b + "'" + ')">' +
       '<div class="pap-bureau-num">' + icon + ' ' + b + '</div>' +
       '<div class="pap-bureau-secteur">' + data.secteurs.join(', ') + '</div>' +
