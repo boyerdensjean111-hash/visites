@@ -254,7 +254,7 @@
 </div>
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v73</span> 🔥</div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v74</span> 🔥</div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -285,7 +285,7 @@
     <button class="btn-connexion" onclick="seConnecter()">Se connecter</button>
     <div class="login-erreur" id="loginErreur"></div>
   </div>
-  <button class="btn-legal" onclick="afficherMentionsLegales()">📜 Mentions légales</button>
+  <button class="btn-legal" onclick="afficherMentionsLegales()">📜 M-légales</button>
   <button onclick="confirmerDeconnexion()" style="background:none;border:none;color:rgba(255,255,255,0.45);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;margin-top:8px;padding:6px 16px;text-decoration:underline;">Déconnexion</button>
 </div>
 <!-- Modal Mentions légales -->
@@ -303,10 +303,9 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v73</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v74</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
-      <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;">📜</button>
       <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
     </div>
   </div>
@@ -655,7 +654,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v73';
+const APP_VERSION = 'Firebase v74';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -1150,19 +1149,25 @@ function mettreAJourOnglets() {
   if (currentRole === 'superviseur' || currentRole === 'admin') ajouterOnglet('observations', '📝 Obs');
   if (currentRole === 'admin') ajouterOnglet('admin', '👁️ Admin');
   if (currentRole === 'admin') ajouterOnglet('csv', '📥 CSV');
-  // v72: Boutons Son + Tuto dans le menu principal (tous rôles)
-  var btnSon = document.createElement('div');
-  btnSon.className = 'tab tab-toggle-son pap-son-toggle';
-  btnSon.style.cssText = 'flex:0;padding:12px 8px;font-size:11px;cursor:pointer;white-space:nowrap;';
-  btnSon.innerHTML = papSonActif ? '🔊' : '🔇';
-  btnSon.onclick = function() { papToggleSon(); };
-  $('tabsBar').appendChild(btnSon);
+  // v73: Boutons Tuto + Vocal + Mentions dans le menu principal (tous rôles)
   var btnTuto = document.createElement('div');
   btnTuto.className = 'tab tab-toggle-tuto pap-tuto-toggle';
   btnTuto.style.cssText = 'flex:0;padding:12px 8px;font-size:11px;cursor:pointer;white-space:nowrap;';
-  btnTuto.innerHTML = papTutoActif ? '🔊📖' : '🚫';
+  btnTuto.innerHTML = papTutoActif ? '🔊📖 Tuto' : '🚫 Tuto';
   btnTuto.onclick = function() { papToggleTuto(); };
   $('tabsBar').appendChild(btnTuto);
+  var btnSon = document.createElement('div');
+  btnSon.className = 'tab tab-toggle-son pap-son-toggle';
+  btnSon.style.cssText = 'flex:0;padding:12px 8px;font-size:11px;cursor:pointer;white-space:nowrap;';
+  btnSon.innerHTML = papSonActif ? '🔊 Vocal' : '🔇 Vocal';
+  btnSon.onclick = function() { papToggleSon(); };
+  $('tabsBar').appendChild(btnSon);
+  var btnMentions = document.createElement('div');
+  btnMentions.className = 'tab';
+  btnMentions.style.cssText = 'flex:0;padding:12px 8px;font-size:11px;cursor:pointer;white-space:nowrap;';
+  btnMentions.innerHTML = '📜 M-légales';
+  btnMentions.onclick = function() { afficherMentionsLegales(); };
+  $('tabsBar').appendChild(btnMentions);
 }
 
 function ajouterOnglet(page, label) {
@@ -4104,7 +4109,7 @@ function papToggleTuto() {
   papTutoActif = !papTutoActif;
   localStorage.setItem('pap_tuto', papTutoActif ? '1' : '0');
   // Mettre à jour icônes menu principal
-  document.querySelectorAll('.tab-toggle-tuto').forEach(btn => { btn.innerHTML = papTutoActif ? '🔊📖' : '🚫'; });
+  document.querySelectorAll('.tab-toggle-tuto').forEach(btn => { btn.innerHTML = papTutoActif ? '🔊📖 Tuto' : '🚫 Tuto'; });
   showToast(papTutoActif ? '📖 Tutos activés' : '🚫 Tutos désactivés');
 }
 
@@ -4115,9 +4120,9 @@ function papToggleSon() {
   document.querySelectorAll('.pap-son-toggle:not(.tab-toggle-son)').forEach(btn => {
     btn.innerHTML = papSonActif ? '🔊 Son ON' : '🔇 Son OFF';
   });
-  // Update menu principal buttons (emoji seul)
+  // Update menu principal buttons (avec texte)
   document.querySelectorAll('.tab-toggle-son').forEach(btn => {
-    btn.innerHTML = papSonActif ? '🔊' : '🔇';
+    btn.innerHTML = papSonActif ? '🔊 Vocal' : '🔇 Vocal';
   });
   showToast(papSonActif ? '🔊 Son activé' : '🔇 Son désactivé');
 }
