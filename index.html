@@ -302,7 +302,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v45</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v47</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;">📜</button>
@@ -648,7 +648,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v45';
+const APP_VERSION = 'Firebase v47';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -742,46 +742,88 @@ function demarrerListenersFirebase() {
   if (firebaseListenersActive) return;
   firebaseListenersActive = true;
 
-  // 🔥 Écouter les personnes en TEMPS RÉEL
-  db.ref('personnes').on('value', function(snapshot) {
-    const data = snapshot.val();
-    if (!data) return;
-    const anciensVisites = toutesPersonnes.filter(p => p[3] === 'Visité').length;
+  // v47: Charger depuis localStorage d'abord (INSTANTANÉ), puis sync Firebase en background
+  window.personnesIndex = {};
 
-    // Convertir l'objet Firebase en tableau de tableaux
+  // 1. Charger le cache local
+  try {
+    var cache = localStorage.getItem('personnesCache');
+    if (cache) {
+      toutesPersonnes = JSON.parse(cache);
+      // Reconstruire l'index
+      toutesPersonnes.forEach(function(row) { window.personnesIndex[String(row[0])] = row; });
+      activerRecherche();
+      updateLastSync();
+      setSyncIndicator(false);
+      console.log('[v47] Cache local : ' + toutesPersonnes.length + ' inscrits (instantané)');
+    }
+  } catch(e) { console.log('[v47] Pas de cache local'); }
+
+  // 2. Sync Firebase en arrière-plan (silencieux)
+  db.ref('personnes').once('value').then(function(snapshot) {
+    var data = snapshot.val();
+    if (!data) return;
+
+    var anciensVisites = toutesPersonnes.filter(function(p) { return p[3] === 'Visité'; }).length;
+
     toutesPersonnes = Object.values(data).map(function(p) {
-      return [
+      var row = [
         p.id || 0, p.nom || '', p.prenom || '', p.statut || 'Non visité',
         p.sexe || '', p.age || '', p.numVoie || '', p.libelleVoie || '',
         p.nomUsage || '', p.codeBureau || '', p.candidat || '', p.dateVisite || '',
         p.notes || '', p.secteur || '', p.militant || '', p.observation || '',
         p.mail || '', p.tel || '', p.libelleBureau || '', p.complement1 || '', p.complement2 || ''
       ];
+      window.personnesIndex[String(p.id)] = row;
+      return row;
     });
 
-    const nouveauxVisites = toutesPersonnes.filter(p => p[3] === 'Visité').length;
+    // Sauvegarder dans localStorage pour le prochain login
+    try { localStorage.setItem('personnesCache', JSON.stringify(toutesPersonnes)); } catch(e) {}
+
+    var nouveauxVisites = toutesPersonnes.filter(function(p) { return p[3] === 'Visité'; }).length;
     if (anciensVisites > 0 && nouveauxVisites !== anciensVisites) {
-      showToast('🔥 Sync temps réel : ' + nouveauxVisites + ' visités', 'succes');
+      showToast('🔥 Sync : ' + nouveauxVisites + ' visités', 'succes');
     }
 
     activerRecherche();
     updateLastSync();
     setSyncIndicator(false);
-    papResetCache(); // Reset PAP matching cache on data update
+  });
 
-    // Rafraîchir la recherche en cours
-    const qNom = $('searchNom')?.value;
-    const qPrenom = $('searchPrenom')?.value;
-    const qId = $('searchId')?.value;
-    if (qNom || qPrenom || qId) rechercher();
+  // 3. Écouter les changements individuels en temps réel
+  db.ref('personnes').on('child_changed', function(childSnap) {
+    var p = childSnap.val();
+    if (!p) return;
+    var id = String(p.id || childSnap.key);
+    var newRow = [
+      p.id || 0, p.nom || '', p.prenom || '', p.statut || 'Non visité',
+      p.sexe || '', p.age || '', p.numVoie || '', p.libelleVoie || '',
+      p.nomUsage || '', p.codeBureau || '', p.candidat || '', p.dateVisite || '',
+      p.notes || '', p.secteur || '', p.militant || '', p.observation || '',
+      p.mail || '', p.tel || '', p.libelleBureau || '', p.complement1 || '', p.complement2 || ''
+    ];
 
-    // Rafraîchir la fiche ouverte
-    if (currentPersonne) {
-      const updated = toutesPersonnes.find(p => p[0] == currentPersonne.id);
-      if (updated && updated[14] && updated[14] !== currentMilitant && updated[3] === 'Visité' && currentPersonne.statut !== 'Visité') {
-        showToast('⚠️ Modifié par ' + updated[14], 'warning');
+    var idx = toutesPersonnes.findIndex(function(r) { return String(r[0]) === id; });
+    if (idx !== -1) { toutesPersonnes[idx] = newRow; } else { toutesPersonnes.push(newRow); }
+    window.personnesIndex[id] = newRow;
+
+    // Sauvegarder le cache mis à jour
+    try { localStorage.setItem('personnesCache', JSON.stringify(toutesPersonnes)); } catch(e) {}
+
+    updateLastSync();
+    papResetCache();
+
+    if (currentPersonne && String(currentPersonne.id) === id) {
+      if (newRow[14] && newRow[14] !== currentMilitant && newRow[3] === 'Visité' && currentPersonne.statut !== 'Visité') {
+        showToast('⚠️ Modifié par ' + newRow[14], 'warning');
       }
     }
+
+    var qNom = $('searchNom')?.value;
+    var qPrenom = $('searchPrenom')?.value;
+    var qId = $('searchId')?.value;
+    if (qNom || qPrenom || qId) rechercher();
   });
 
   // 🔥 Écouter les militants en TEMPS RÉEL
@@ -1607,7 +1649,7 @@ function afficherMenuGestion() {
   $('gestionTitre').textContent = '⚙️ Gestion';
   $('gestionBtnRetour').style.display = 'none';
   $('gestionBtnAjouter').style.display = 'none';
-  $('gestionContenu').innerHTML = '<div style="display:flex;flex-direction:column;gap:10px;"><button onclick="ouvrirSectionGestion(\'militants\')" style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:14px;width:100%;"><span style="font-size:28px;">👥</span><div><div style="font-weight:700;font-size:14px;color:#1a3a6b;">Militants</div><div style="font-size:12px;color:#888;">Gérer les militants</div></div></button><button onclick="ouvrirSectionGestion(\'export\')" style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:14px;width:100%;"><span style="font-size:28px;">📊</span><div><div style="font-weight:700;font-size:14px;color:#1a3a6b;">Export / Stats</div><div style="font-size:12px;color:#888;">Statistiques avancées</div></div></button><button onclick="ouvrirSectionGestion(\'testalertes\')" style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:14px;width:100%;"><span style="font-size:28px;">🔊</span><div><div style="font-weight:700;font-size:14px;color:#1a3a6b;">Alertes Vocales PAP</div><div style="font-size:12px;color:#888;">Tester toutes les alertes</div></div></button><button onclick="ouvrirSectionGestion(\'syncsheet\')" style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:14px;width:100%;"><span style="font-size:28px;">🔄</span><div><div style="font-weight:700;font-size:14px;color:#1a3a6b;">Sync Google Sheets</div><div style="font-size:12px;color:#888;">Synchroniser toutes les données Firebase → Sheets</div></div></button></div>';
+  $('gestionContenu').innerHTML = '<div style="display:flex;flex-direction:column;gap:10px;"><button onclick="ouvrirSectionGestion(\'militants\')" style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:14px;width:100%;"><span style="font-size:28px;">👥</span><div><div style="font-weight:700;font-size:14px;color:#1a3a6b;">Militants</div><div style="font-size:12px;color:#888;">Gérer les militants</div></div></button><button onclick="ouvrirSectionGestion(\'export\')" style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:14px;width:100%;"><span style="font-size:28px;">📊</span><div><div style="font-weight:700;font-size:14px;color:#1a3a6b;">Export / Stats</div><div style="font-size:12px;color:#888;">Statistiques avancées</div></div></button><button onclick="ouvrirSectionGestion(\'testalertes\')" style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:14px;width:100%;"><span style="font-size:28px;">🔊</span><div><div style="font-weight:700;font-size:14px;color:#1a3a6b;">Alertes Vocales PAP</div><div style="font-size:12px;color:#888;">Tester toutes les alertes</div></div></button><button onclick="ouvrirSectionGestion(\'syncsheet\')" style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:14px;width:100%;"><span style="font-size:28px;">🔄</span><div><div style="font-weight:700;font-size:14px;color:#1a3a6b;">Sync Google Sheets</div><div style="font-size:12px;color:#888;">Synchroniser toutes les données Firebase → Sheets</div></div></button><button onclick="rechargerListeComplete()" style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:14px;width:100%;"><span style="font-size:28px;">🔃</span><div><div style="font-weight:700;font-size:14px;color:#1a3a6b;">Recharger la liste</div><div style="font-size:12px;color:#888;">Recharger toutes les personnes depuis Firebase</div></div></button></div>';
 }
 
 function ouvrirSectionGestion(section) {
@@ -2201,6 +2243,42 @@ function parseCSVLine(line) {
   }
   result.push(current.trim());
   return result;
+}
+
+// =====================================================
+// RECHARGER LISTE COMPLÈTE (admin)
+// =====================================================
+
+async function rechargerListeComplete() {
+  showToast('🔃 Rechargement en cours...', 'warning');
+  try {
+    var snap = await db.ref('personnes').once('value');
+    var data = snap.val();
+    if (!data) { showToast('❌ Aucune donnée', 'erreur'); return; }
+
+    window.personnesIndex = {};
+    toutesPersonnes = Object.values(data).map(function(p) {
+      var row = [
+        p.id || 0, p.nom || '', p.prenom || '', p.statut || 'Non visité',
+        p.sexe || '', p.age || '', p.numVoie || '', p.libelleVoie || '',
+        p.nomUsage || '', p.codeBureau || '', p.candidat || '', p.dateVisite || '',
+        p.notes || '', p.secteur || '', p.militant || '', p.observation || '',
+        p.mail || '', p.tel || '', p.libelleBureau || '', p.complement1 || '', p.complement2 || ''
+      ];
+      window.personnesIndex[String(p.id)] = row;
+      return row;
+    });
+
+    // Sauvegarder dans localStorage
+    try { localStorage.setItem('personnesCache', JSON.stringify(toutesPersonnes)); } catch(e) {}
+
+    var visites = toutesPersonnes.filter(function(p) { return p[3] === 'Visité'; }).length;
+    updateLastSync();
+    papResetCache();
+    showToast('✅ ' + toutesPersonnes.length + ' inscrits rechargés (' + visites + ' visités)', 'succes');
+  } catch(e) {
+    showToast('❌ Erreur : ' + e.message, 'erreur');
+  }
 }
 
 // =====================================================
