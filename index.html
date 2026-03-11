@@ -254,7 +254,7 @@
 </div>
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v68</span> 🔥</div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v69</span> 🔥</div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -303,7 +303,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v68</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v69</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;">📜</button>
@@ -655,7 +655,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v68';
+const APP_VERSION = 'Firebase v69';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -1663,34 +1663,33 @@ async function chargerComparaison() {
     const objectif = parseNum(config.objectifGagner) || 1362;
     const reserveVoix = totalInscrits - votants2020;
 
-    // v68: Récupérer stats Google Sheets avec CACHE localStorage (affichage instantané)
+    // v42: Récupérer TOUTES les stats live depuis Google Sheets (Dashboard)
     const intentionsParCandidat = {};
     CANDIDATS.forEach(c => { if (c) intentionsParCandidat[c] = 0; });
     let foyersJohnny = totalFoyersJohnny || parseNum(config.foyersJohnny) || 0;
     let resultats2020 = config.resultats2020 || [];
 
-    // v68: 1) Charger le cache GAS depuis localStorage (INSTANTANÉ)
-    var cacheUtilise = false;
     try {
-      var cacheGAS = JSON.parse(localStorage.getItem('statsGAS_cache') || 'null');
-      if (cacheGAS && cacheGAS.data) {
-        var statsCache = cacheGAS.data;
-        if (statsCache.foyersJohnny) foyersJohnny = parseNum(statsCache.foyersJohnny);
-        if (statsCache.intentions2026 && statsCache.intentions2026.length) {
-          statsCache.intentions2026.forEach(i => {
+      const respStats = await fetch(SYNC_SHEET_URL + '?action=getStatsComparaison');
+      const statsLive = await respStats.json();
+      if (statsLive && !statsLive.error) {
+        // Foyers Johnny (B24)
+        if (statsLive.foyersJohnny) foyersJohnny = parseNum(statsLive.foyersJohnny);
+        // Intentions 2026 par candidat (B19:C22)
+        if (statsLive.intentions2026 && statsLive.intentions2026.length) {
+          statsLive.intentions2026.forEach(i => {
             if (i.candidat) intentionsParCandidat[i.candidat.trim()] = parseNum(i.visites);
           });
         }
-        if (statsCache.resultats2020 && statsCache.resultats2020.length) {
-          resultats2020 = statsCache.resultats2020;
+        // Résultats 2020 (M5:O7)
+        if (statsLive.resultats2020 && statsLive.resultats2020.length) {
+          resultats2020 = statsLive.resultats2020;
         }
-        cacheUtilise = true;
-        console.log('[v68] Stats GAS depuis cache (' + Math.round((Date.now() - cacheGAS.ts) / 1000) + 's)');
+        // Mettre à jour Firebase cache
+        db.ref('config/comparaisonConfig/foyersJohnny').set(foyersJohnny);
       }
-    } catch(e) {}
-
-    // v68: 2) Si pas de cache, fallback calcul local Firebase
-    if (!cacheUtilise) {
+    } catch(e) {
+      // Fallback: calcul local depuis Firebase
       toutesPersonnes.forEach(p => {
         if (p[3] === 'Visité' && p[10]) {
           const c = p[10];
@@ -1698,11 +1697,6 @@ async function chargerComparaison() {
           intentionsParCandidat[c]++;
         }
       });
-    }
-
-    // v68: 3) Fetch GAS en ARRIÈRE-PLAN (ne bloque pas l'affichage)
-    if (SYNC_SHEET_URL) {
-      _refreshStatsGAS_bg(parseNum);
     }
 
     // 2ème ligne compteur (votants 2020, foyers, % foyers)
@@ -1789,27 +1783,6 @@ async function chargerComparaison() {
   } catch(e) {
     statsDiv.innerHTML = '<div style="color:#e74c3c;font-size:12px;">\u26A0\uFE0F Erreur: ' + e.message + '</div>';
   }
-}
-
-// v68: Refresh stats Google Sheets en arrière-plan + mise à jour cache
-function _refreshStatsGAS_bg(parseNum) {
-  fetch(SYNC_SHEET_URL + '?action=getStatsComparaison').then(function(r) { return r.json(); }).then(function(statsLive) {
-    if (!statsLive || statsLive.error) return;
-    // Sauvegarder dans cache localStorage
-    try { localStorage.setItem('statsGAS_cache', JSON.stringify({ ts: Date.now(), data: statsLive })); } catch(e) {}
-    // Mettre à jour foyersJohnny dans Firebase
-    if (statsLive.foyersJohnny) {
-      db.ref('config/comparaisonConfig/foyersJohnny').set(parseNum(statsLive.foyersJohnny));
-    }
-    // Si l'onglet Stats est toujours visible, rafraîchir l'affichage
-    var statsPage = $('page-stats');
-    if (statsPage && statsPage.classList.contains('active')) {
-      chargerComparaison();
-    }
-    console.log('[v68] Stats GAS fraîches → cache mis à jour');
-  }).catch(function(err) {
-    console.log('[v68] Fetch GAS bg: ' + err.message);
-  });
 }
 
 // =====================================================
