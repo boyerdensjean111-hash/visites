@@ -253,7 +253,7 @@
 </div>
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v50</span> 🔥</div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v51</span> 🔥</div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -302,7 +302,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v50</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v51</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;">📜</button>
@@ -648,7 +648,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v50';
+const APP_VERSION = 'Firebase v51';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -935,14 +935,37 @@ async function chargerMentionsLegales() {
   afficherMentionsComplete({ mentions: 'Application Visites Électorales - La Plaine-des-Palmistes' });
 }
 
-// v49: Afficher les 3 pages de mentions légales + dates
+// v50: Afficher les 3 pages de mentions légales + remplacement {DATE}, {heure}, {Votre mail}
 function afficherMentionsComplete(data) {
-  var page1 = data.mentions || '';
-  var page2 = data.conformite || '';
-  var page3 = data.suppression || '';
-  var dateSup = data.dateSuppression || '';
+  var dateElection = String(data.dateElection || '');
+  var dateSup = String(data.dateSuppression || '');
+  var emailContact = String(data.emailContact || '');
 
-  // Splash screen : juste page 1 résumé
+  // Extraire date et heure de dateSuppression (ex: "23/03/2026 18h00" → date="23/03/2026", heure="18h00")
+  var dateSupParts = dateSup.split(' ');
+  var dateSupDate = dateSupParts[0] || dateSup;
+  var dateSupHeure = dateSupParts[1] || '';
+
+  // Page 1 (D6) : {DATE} = D5 (date élection)
+  var page1 = String(data.mentions || '');
+  page1 = page1.replace(/\{DATE\}/gi, dateElection);
+
+  // Page 2 (D14) : 1er {DATE}=D5, 2e {DATE}=D12, {Votre mail}=D18
+  var page2 = String(data.conformite || '');
+  var p2count = 0;
+  page2 = page2.replace(/\{DATE\}/gi, function() {
+    p2count++;
+    return p2count === 1 ? dateElection : dateSupDate;
+  });
+  page2 = page2.replace(/\{Votre mail\}/gi, emailContact);
+  page2 = page2.replace(/\[Votre email\]/gi, emailContact);
+
+  // Page 3 (D16) : tous {DATE}=D12, {heure}=heure de D12
+  var page3 = String(data.suppression || '');
+  page3 = page3.replace(/\{DATE\}/gi, dateSupDate);
+  page3 = page3.replace(/\{heure\}/gi, dateSupHeure);
+
+  // Splash screen : page 1 résumé
   var splashEl = $('splashMentionsContenu');
   if (splashEl) splashEl.textContent = page1;
 
@@ -950,7 +973,6 @@ function afficherMentionsComplete(data) {
   var pageMentions = $('pageMentions');
   if (pageMentions) {
     var html = page1;
-    if (dateSup) html += '\n\n📅 Date de suppression : ' + dateSup;
     if (page2) html += '\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' + page2;
     if (page3) html += '\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' + page3;
     pageMentions.textContent = html;
