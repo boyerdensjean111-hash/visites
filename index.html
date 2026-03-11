@@ -254,7 +254,7 @@
 </div>
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v81</span> 🔥</div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v82</span> 🔥</div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -303,7 +303,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v81</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v82</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
@@ -654,7 +654,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v81';
+const APP_VERSION = 'Firebase v82';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -1221,11 +1221,20 @@ function confirmerDeconnexion() {
   showPage('recherche');
 }
 
-// v80: Bouton Déconnexion page login → fermer l'app complètement
+// v81: Bouton Déconnexion page login → fermer l'app
 function fermerApplication() {
+  // 1. Essayer window.close()
   try { window.close(); } catch(e) {}
-  // Fallback : vider la page complètement
-  window.location.replace('about:blank');
+  // 2. Essayer navigator.app.exitApp() (PWA installée)
+  try { if (navigator.app) navigator.app.exitApp(); } catch(e) {}
+  // 3. Remonter tout l'historique pour sortir de l'app (retour bureau)
+  var len = window.history.length;
+  if (len > 1) {
+    window.history.go(-(len));
+  } else {
+    // 4. Dernier recours : page vide
+    window.location.replace('about:blank');
+  }
 }
 
 // =====================================================
