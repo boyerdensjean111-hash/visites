@@ -253,7 +253,7 @@
 </div>
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v49</span> 🔥</div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v50</span> 🔥</div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -302,7 +302,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v49</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v50</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button onclick="afficherMentionsLegales()" style="background:rgba(255,255,255,0.2);border:none;padding:8px 12px;border-radius:8px;color:white;font-size:12px;cursor:pointer;">📜</button>
@@ -648,7 +648,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v49';
+const APP_VERSION = 'Firebase v50';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -913,17 +913,47 @@ function chargerToutesPersonnes() {
 
 async function chargerMentionsLegales() {
   try {
+    // v49: Essayer Firebase d'abord
     const snapshot = await db.ref('config/mentions').once('value');
     const data = snapshot.val();
-    if (data) {
-      const splashEl = $('splashMentionsContenu');
-      if (splashEl) splashEl.textContent = data.mentions || 'Mentions légales';
-      const pageMentions = $('pageMentions');
-      if (pageMentions) pageMentions.textContent = data.mentions || 'Mentions légales';
+    if (data && data.mentions) {
+      afficherMentionsComplete(data);
+      return;
     }
-  } catch(e) {
-    const splashEl = $('splashMentionsContenu');
-    if (splashEl) splashEl.textContent = 'Application Visites Électorales - La Plaine-des-Palmistes';
+    // v49: Fallback → lire depuis Google Sheets colonne D (3 pages + dates)
+    if (SYNC_SHEET_URL) {
+      const resp = await fetch(SYNC_SHEET_URL + '?action=getMentionsLegales');
+      const json = await resp.json();
+      if (json.mentions) {
+        afficherMentionsComplete(json);
+        // Sauvegarder dans Firebase pour la prochaine fois
+        db.ref('config/mentions').set(json);
+        return;
+      }
+    }
+  } catch(e) {}
+  afficherMentionsComplete({ mentions: 'Application Visites Électorales - La Plaine-des-Palmistes' });
+}
+
+// v49: Afficher les 3 pages de mentions légales + dates
+function afficherMentionsComplete(data) {
+  var page1 = data.mentions || '';
+  var page2 = data.conformite || '';
+  var page3 = data.suppression || '';
+  var dateSup = data.dateSuppression || '';
+
+  // Splash screen : juste page 1 résumé
+  var splashEl = $('splashMentionsContenu');
+  if (splashEl) splashEl.textContent = page1;
+
+  // Modal complète : les 3 pages
+  var pageMentions = $('pageMentions');
+  if (pageMentions) {
+    var html = page1;
+    if (dateSup) html += '\n\n📅 Date de suppression : ' + dateSup;
+    if (page2) html += '\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' + page2;
+    if (page3) html += '\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' + page3;
+    pageMentions.textContent = html;
   }
 }
 
