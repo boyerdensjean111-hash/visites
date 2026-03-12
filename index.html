@@ -260,7 +260,7 @@
 </div>
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v86</span> 🔥</div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v87</span> 🔥</div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -309,7 +309,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v86</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v87</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
@@ -660,7 +660,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v86';
+const APP_VERSION = 'Firebase v87';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -1443,6 +1443,17 @@ function afficherFiche(p) {
         '&nbsp;&nbsp;Recommandés pour <b>recontacter</b> en tant que<br>' +
         '&nbsp;&nbsp;<b>comité de soutien</b> pour la future élection !',
         'Remplir les champs ! Statut, c\'est ce que tu as constaté sur le terrain. Visité, tu as parlé à la personne. Absent, personne n\'était là. Opposition, ne soutient pas. Candidat soutenu, le candidat que la personne soutient, parmi Johnny Payet, Sophie Arzal, Amandine Ramaye, ou Frédéric Azor. Notes, le nom du militant, c\'est à dire toi, ou de la personne qui a recommandé cet électeur. Contact, mail ou téléphone si donné, c\'est facultatif. Ces contacts sont recommandés pour recontacter en tant que comité de soutien pour la future élection.');
+      // v86: 3ème message — explication mini-carte GPS (setTimeout > 600 pour attendre que papTutoAlert ait fini son reset)
+      setTimeout(function() {
+        papAlertCallback = function() {
+          papTutoAlert('fiche-map', '🗺️', 'GPS — ADRESSE EXACTE',
+            '📍 <b>La carte en bas de la fiche</b> te montre l\'<b>adresse exacte</b> de la personne !<br><br>' +
+            '🚗 Clique sur <b>« Naviguer avec Google Maps »</b> pour être <b>guidé directement</b> jusqu\'à sa porte, comme un GPS !<br><br>' +
+            '💪 <b>Plus besoin de chercher</b> l\'adresse toi-même — l\'app te guide <b>en temps réel</b> jusqu\'au domicile.<br><br>' +
+            '⚡ <b>Gagne du temps</b> sur le terrain : arrive plus vite, visite plus de monde, <b>chaque visite compte</b> pour Johnny ! 🏆',
+            'Regarde la carte en bas de la fiche ! Elle te montre l\'adresse exacte de la personne. Clique sur naviguer avec Google Maps pour être guidé directement jusqu\'à sa porte, comme un GPS ! Plus besoin de chercher l\'adresse toi-même, l\'app te guide en temps réel. Gagne du temps sur le terrain, arrive plus vite, visite plus de monde. Chaque visite compte pour Johnny !');
+        };
+      }, 700);
     };
   }, 700);
 
