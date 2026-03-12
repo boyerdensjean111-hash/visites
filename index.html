@@ -260,7 +260,7 @@
 </div>
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v87</span> 🔥</div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v88</span> 🔥</div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -309,7 +309,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v87</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v88</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
@@ -571,7 +571,7 @@
       </div>
       <div style="display:flex;gap:8px;width:100%;">
         <button class="modal-btn-cancel" onclick="annulerAjoutMilitant()">Annuler</button>
-        <button class="modal-btn-ok" style="background:#e67e22;" onclick="sauvegarderBrouillon()">📝 Créer un brouillon</button>
+        <button class="modal-btn-ok" style="background:#27ae60;" onclick="ajouterSansMail()">✅ Ajouter sans mail</button>
       </div>
     </div>
   </div>
@@ -660,7 +660,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v87';
+const APP_VERSION = 'Firebase v88';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -1967,7 +1967,7 @@ function afficherGestionMilitants() {
   div.innerHTML = listeMilitants.map(m => {
     const roleOptions = roles.map(r => '<option value="' + r + '" ' + (m.role === r ? 'selected' : '') + '>' + r + '</option>').join('');
     const isAdmin = m.role === 'admin';
-    return '<div style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:14px;margin-bottom:10px;"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;"><div><div style="font-weight:700;font-size:14px;">' + m.nom + '</div><div style="font-size:12px;color:' + (m.actif !== false ? '#27ae60' : '#e74c3c') + ';">' + (m.actif !== false ? '✅ Actif' : '🔴 Désactivé') + '</div></div><div style="display:flex;align-items:center;gap:8px;">' + (!isAdmin ? '<button onclick="confirmerSupprimerMilitant(\'' + m.nom + '\')" style="background:#c0392b;color:white;border:none;border-radius:6px;width:32px;height:32px;font-size:14px;cursor:pointer;">🗑️</button>' : '') + (!isAdmin ? '<label class="toggle"><input type="checkbox" ' + (m.actif !== false ? 'checked' : '') + ' onchange="toggleMilitant(\'' + m.nom + '\', this.checked)"><span class="toggle-slider"></span></label>' : '') + '</div></div><div style="display:flex;align-items:center;gap:10px;"><label style="font-size:12px;color:#666;white-space:nowrap;">Rôle :</label><select onchange="changerRole(\'' + m.nom + '\', this.value)" style="flex:1;padding:8px 10px;border:1.5px solid #e0e4ea;border-radius:8px;font-size:13px;background:white;" ' + (isAdmin ? 'disabled' : '') + '>' + roleOptions + '</select></div><div style="display:flex;align-items:center;gap:10px;background:#f8f9fa;padding:10px;border-radius:8px;"><label style="font-size:12px;color:#666;white-space:nowrap;">🔑 PIN :</label><input type="text" id="pin_' + m.nom.replace(/\s/g, '_') + '" value="' + m.pin + '" style="flex:1;padding:8px 10px;border:1.5px solid #e0e4ea;border-radius:8px;font-size:14px;font-family:monospace;font-weight:700;text-align:center;letter-spacing:4px;" maxlength="4" pattern="[0-9]*" inputmode="numeric"><button onclick="modifierPin(\'' + m.nom + '\')" style="background:#2755a8;color:white;border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">💾 Sauver</button><button onclick="reinitialiserPin(\'' + m.nom + '\')" style="background:#e67e22;color:white;border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">🔄</button></div></div>';
+    return '<div style="background:white;border:1.5px solid #e0e4ea;border-radius:12px;padding:14px;margin-bottom:10px;"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;"><div><div style="font-weight:700;font-size:14px;">' + m.nom + '</div><div style="font-size:12px;color:' + (m.actif !== false ? '#27ae60' : '#e74c3c') + ';">' + (m.actif !== false ? '✅ Actif' : '🔴 Désactivé') + (m.mail ? ' · 📧 ' + m.mail : '') + '</div></div><div style="display:flex;align-items:center;gap:6px;">' + (!isAdmin ? '<button onclick="ouvrirModifierMilitant(\'' + escapeQuotes(m.nom) + '\')" style="background:#2755a8;color:white;border:none;border-radius:6px;width:32px;height:32px;font-size:14px;cursor:pointer;" title="Modifier">✏️</button>' : '') + (!isAdmin ? '<button onclick="confirmerSupprimerMilitant(\'' + escapeQuotes(m.nom) + '\')" style="background:#c0392b;color:white;border:none;border-radius:6px;width:32px;height:32px;font-size:14px;cursor:pointer;" title="Supprimer">🗑️</button>' : '') + (!isAdmin ? '<label class="toggle"><input type="checkbox" ' + (m.actif !== false ? 'checked' : '') + ' onchange="toggleMilitant(\'' + escapeQuotes(m.nom) + '\', this.checked)"><span class="toggle-slider"></span></label>' : '') + '</div></div><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;"><label style="font-size:12px;color:#666;white-space:nowrap;">Rôle :</label><select onchange="changerRole(\'' + escapeQuotes(m.nom) + '\', this.value)" style="flex:1;padding:8px 10px;border:1.5px solid #e0e4ea;border-radius:8px;font-size:13px;background:white;" ' + (isAdmin ? 'disabled' : '') + '>' + roleOptions + '</select></div><div style="display:flex;align-items:center;gap:10px;background:#f8f9fa;padding:10px;border-radius:8px;"><label style="font-size:12px;color:#666;white-space:nowrap;">🔑 PIN :</label><input type="text" id="pin_' + m.nom.replace(/\s/g, '_') + '" value="' + m.pin + '" style="flex:1;padding:8px 10px;border:1.5px solid #e0e4ea;border-radius:8px;font-size:14px;font-family:monospace;font-weight:700;text-align:center;letter-spacing:4px;" maxlength="4" pattern="[0-9]*" inputmode="numeric"><button onclick="modifierPin(\'' + escapeQuotes(m.nom) + '\')" style="background:#2755a8;color:white;border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">💾 Sauver</button><button onclick="reinitialiserPin(\'' + escapeQuotes(m.nom) + '\')" style="background:#e67e22;color:white;border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">🔄</button></div></div>';
   }).join('');
 }
 
@@ -2156,7 +2156,7 @@ function papChangerVoix(idx) {
 function genererPinAleatoire() { return String(Math.floor(1000 + Math.random() * 9000)); }
 function genererTokenAleatoire() { var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'; var token = ''; for (var i = 0; i < 16; i++) token += chars.charAt(Math.floor(Math.random() * chars.length)); return token; }
 
-function ouvrirAjoutMilitant() { ouvrirModal('modalAjoutMilitant'); setTimeout(function() { var nom = $('nouveauNom'); var pin = $('nouveauPin'); var role = $('nouveauRole'); var email = $('nouveauEmail'); var script = $('nouveauScript'); var objet = $('nouveauObjet'); var lien = $('nouveauLien'); var emailExp = $('emailExpediteur'); var toggle = $('toggleLienMilitant'); var alerte = $('alerteEmail'); if (nom) nom.value = ''; if (pin) pin.value = genererPinAleatoire(); if (role) role.value = 'militant'; if (email) email.value = ''; if (script) script.value = ''; if (objet) objet.value = ''; if (alerte) alerte.style.display = 'none'; var newToken = genererTokenAleatoire(); if (lien) { lien.dataset.nom = ''; lien.dataset.token = newToken; lien.value = 'https://boyerdensjean111-hash.github.io/visites/?t=' + newToken; } if (toggle) toggle.checked = true; majStatutLien(); var savedEmail = localStorage.getItem('visites_email_expediteur'); if (emailExp && savedEmail) emailExp.value = savedEmail; $('btnEnvoyerMailZone').style.display = 'none'; scriptModele = ''; objetModele = ''; majIndicateurs(); chargerScriptServeur(); }, 50); }
+function ouvrirAjoutMilitant() { ouvrirModal('modalAjoutMilitant'); $('modalAjoutMilitant').dataset.editMode = 'false'; $('modalAjoutMilitant').dataset.editOriginal = ''; var h3 = $('modalAjoutMilitant').querySelector('h3'); if (h3) h3.textContent = '➕ Ajouter un militant'; setTimeout(function() { var nom = $('nouveauNom'); var pin = $('nouveauPin'); var role = $('nouveauRole'); var email = $('nouveauEmail'); var script = $('nouveauScript'); var objet = $('nouveauObjet'); var lien = $('nouveauLien'); var emailExp = $('emailExpediteur'); var toggle = $('toggleLienMilitant'); var alerte = $('alerteEmail'); if (nom) nom.value = ''; if (pin) pin.value = genererPinAleatoire(); if (role) role.value = 'militant'; if (email) email.value = ''; if (script) script.value = ''; if (objet) objet.value = ''; if (alerte) alerte.style.display = 'none'; var newToken = genererTokenAleatoire(); if (lien) { lien.dataset.nom = ''; lien.dataset.token = newToken; lien.value = 'https://boyerdensjean111-hash.github.io/visites/?t=' + newToken; } if (toggle) toggle.checked = true; majStatutLien(); var savedEmail = localStorage.getItem('visites_email_expediteur'); if (emailExp && savedEmail) emailExp.value = savedEmail; $('btnEnvoyerMailZone').style.display = 'none'; scriptModele = ''; objetModele = ''; majIndicateurs(); chargerScriptServeur(); }, 50); }
 
 function verifierEmailValide(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); }
 
@@ -2175,11 +2175,75 @@ function majObjetAvecVariables() { if (!objetModele) return; var nom = ($('nouve
 
 function majScriptAvecVariables() { if (!scriptModele) return; var nom = ($('nouveauNom') ? $('nouveauNom').value : '').trim(); var pin = ($('nouveauPin') ? $('nouveauPin').value : '').trim(); var lien = ($('nouveauLien') ? $('nouveauLien').value : ''); var script = scriptModele; script = script.replace(/\{nom\}/gi, nom || '___'); script = script.replace(/\{pin\}/gi, pin || '____'); script = script.replace(/\{lien\}/gi, lien || '___'); script = script.replace(/\{role\}/gi, ($('nouveauRole') ? $('nouveauRole').value : 'militant')); $('nouveauScript').value = script; }
 
-function ouvrirGmail() { var nom = $('nouveauNom').value.trim(); var pin = $('nouveauPin').value.trim(); var email = $('nouveauEmail').value.trim(); var script = $('nouveauScript').value.trim(); var objet = $('nouveauObjet').value.trim(); var lien = ($('nouveauLien') ? $('nouveauLien').value : '') || 'https://boyerdensjean111-hash.github.io/visites/'; var sujet = encodeURIComponent(objet || 'Visites Électorales - Vos identifiants'); var corps = encodeURIComponent(script || ('Bonjour ' + nom + ',\n\nVoici vos identifiants :\n🔗 Lien : ' + lien + '\n👤 Nom : ' + nom + '\n🔑 PIN : ' + pin + '\n\nCordialement,\n' + currentMilitant)); var gmailUrl = 'https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent(email) + '&su=' + sujet + '&body=' + corps; window.open(gmailUrl, '_blank'); }
+function ouvrirGmail() { var nom = $('nouveauNom') ? $('nouveauNom').value.trim() : (arguments[0] || ''); var pin = $('nouveauPin') ? $('nouveauPin').value.trim() : (arguments[1] || ''); var email = $('nouveauEmail') ? $('nouveauEmail').value.trim() : (arguments[2] || ''); var script = $('nouveauScript') ? $('nouveauScript').value.trim() : ''; var objet = $('nouveauObjet') ? $('nouveauObjet').value.trim() : ''; var lien = ($('nouveauLien') ? $('nouveauLien').value : '') || 'https://boyerdensjean111-hash.github.io/visites/'; var sujet = encodeURIComponent(objet || 'Visites Électorales - Vos identifiants'); var corps = encodeURIComponent(script || ('Bonjour ' + nom + ',\n\nVoici vos identifiants :\n\nLien : ' + lien + '\nNom : ' + nom + '\nPIN : ' + pin + '\n\nCordialement,\n' + currentMilitant)); var mailtoUrl = 'mailto:' + encodeURIComponent(email) + '?subject=' + sujet + '&body=' + corps; window.location.href = mailtoUrl; }
 
 function annulerAjoutMilitant() { var nom = ($('nouveauNom') ? $('nouveauNom').value : '').trim(); var email = ($('nouveauEmail') ? $('nouveauEmail').value : '').trim(); if (nom || email) { if (!confirm('⚠️ Vous n\'avez pas terminé !\n\nLe militant n\'a pas été ajouté.\nVoulez-vous vraiment quitter ?')) return; } localStorage.removeItem('visites_brouillon_militant'); fermerModal('modalAjoutMilitant'); }
 
-function sauvegarderBrouillon() { var nom = ($('nouveauNom') ? $('nouveauNom').value : '').trim(); var pin = ($('nouveauPin') ? $('nouveauPin').value : '').trim(); var email = ($('nouveauEmail') ? $('nouveauEmail').value : '').trim(); var role = ($('nouveauRole') ? $('nouveauRole').value : 'militant'); var token = ($('nouveauLien') ? $('nouveauLien').dataset.token : '') || ''; var lien = ($('nouveauLien') ? $('nouveauLien').value : '') || ''; var emailExp = ($('emailExpediteur') ? $('emailExpediteur').value : '').trim(); if (!nom) { showToast('❌ Entrez au moins un nom', 'erreur'); return; } var brouillon = { nom: nom, pin: pin, role: role, email: email, token: token, lien: lien, emailExp: emailExp, date: new Date().toLocaleString('fr-FR') }; localStorage.setItem('visites_brouillon_militant', JSON.stringify(brouillon)); fermerModal('modalAjoutMilitant'); showToast('📝 Brouillon sauvegardé !', 'succes'); }
+// v87: Ajouter militant sans envoyer de mail
+async function ajouterSansMail() {
+  var nom = ($('nouveauNom') ? $('nouveauNom').value : '').trim();
+  var pin = ($('nouveauPin') ? $('nouveauPin').value : '').trim();
+  var role = ($('nouveauRole') ? $('nouveauRole').value : 'militant');
+  var email = ($('nouveauEmail') ? $('nouveauEmail').value : '').trim();
+  var actif = $('toggleLienMilitant') ? $('toggleLienMilitant').checked !== false : true;
+  var token = ($('nouveauLien') ? $('nouveauLien').dataset.token : '') || '';
+  var lien = ($('nouveauLien') ? $('nouveauLien').value : '') || '';
+  if (!nom) { showToast('❌ Entrez un nom', 'erreur'); return; }
+  if (!/^\d{4}$/.test(pin)) { showToast('❌ PIN doit être 4 chiffres', 'erreur'); return; }
+  // Vérifier doublon (sauf en mode édition)
+  var editMode = $('modalAjoutMilitant').dataset.editMode === 'true';
+  var editOriginalNom = $('modalAjoutMilitant').dataset.editOriginal || '';
+  if (!editMode && listeMilitants.some(function(m) { return m.nom.toLowerCase() === nom.toLowerCase(); })) { showToast('❌ Ce nom existe déjà', 'erreur'); return; }
+  fermerModal('modalAjoutMilitant');
+  showToast('⏳ Ajout en cours...', '');
+  try {
+    if (editMode && editOriginalNom) {
+      // Mode édition : mettre à jour
+      await db.ref('militants/' + sanitizeKey(editOriginalNom)).update({ nom: nom, pin: pin, role: role, actif: actif, mail: email, token: token, lien: lien });
+      syncVersGoogleSheets({ action: 'modif_militant', nom: nom, pin: pin, role: role, actif: actif, mail: email, token: token, lien: lien });
+      var idx = listeMilitants.findIndex(function(m) { return m.nom === editOriginalNom; });
+      if (idx >= 0) listeMilitants[idx] = { nom: nom, pin: pin, role: role, actif: actif, token: token, mail: email, lien: lien };
+      showToast('✅ Militant modifié !', 'succes');
+    } else {
+      await db.ref('militants/' + sanitizeKey(nom)).set({ nom: nom, pin: pin, role: role, actif: actif, mail: email, token: token, lien: lien });
+      syncVersGoogleSheets({ action: 'ajout_militant', nom: nom, pin: pin, role: role, actif: actif, mail: email, token: token, lien: lien });
+      listeMilitants.push({ nom: nom, pin: pin, role: role, actif: actif, token: token, mail: email, lien: lien });
+      showToast('✅ Militant ajouté !', 'succes');
+    }
+    afficherGestionMilitants();
+  } catch(e) { showToast('❌ Erreur: ' + e.message, 'erreur'); }
+}
+
+// v87: Ouvrir modal en mode édition
+function ouvrirModifierMilitant(nom) {
+  var m = listeMilitants.find(function(x) { return x.nom === nom; });
+  if (!m) return;
+  ouvrirModal('modalAjoutMilitant');
+  $('modalAjoutMilitant').dataset.editMode = 'true';
+  $('modalAjoutMilitant').dataset.editOriginal = nom;
+  setTimeout(function() {
+    var h3 = $('modalAjoutMilitant').querySelector('h3');
+    if (h3) h3.textContent = '✏️ Modifier le militant';
+    if ($('nouveauNom')) $('nouveauNom').value = m.nom;
+    if ($('nouveauPin')) $('nouveauPin').value = m.pin || '';
+    if ($('nouveauRole')) $('nouveauRole').value = m.role || 'militant';
+    if ($('nouveauEmail')) $('nouveauEmail').value = m.mail || '';
+    if ($('toggleLienMilitant')) $('toggleLienMilitant').checked = m.actif !== false;
+    majStatutLien();
+    var lienInput = $('nouveauLien');
+    if (lienInput) {
+      lienInput.value = m.lien || ('https://boyerdensjean111-hash.github.io/visites/?t=' + (m.token || ''));
+      lienInput.dataset.token = m.token || '';
+      lienInput.dataset.nom = m.nom;
+    }
+    var savedEmail = localStorage.getItem('visites_email_expediteur');
+    if ($('emailExpediteur') && savedEmail) $('emailExpediteur').value = savedEmail;
+    $('btnEnvoyerMailZone').style.display = 'none';
+    scriptModele = ''; objetModele = '';
+    majIndicateurs();
+    chargerScriptServeur();
+  }, 50);
+}
 
 function verifierBrouillon() { try { var raw = localStorage.getItem('visites_brouillon_militant'); if (!raw) return; var b = JSON.parse(raw); if (!b.nom) return; setTimeout(function() { if (confirm('📝 Brouillon en attente !\n\n👤 ' + b.nom + '\n🔑 PIN : ' + b.pin + '\n' + (b.email ? '📧 ' + b.email + '\n' : '') + '📅 Sauvegardé le ' + b.date + '\n\nVoulez-vous reprendre ce brouillon ?')) { restaurerBrouillon(b); } else { if (confirm('Supprimer ce brouillon ?')) { localStorage.removeItem('visites_brouillon_militant'); showToast('🗑️ Brouillon supprimé', 'succes'); } } }, 1000); } catch(e) {} }
 
@@ -2193,26 +2257,29 @@ async function ajouterEtEnvoyerMail() {
   var actif = $('toggleLienMilitant') ? $('toggleLienMilitant').checked !== false : true;
   var token = ($('nouveauLien') ? $('nouveauLien').dataset.token : '') || '';
   var lien = ($('nouveauLien') ? $('nouveauLien').value : '') || '';
+  var editMode = $('modalAjoutMilitant').dataset.editMode === 'true';
+  var editOriginalNom = $('modalAjoutMilitant').dataset.editOriginal || '';
 
   if (!nom) { showToast('❌ Entrez un nom', 'erreur'); return; }
   if (!/^\d{4}$/.test(pin)) { showToast('❌ PIN doit être 4 chiffres', 'erreur'); return; }
   if (!email || !verifierEmailValide(email)) { showToast('❌ Email militant invalide', 'erreur'); return; }
-  if (listeMilitants.some(function(m) { return m.nom.toLowerCase() === nom.toLowerCase(); })) { showToast('❌ Ce nom existe déjà', 'erreur'); return; }
+  if (!editMode && listeMilitants.some(function(m) { return m.nom.toLowerCase() === nom.toLowerCase(); })) { showToast('❌ Ce nom existe déjà', 'erreur'); return; }
 
   fermerModal('modalAjoutMilitant');
-  showToast('⏳ Ajout en cours...', '');
+  showToast('⏳ ' + (editMode ? 'Modification' : 'Ajout') + ' en cours...', '');
   try {
-    await db.ref('militants/' + sanitizeKey(nom)).set({
-      nom: nom, pin: pin, role: role, actif: actif, mail: email, token: token, lien: lien
-    });
-    syncVersGoogleSheets({ action: 'ajout_militant', nom: nom, pin: pin, role: role, actif: actif, mail: email, token: token, lien: lien });
-    listeMilitants.push({ nom: nom, pin: pin, role: role, actif: actif, token: token, mail: email, lien: lien });
-    localStorage.removeItem('visites_brouillon_militant');
-    if (!actif) {
-      try { await db.ref('militants/' + sanitizeKey(nom) + '/actif').set(false); } catch(e) {}
+    if (editMode && editOriginalNom) {
+      await db.ref('militants/' + sanitizeKey(editOriginalNom)).update({ nom: nom, pin: pin, role: role, actif: actif, mail: email, token: token, lien: lien });
+      syncVersGoogleSheets({ action: 'modif_militant', nom: nom, pin: pin, role: role, actif: actif, mail: email, token: token, lien: lien });
+      var idx = listeMilitants.findIndex(function(m) { return m.nom === editOriginalNom; });
+      if (idx >= 0) listeMilitants[idx] = { nom: nom, pin: pin, role: role, actif: actif, token: token, mail: email, lien: lien };
+    } else {
+      await db.ref('militants/' + sanitizeKey(nom)).set({ nom: nom, pin: pin, role: role, actif: actif, mail: email, token: token, lien: lien });
+      syncVersGoogleSheets({ action: 'ajout_militant', nom: nom, pin: pin, role: role, actif: actif, mail: email, token: token, lien: lien });
+      listeMilitants.push({ nom: nom, pin: pin, role: role, actif: actif, token: token, mail: email, lien: lien });
     }
     ouvrirGmail();
-    showToast('✅ Militant ajouté + Gmail ouvert !', 'succes');
+    showToast('✅ Militant ' + (editMode ? 'modifié' : 'ajouté') + ' + mail ouvert !', 'succes');
     afficherGestionMilitants();
   } catch(e) {
     showToast('❌ Erreur: ' + e.message, 'erreur');
