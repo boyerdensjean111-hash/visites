@@ -127,10 +127,11 @@
   .alerte-conflit { background:#fff3cd; border:2px solid var(--orange); border-radius:10px; padding:12px; margin-bottom:12px; }
   .alerte-conflit .titre { font-weight:700; color:#856404; font-size:14px; margin-bottom:4px; }
   .alerte-conflit .detail { font-size:12px; color:#856404; }
-  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:500; display:none; align-items:center; justify-content:center; padding:20px; }
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:500; display:none; align-items:center; justify-content:center; padding:12px; }
   .modal-overlay.ouvert { display:flex; animation:fadeIn .2s ease; }
   @keyframes fadeIn { from{opacity:0} to{opacity:1} }
-  .modal-box { background:white; border-radius:16px; padding:28px 24px; width:calc(100% - 24px); max-width:340px; max-height:90vh; overflow-y:auto; box-shadow:0 10px 40px rgba(0,0,0,0.3); animation:slideUp .25s ease; }
+  .modal-box { background:white; border-radius:16px; padding:20px 16px; width:calc(100% - 16px); max-width:420px; max-height:90vh; overflow-y:auto; box-shadow:0 10px 40px rgba(0,0,0,0.3); animation:slideUp .25s ease; }
+  @media(max-width:480px) { .modal-overlay { padding:6px; } .modal-box { width:100%; max-width:100%; border-radius:12px; padding:16px 12px; max-height:92vh; } }
   @keyframes slideUp { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
   .modal-box h3 { font-size:17px; font-weight:700; color:var(--texte); margin-bottom:10px; }
   .modal-box p { font-size:14px; color:var(--texte2); margin-bottom:24px; line-height:1.5; }
@@ -260,7 +261,7 @@
 </div>
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v91</span> 🔥</div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v92</span> 🔥</div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -309,7 +310,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v91</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v92</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
@@ -518,7 +519,7 @@
   </div>
 </div>
 <div id="modalAjoutMilitant" class="modal-overlay" style="z-index:600;display:none;">
-  <div class="modal-box" style="max-width:420px;padding:20px 16px;">
+  <div class="modal-box">
     <h3>➕ Ajouter un militant</h3>
     <div class="field" style="margin-bottom:10px;">
       <label><span id="indExp">❌</span> Email expéditeur <span style="font-weight:400;color:#888;font-size:11px;">(votre adresse)</span></label>
@@ -660,7 +661,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v91';
+const APP_VERSION = 'Firebase v92';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -2265,6 +2266,8 @@ async function ajouterEtEnvoyerMail() {
   if (!email || !verifierEmailValide(email)) { showToast('❌ Email militant invalide', 'erreur'); return; }
   if (!editMode && listeMilitants.some(function(m) { return m.nom.toLowerCase() === nom.toLowerCase(); })) { showToast('❌ Ce nom existe déjà', 'erreur'); return; }
 
+  // v91: Ouvrir Gmail AVANT les await (sinon popup bloqué sur mobile)
+  ouvrirGmail();
   fermerModal('modalAjoutMilitant');
   showToast('⏳ ' + (editMode ? 'Modification' : 'Ajout') + ' en cours...', '');
   try {
@@ -2278,7 +2281,6 @@ async function ajouterEtEnvoyerMail() {
       syncVersGoogleSheets({ action: 'ajout_militant', nom: nom, pin: pin, role: role, actif: actif, mail: email, token: token, lien: lien });
       listeMilitants.push({ nom: nom, pin: pin, role: role, actif: actif, token: token, mail: email, lien: lien });
     }
-    ouvrirGmail();
     showToast('✅ Militant ' + (editMode ? 'modifié' : 'ajouté') + ' + mail ouvert !', 'succes');
     afficherGestionMilitants();
   } catch(e) {
