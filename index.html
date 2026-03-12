@@ -80,6 +80,11 @@
   .fiche-header .nom-usage { font-size:13px; opacity:.65; margin-top:4px; font-style:italic; }
   .fiche-header .badge-deja-visite { display:inline-block; background:#27ae60; color:white; font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; margin-top:8px; }
   .fiche-body { padding:14px; }
+  .fiche-map-container { margin:0 14px 10px; border-radius:10px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.12); }
+  .fiche-map { height:200px; width:100%; z-index:1; }
+  .fiche-map-btn { display:block; width:100%; padding:10px; background:#4285f4; color:white; border:none; font-size:13px; font-weight:700; cursor:pointer; text-align:center; }
+  .fiche-map-btn:active { background:#3367d6; }
+  .fiche-map-loading { text-align:center; padding:20px; color:#7f8c8d; font-size:12px; }
   .fiche-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--gris); }
   .fiche-row:last-child { border-bottom:none; }
   .fiche-row .label { font-size:12px; color:var(--texte2); font-weight:500; }
@@ -180,6 +185,7 @@
   .pap-carte-panel-header { background:var(--bleu); color:white; padding:12px 16px; border-radius:16px 16px 0 0; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:1; }
   .pap-carte-panel-header h4 { font-family:'Bebas Neue',sans-serif; font-size:18px; margin:0; letter-spacing:.5px; }
   .pap-carte-panel-close { background:rgba(255,255,255,0.2); border:none; color:white; width:30px; height:30px; border-radius:50%; font-size:16px; cursor:pointer; }
+  .pap-carte-panel-retour { background:rgba(255,255,255,0.2); border:none; color:white; padding:6px 12px; border-radius:20px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap; }
   .pap-carte-personne { padding:12px 16px; border-bottom:1px solid var(--gris); display:flex; align-items:center; gap:10px; cursor:pointer; }
   .pap-carte-personne:active { background:var(--gris); }
   .pap-carte-personne .icon { font-size:20px; flex-shrink:0; }
@@ -254,7 +260,7 @@
 </div>
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v82</span> 🔥</div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v86</span> 🔥</div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -303,7 +309,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v82</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v86</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
@@ -654,7 +660,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v82';
+const APP_VERSION = 'Firebase v86';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -1221,20 +1227,12 @@ function confirmerDeconnexion() {
   showPage('recherche');
 }
 
-// v81: Bouton Déconnexion page login → fermer l'app
+// v82: Bouton Déconnexion page login → fermer l'app
 function fermerApplication() {
-  // 1. Essayer window.close()
-  try { window.close(); } catch(e) {}
-  // 2. Essayer navigator.app.exitApp() (PWA installée)
-  try { if (navigator.app) navigator.app.exitApp(); } catch(e) {}
-  // 3. Remonter tout l'historique pour sortir de l'app (retour bureau)
-  var len = window.history.length;
-  if (len > 1) {
-    window.history.go(-(len));
-  } else {
-    // 4. Dernier recours : page vide
-    window.location.replace('about:blank');
-  }
+  // Ouvrir about:blank dans _self (la page devient "ouverte par script")
+  // puis fermer — seule technique fiable sur mobile
+  window.open('about:blank', '_self');
+  window.close();
 }
 
 // =====================================================
@@ -1289,7 +1287,7 @@ function chargerPageListe(reset) {
     var el = document.createElement('div');
     el.className = 'resultat-item ' + statutClass;
     el.style.cssText = 'display:flex;align-items:center;gap:10px;';
-    el.onclick = (function(id) { return function() { selectionnerPersonne(id); }; })(p[0]);
+    el.onclick = (function(id) { return function() { papFromPAP = false; papFromCarte = false; selectionnerPersonne(id); }; })(p[0]);
     el.innerHTML = '<div style="font-size:16px;font-weight:700;color:#1a1a1a;min-width:55px;">ID→' + p[0] + '</div><div class="ri-info" style="flex:1;"><div class="ri-nom">' + p[1] + ' ' + p[2] + '</div><div class="ri-detail">' + [sexeIcon + (age ? ' ' + age : ''), adresse].filter(Boolean).join(' · ') + militantInfo + '</div></div><span class="ri-badge ' + badgeClass + '">' + badgeText + '</span>';
     div.appendChild(el);
   }
@@ -1356,7 +1354,7 @@ function afficherResultats(resultats) {
     const militantInfo = statut === 'Visité' && militant ? ' · <span style="color:#27ae60;font-size:10px;">par ' + militant.split(' ').pop() + '</span>' : '';
     const nomUsage = p[8] || '';
     const nomUsageInfo = nomUsage && nomUsage !== p[1] ? '<div style="font-size:11px;color:#8e44ad;font-style:italic;">Usage : ' + nomUsage + '</div>' : '';
-    html.push('<div class="resultat-item ' + statutClass + '" onclick="selectionnerPersonne(' + p[0] + ')" style="display:flex;align-items:center;gap:10px;"><div style="font-size:16px;font-weight:700;color:#1a1a1a;min-width:55px;">ID→' + p[0] + '</div><div class="ri-info" style="flex:1;"><div class="ri-nom">' + p[1] + ' ' + p[2] + '</div><div class="ri-detail">' + [sexeIcon + (age ? ' ' + age : ''), adresse].filter(Boolean).join(' · ') + militantInfo + '</div>' + nomUsageInfo + '</div><span class="ri-badge ' + badgeClass + '">' + badgeText + '</span></div>');
+    html.push('<div class="resultat-item ' + statutClass + '" onclick="papFromPAP=false;papFromCarte=false;selectionnerPersonne(' + p[0] + ')" style="display:flex;align-items:center;gap:10px;"><div style="font-size:16px;font-weight:700;color:#1a1a1a;min-width:55px;">ID→' + p[0] + '</div><div class="ri-info" style="flex:1;"><div class="ri-nom">' + p[1] + ' ' + p[2] + '</div><div class="ri-detail">' + [sexeIcon + (age ? ' ' + age : ''), adresse].filter(Boolean).join(' · ') + militantInfo + '</div>' + nomUsageInfo + '</div><span class="ri-badge ' + badgeClass + '">' + badgeText + '</span></div>');
   }
   div.innerHTML = html.join('');
 }
@@ -1412,7 +1410,7 @@ function afficherFiche(p) {
   const headerBg = isFicheSecondaire ? '#e67e22' : 'var(--bleu)';
   const btnRetourHtml = isFicheSecondaire ? '' : (papFromCarte ? '<button class="btn-retour" onclick="retourCarte()">← Retour Carte 🗺️</button>' : (papFromPAP ? '<button class="btn-retour" onclick="retourPAP()">← Retour PAP</button>' : '<button class="btn-retour" onclick="retourRecherche()">← Retour</button>'));
   const btnRetourPrincipale = isFicheSecondaire ? '<button onclick="retourFichePrincipale()" style="display:block;width:100%;margin-top:10px;background:var(--bleu);color:white;border:none;border-radius:10px;padding:10px 16px;font-size:14px;font-weight:700;cursor:pointer;">🏠 Retour fiche principale</button>' : '';
-  $('saisieContenu').innerHTML = btnRetourHtml + conflitInfo + '<div class="fiche"><div class="fiche-header" style="background:' + headerBg + ';"><div style="display:flex;justify-content:space-between;align-items:flex-start;"><div class="nom">' + p.nom + '</div><div style="font-size:14px;color:white;font-weight:600;">ID — ' + p.id + '</div></div><div class="prenom">' + p.prenom + '</div>' + (p.nomUsage && p.nomUsage !== p.nom ? '<div class="nom-usage">Usage : ' + p.nomUsage + '</div>' : '') + (isVisite ? '<div class="badge-deja-visite">✅ Visité' + (p.militant ? ' par ' + p.militant.split(' ').pop() : '') + (p.candidatActuel ? ' · ' + p.candidatActuel : '') + '</div>' : '') + btnRetourPrincipale + '</div><div class="fiche-body">' + (p.sexe ? '<div class="fiche-row"><span class="label">Sexe</span><span class="value">' + (p.sexe === 'M' ? '👨 Masculin' : '👩 Féminin') + '</span></div>' : '') + (p.age ? '<div class="fiche-row"><span class="label">Âge</span><span class="value">' + p.age + ' ans</span></div>' : '') + '<div class="fiche-row"><span class="label">Adresse</span><span class="value">' + adresse + '</span></div><div class="fiche-row"><span class="label">Bureau 🏢</span><span class="value">' + (p.bureau || '—') + '</span></div><div class="fiche-row"><span class="label">Statut</span><span class="value"><span class="statut-badge ' + (p.statut === 'Visité' ? 'statut-visite' : 'statut-non') + '">' + (p.statut === 'Visité' ? '✓ Visité' : p.statut === 'Absent' ? '🚪 Absent' : p.statut === 'Opposition' ? '🚫 Opposition' : 'Non visité') + '</span></span></div>' + (p.dateDerniereVisite ? '<div class="fiche-row"><span class="label">Dernière visite</span><span class="value">' + p.dateDerniereVisite + '</span></div>' : '') + '</div></div>' + (isFicheSecondaire ? '' : genererCoResidents(p)) + '<div class="form-section"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--gris);"><h3 style="font-size:13px;font-weight:700;color:var(--bleu);text-transform:uppercase;letter-spacing:.5px;margin:0;padding:0;border:none;">✏️ Enregistrer une visite</h3>' + ((currentRole === 'admin' || currentRole === 'superviseur' || currentRole === 'responsable bureaux' || currentRole === 'manager') ? '<button onclick="demanderReinitialisation()" style="background:#c0392b;color:white;border:none;border-radius:8px;width:36px;height:36px;font-size:18px;cursor:pointer;" title="Réinitialiser">🗑️</button>' : '') + '</div><div class="field"><label>Statut</label><select id="fStatut"><option value="Visité" ' + (p.statut === 'Visité' ? 'selected' : '') + '>✅ Visité</option><option value="Non visité" ' + (p.statut === 'Non visité' || !p.statut ? 'selected' : '') + '>❌ Non visité</option><option value="Absent" ' + (p.statut === 'Absent' ? 'selected' : '') + '>🚪 Absent</option><option value="Opposition" ' + (p.statut === 'Opposition' ? 'selected' : '') + '>🚫 Opposition</option></select></div><div class="field"><label>Candidat soutenu</label><select id="fCandidat">' + cOpts + '</select></div><div class="field"><label>Notes</label><textarea id="fNotes" placeholder="Remarques...">' + (p.notes || '') + '</textarea></div><div class="field"><label>📇 Contact</label><div style="display:flex;gap:8px;"><div style="flex:1;"><input type="email" id="fMail" placeholder="📧 Mail" value="' + (p.mail || '') + '"></div><div style="flex:1;"><input type="tel" id="fTel" placeholder="📞 Tél" value="' + (p.tel || '') + '"></div></div></div>' + ((currentRole === 'admin' || currentRole === 'superviseur') ? '<div class="field"><label>Observation</label><textarea id="fObservation" placeholder="Observation...">' + (p.observation || '') + '</textarea></div>' : '') + '<button class="btn-vert" onclick="enregistrerVisite()">✅ Enregistrer</button></div>';
+  $('saisieContenu').innerHTML = btnRetourHtml + conflitInfo + '<div class="fiche"><div class="fiche-header" style="background:' + headerBg + ';"><div style="display:flex;justify-content:space-between;align-items:flex-start;"><div class="nom">' + p.nom + '</div><div style="font-size:14px;color:white;font-weight:600;">ID — ' + p.id + '</div></div><div class="prenom">' + p.prenom + '</div>' + (p.nomUsage && p.nomUsage !== p.nom ? '<div class="nom-usage">Usage : ' + p.nomUsage + '</div>' : '') + (isVisite ? '<div class="badge-deja-visite">✅ Visité' + (p.militant ? ' par ' + p.militant.split(' ').pop() : '') + (p.candidatActuel ? ' · ' + p.candidatActuel : '') + '</div>' : '') + btnRetourPrincipale + '</div><div class="fiche-body">' + (p.sexe ? '<div class="fiche-row"><span class="label">Sexe</span><span class="value">' + (p.sexe === 'M' ? '👨 Masculin' : '👩 Féminin') + '</span></div>' : '') + (p.age ? '<div class="fiche-row"><span class="label">Âge</span><span class="value">' + p.age + ' ans</span></div>' : '') + '<div class="fiche-row"><span class="label">Adresse</span><span class="value">' + adresse + '</span></div><div class="fiche-row"><span class="label">Bureau 🏢</span><span class="value">' + (p.bureau || '—') + '</span></div><div class="fiche-row"><span class="label">Statut</span><span class="value"><span class="statut-badge ' + (p.statut === 'Visité' ? 'statut-visite' : 'statut-non') + '">' + (p.statut === 'Visité' ? '✓ Visité' : p.statut === 'Absent' ? '🚪 Absent' : p.statut === 'Opposition' ? '🚫 Opposition' : 'Non visité') + '</span></span></div>' + (p.dateDerniereVisite ? '<div class="fiche-row"><span class="label">Dernière visite</span><span class="value">' + p.dateDerniereVisite + '</span></div>' : '') + '</div><div id="ficheMapContainer" class="fiche-map-container"></div></div>' + (isFicheSecondaire ? '' : genererCoResidents(p)) + '<div class="form-section"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--gris);"><h3 style="font-size:13px;font-weight:700;color:var(--bleu);text-transform:uppercase;letter-spacing:.5px;margin:0;padding:0;border:none;">✏️ Enregistrer une visite</h3>' + ((currentRole === 'admin' || currentRole === 'superviseur' || currentRole === 'responsable bureaux' || currentRole === 'manager') ? '<button onclick="demanderReinitialisation()" style="background:#c0392b;color:white;border:none;border-radius:8px;width:36px;height:36px;font-size:18px;cursor:pointer;" title="Réinitialiser">🗑️</button>' : '') + '</div><div class="field"><label>Statut</label><select id="fStatut"><option value="Visité" ' + (p.statut === 'Visité' ? 'selected' : '') + '>✅ Visité</option><option value="Non visité" ' + (p.statut === 'Non visité' || !p.statut ? 'selected' : '') + '>❌ Non visité</option><option value="Absent" ' + (p.statut === 'Absent' ? 'selected' : '') + '>🚪 Absent</option><option value="Opposition" ' + (p.statut === 'Opposition' ? 'selected' : '') + '>🚫 Opposition</option></select></div><div class="field"><label>Candidat soutenu</label><select id="fCandidat">' + cOpts + '</select></div><div class="field"><label>Notes</label><textarea id="fNotes" placeholder="Remarques...">' + (p.notes || '') + '</textarea></div><div class="field"><label>📇 Contact</label><div style="display:flex;gap:8px;"><div style="flex:1;"><input type="email" id="fMail" placeholder="📧 Mail" value="' + (p.mail || '') + '"></div><div style="flex:1;"><input type="tel" id="fTel" placeholder="📞 Tél" value="' + (p.tel || '') + '"></div></div></div>' + ((currentRole === 'admin' || currentRole === 'superviseur') ? '<div class="field"><label>Observation</label><textarea id="fObservation" placeholder="Observation...">' + (p.observation || '') + '</textarea></div>' : '') + '<button class="btn-vert" onclick="enregistrerVisite()">✅ Enregistrer</button></div>';
   // Tuto fiche
   papTutoAlert('fiche', '✏️', 'FICHE ÉLECTEUR',
     '<b>1.</b> Vérifie les infos : nom, adresse, bureau<br>' +
@@ -1447,6 +1445,10 @@ function afficherFiche(p) {
         'Remplir les champs ! Statut, c\'est ce que tu as constaté sur le terrain. Visité, tu as parlé à la personne. Absent, personne n\'était là. Opposition, ne soutient pas. Candidat soutenu, le candidat que la personne soutient, parmi Johnny Payet, Sophie Arzal, Amandine Ramaye, ou Frédéric Azor. Notes, le nom du militant, c\'est à dire toi, ou de la personne qui a recommandé cet électeur. Contact, mail ou téléphone si donné, c\'est facultatif. Ces contacts sont recommandés pour recontacter en tant que comité de soutien pour la future élection.');
     };
   }, 700);
+
+  // v83: Mini-carte adresse exacte
+  var adresseGeo = [p.nVoie, p.libelleVoie, p.complement].filter(Boolean).join(' ');
+  if (adresseGeo) afficherFicheMiniCarte(adresseGeo, p.nom + ' ' + p.prenom);
 }
 
 // =====================================================
@@ -1540,6 +1542,11 @@ async function executerEnregistrement() {
       setTimeout(function() { retourCarte(); }, 1000);
       return;
     }
+    if (papFromPAP) {
+      showToast('🔥 Enregistré ! Retour PAP...', 'succes');
+      setTimeout(function() { retourPAP(); }, 1000);
+      return;
+    }
     afficherFiche(currentPersonne);
     showToast('🔥 Enregistré instantanément !', 'succes');
 
@@ -1599,9 +1606,9 @@ async function confirmerReinitialisation() {
 // =====================================================
 // NAVIGATION
 // =====================================================
-function initTabs() { document.querySelectorAll('.tab').forEach(tab => { tab.onclick = () => { const page = tab.dataset.page; if (!page) return; document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); tab.classList.add('active'); $('page-' + page).classList.add('active'); if (page === 'stats') chargerStats(); if (page === 'admin') chargerAdmin(); if (page === 'csv') { verifierStatutsCSV(); chargerConfigComparaison(); } if (page === 'pap') afficherPapAccueil(); }; }); }
-function showPage(page) { const tab = document.querySelector('.tab[data-page="' + page + '"]'); if (tab) tab.click(); }
-function retourRecherche() { isFicheSecondaire = false; fichePrincipaleId = null; showPage('recherche'); setTimeout(() => rechercher(), 50); }
+function initTabs() { document.querySelectorAll('.tab').forEach(tab => { tab.onclick = () => { const page = tab.dataset.page; if (!page) return; papFromPAP = false; papFromCarte = false; showPage(page); }; }); }
+function showPage(page) { document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); const tab = document.querySelector('.tab[data-page="' + page + '"]'); if (tab) tab.classList.add('active'); const pg = $('page-' + page); if (pg) pg.classList.add('active'); if (page === 'stats') chargerStats(); if (page === 'admin') chargerAdmin(); if (page === 'csv') { verifierStatutsCSV(); chargerConfigComparaison(); } if (page === 'pap') afficherPapAccueil(); }
+function retourRecherche() { isFicheSecondaire = false; fichePrincipaleId = null; papFromPAP = false; papFromCarte = false; showPage('recherche'); setTimeout(() => rechercher(), 50); }
 function voirCoResident(id) { fichePrincipaleId = currentPersonne ? currentPersonne.id : null; isFicheSecondaire = true; selectionnerPersonne(id); }
 function retourFichePrincipale() { const id = fichePrincipaleId; isFicheSecondaire = false; fichePrincipaleId = null; if (id) selectionnerPersonne(id); else retourRecherche(); }
 
@@ -1858,7 +1865,7 @@ function afficherObservation(id) {
   $('obsModalContenu').innerHTML = '<div style="margin-bottom:12px;">' + String(p[15] || '') + '</div><div style="font-size:12px;color:#888;border-top:1px solid #ddd;padding-top:10px;">' + (p[14] ? '👤 ' + p[14] : '') + (p[11] ? ' · 📅 ' + p[11] : '') + '</div>';
   ouvrirModal('modalObservation');
 }
-function ouvrirFicheDepuisObs() { fermerModal('modalObservation'); if (currentObsId) selectionnerPersonne(currentObsId); }
+function ouvrirFicheDepuisObs() { fermerModal('modalObservation'); papFromPAP = false; papFromCarte = false; if (currentObsId) selectionnerPersonne(currentObsId); }
 
 // =====================================================
 // ADMIN
@@ -2785,6 +2792,53 @@ let papEtatActuel = { bureau: null, division: null, rue: null };
 let papFromPAP = false; // flag to know if saisie was opened from PAP
 let papFromCarte = false; // flag: saisie ouverte depuis la carte
 let papCarteContext = null; // { bureau, divIdx, rueIdx } pour retour carte
+let papMarqueurExact = null; // v83: marqueur adresse exacte sur carte
+
+// v83: Géocodage adresse exacte via API BAN
+const geocodeCache = {};
+async function geocoderBAN(adresse) {
+  if (!adresse || adresse === '—') return null;
+  const cle = adresse.trim().toLowerCase();
+  if (geocodeCache[cle]) return geocodeCache[cle];
+  try {
+    const q = encodeURIComponent(adresse + ' La Plaine-des-Palmistes');
+    const resp = await fetch('https://api-adresse.data.gouv.fr/search/?q=' + q + '&limit=1&lat=-21.1325&lon=55.6325');
+    const data = await resp.json();
+    if (data.features && data.features.length > 0) {
+      const f = data.features[0];
+      const result = { lat: f.geometry.coordinates[1], lng: f.geometry.coordinates[0], label: f.properties.label };
+      geocodeCache[cle] = result;
+      return result;
+    }
+  } catch(e) { console.log('Geocodage BAN erreur:', e); }
+  return null;
+}
+
+// v83: Afficher mini-carte sur fiche personne
+let ficheMap = null;
+function afficherFicheMiniCarte(adresseComplete, nomComplet) {
+  var container = document.getElementById('ficheMapContainer');
+  if (!container) return;
+  container.innerHTML = '<div class="fiche-map-loading">📍 Recherche adresse...</div>';
+
+  geocoderBAN(adresseComplete).then(function(geo) {
+    if (!geo) {
+      container.innerHTML = '<div class="fiche-map-loading">📍 Adresse non trouvée sur la carte</div>';
+      return;
+    }
+    container.innerHTML = '<div id="ficheMapDiv" class="fiche-map"></div>' +
+      '<button class="fiche-map-btn" onclick="ouvrirGoogleMaps(' + geo.lat + ',' + geo.lng + ')">🗺️ Ouvrir dans Google Maps</button>';
+
+    ficheMap = L.map('ficheMapDiv', { zoomControl: false, attributionControl: false }).setView([geo.lat, geo.lng], 17);
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 }).addTo(ficheMap);
+    L.marker([geo.lat, geo.lng]).addTo(ficheMap).bindPopup('<b>' + nomComplet + '</b><br>' + geo.label).openPopup();
+    setTimeout(function() { ficheMap.invalidateSize(); }, 200);
+  });
+}
+
+function ouvrirGoogleMaps(lat, lng) {
+  window.open('https://www.google.com/maps/dir/?api=1&destination=' + lat + ',' + lng, '_blank');
+}
 
 // Voice synthesis — voix douce et naturelle
 let papVoixChoisie = null;
@@ -3300,6 +3354,9 @@ let papEtapes = [];
 let papEtapeActuelle = 0;
 let papTuileSat = null;
 let papTuilePlan = null;
+let papRouteLayer = null; // v84: layer group pour itinéraire
+let papPersonnesLayer = null; // v84: layer group pour marqueurs personnes exactes
+let papMarqueursRuesLayer = null; // v85: layer group pour marqueurs rues numérotés
 
 function papOuvrirCarte(bureau, divIdx) {
   const div = PAP_DATA[bureau].divisions[divIdx];
@@ -3378,6 +3435,8 @@ function papSwitchTuile(type) {
 function papFermerCarte() {
   if (papGpsWatchId) { navigator.geolocation.clearWatch(papGpsWatchId); papGpsWatchId = null; }
   papGpsMarker = null; papGpsPulse = null; papGpsTrace = null; papGpsPositions = []; papLigneVersEtape = null;
+  papMarqueurExact = null; // v83
+  papRouteLayer = null; papPersonnesLayer = null; papMarqueursRuesLayer = null; // v85
   if (papMapInstance) { papMapInstance.remove(); papMapInstance = null; }
   document.querySelectorAll('.pap-carte-overlay').forEach(e => e.remove());
 }
@@ -3598,6 +3657,10 @@ function papAfficherMarqueurs(resultats) {
   resultats = papTrierPlusProche(resultats);
   papEtapes = resultats;
 
+  // v85: Layer group pour marqueurs rues
+  if (papMarqueursRuesLayer) { papMapInstance.removeLayer(papMarqueursRuesLayer); }
+  papMarqueursRuesLayer = L.layerGroup().addTo(papMapInstance);
+
   const points = [];
 
   resultats.forEach(function(r, i) {
@@ -3612,7 +3675,7 @@ function papAfficherMarqueurs(resultats) {
       iconAnchor: [19, 19]
     });
 
-    var marker = L.marker(latlng, { icon: numIcon }).addTo(papMapInstance);
+    var marker = L.marker(latlng, { icon: numIcon }).addTo(papMarqueursRuesLayer);
 
     marker.bindTooltip('<b>' + (i + 1) + '.</b> ' + r.nom + ' <span style="color:#888;">(' + r.total + ')</span>', {
       permanent: true,
@@ -3650,6 +3713,10 @@ function papAfficherMarqueurs(resultats) {
 
 // Appel OSRM pour tracer la route réelle sur les rues
 function papTracerRouteReelle(points) {
+  // v84: Créer le layer group pour la route
+  if (papRouteLayer) { papMapInstance.removeLayer(papRouteLayer); }
+  papRouteLayer = L.layerGroup().addTo(papMapInstance);
+
   // Construire les coordonnées pour OSRM (lng,lat;lng,lat;...)
   var coords = points.map(function(p) { return p[1] + ',' + p[0]; }).join(';');
   var url = 'https://router.project-osrm.org/route/v1/foot/' + coords + '?overview=full&geometries=geojson';
@@ -3659,20 +3726,16 @@ function papTracerRouteReelle(points) {
     .then(function(data) {
       if (data && data.routes && data.routes.length > 0) {
         var routeCoords = data.routes[0].geometry.coordinates.map(function(c) { return [c[1], c[0]]; });
-
-        // Ligne blanche épaisse (fond) + ligne bleue par-dessus (route réelle)
-        L.polyline(routeCoords, { color: '#ffffff', weight: 8, opacity: 0.9 }).addTo(papMapInstance);
-        L.polyline(routeCoords, { color: '#3498db', weight: 4, opacity: 1 }).addTo(papMapInstance);
+        L.polyline(routeCoords, { color: '#ffffff', weight: 8, opacity: 0.9 }).addTo(papRouteLayer);
+        L.polyline(routeCoords, { color: '#3498db', weight: 4, opacity: 1 }).addTo(papRouteLayer);
       } else {
-        // Fallback: lignes droites si OSRM échoue
-        L.polyline(points, { color: '#ffffff', weight: 6, opacity: 0.9 }).addTo(papMapInstance);
-        L.polyline(points, { color: '#e74c3c', weight: 3, opacity: 1 }).addTo(papMapInstance);
+        L.polyline(points, { color: '#ffffff', weight: 6, opacity: 0.9 }).addTo(papRouteLayer);
+        L.polyline(points, { color: '#e74c3c', weight: 3, opacity: 1 }).addTo(papRouteLayer);
       }
     })
     .catch(function() {
-      // Fallback: lignes droites
-      L.polyline(points, { color: '#ffffff', weight: 6, opacity: 0.9 }).addTo(papMapInstance);
-      L.polyline(points, { color: '#e74c3c', weight: 3, opacity: 1 }).addTo(papMapInstance);
+      L.polyline(points, { color: '#ffffff', weight: 6, opacity: 0.9 }).addTo(papRouteLayer);
+      L.polyline(points, { color: '#e74c3c', weight: 3, opacity: 1 }).addTo(papRouteLayer);
     });
 }
 
@@ -3705,6 +3768,7 @@ function papOuvrirPanelRue(etape) {
   panel.className = 'pap-carte-panel';
 
   var html = '<div class="pap-carte-panel-header">' +
+    '<button class="pap-carte-panel-retour" onclick="papFermerPanel()">← Retour</button>' +
     '<h4>📍 ' + etape.nom + ' (' + rs.done + '/' + rs.total + ')</h4>' +
     '<button class="pap-carte-panel-close" onclick="papFermerPanel()">✕</button>' +
     '</div>';
@@ -3743,7 +3807,44 @@ function papOuvrirPanelRue(etape) {
   panel.innerHTML = html;
   document.querySelector('.pap-carte-overlay').appendChild(panel);
 
+  // v85: Masquer barre GPS + TOUT (rues + itinéraire) + afficher marqueurs personnes exactes
+  var gpsBar = document.getElementById('papGpsBar');
+  if (gpsBar) gpsBar.style.display = 'none';
+  if (papMarqueursRuesLayer && papMapInstance) { papMapInstance.removeLayer(papMarqueursRuesLayer); }
+  if (papRouteLayer && papMapInstance) { papMapInstance.removeLayer(papRouteLayer); }
+  if (papPersonnesLayer) { papMapInstance.removeLayer(papPersonnesLayer); }
+  papPersonnesLayer = L.layerGroup().addTo(papMapInstance);
+
+  // Géocoder chaque personne non visitée et placer un marqueur
+  var personnesAGeo = [];
+  rueData.personnes.forEach(function(p) {
+    var statut = papGetStatut(p.n, p.p);
+    if (statut === 'Visité' || statut === 'Opposition') return;
+    personnesAGeo.push(p);
+  });
+
+  var bounds = [];
+  personnesAGeo.forEach(function(p, idx) {
+    geocoderBAN(p.a).then(function(geo) {
+      if (!geo || !papPersonnesLayer || !papMapInstance) return;
+      var couleur = papGetStatut(p.n, p.p) === 'Absent' ? '#f39c12' : '#e74c3c';
+      var icone = L.divIcon({ className: '', html: '<div style="background:' + couleur + ';color:white;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.4);border:2px solid white;">' + (idx + 1) + '</div>', iconSize: [28, 28], iconAnchor: [14, 14] });
+      L.marker([geo.lat, geo.lng], { icon: icone, zIndexOffset: 800 }).addTo(papPersonnesLayer).bindPopup('<b>' + p.n + ' ' + p.p + '</b><br>' + geo.label);
+      bounds.push([geo.lat, geo.lng]);
+      if (bounds.length === personnesAGeo.length) {
+        papMapInstance.fitBounds(L.latLngBounds(bounds).pad(0.15));
+      }
+    });
+  });
+
   papParler(etape.nom + '. ' + rs.restant + ' personnes restantes.');
+
+  // v85: Auto-retour si toutes les fiches sont complètes
+  if (rs.restant === 0) {
+    papParler('Rue terminée ! Retour à la carte.');
+    setTimeout(function() { papFermerPanel(); }, 1200);
+    return;
+  }
 
   // Tuto panel personnes
   papTutoAlert('panel', '👆', 'LISTE DES PERSONNES',
@@ -3784,6 +3885,13 @@ function papFermerPanel() {
     e.style.transform = 'translateY(100%)';
     setTimeout(function() { e.remove(); }, 200);
   });
+  // v85: Restaurer barre GPS
+  var gpsBar = document.getElementById('papGpsBar');
+  if (gpsBar) gpsBar.style.display = '';
+  // v85: Supprimer marqueurs personnes + restaurer TOUT (rues + itinéraire)
+  if (papPersonnesLayer && papMapInstance) { papMapInstance.removeLayer(papPersonnesLayer); papPersonnesLayer = null; }
+  if (papMarqueursRuesLayer && papMapInstance) { papMarqueursRuesLayer.addTo(papMapInstance); }
+  if (papRouteLayer && papMapInstance) { papRouteLayer.addTo(papMapInstance); }
 }
 
 // v27: Alerte confirmation Absent depuis la vue DIVISION (pas la carte)
@@ -3820,6 +3928,33 @@ function papOuvrirFicheDepuisCarte(nom, prenom, rueIdx) {
     divIdx: papEtatActuel.division,
     rueIdx: rueIdx
   };
+
+  // v83: Ajouter marqueur adresse exacte sur la carte
+  if (papMapInstance) {
+    if (papMarqueurExact) { papMapInstance.removeLayer(papMarqueurExact); papMarqueurExact = null; }
+    var bureau = papEtatActuel.bureau;
+    var divIdx = papEtatActuel.division;
+    if (bureau && divIdx !== null && PAP_DATA[bureau] && PAP_DATA[bureau].divisions[divIdx]) {
+      var rueData = PAP_DATA[bureau].divisions[divIdx].rues[rueIdx];
+      if (rueData) {
+        var persAdresse = null;
+        for (var i = 0; i < rueData.personnes.length; i++) {
+          if (rueData.personnes[i].n === nom && rueData.personnes[i].p === prenom) {
+            persAdresse = rueData.personnes[i].a;
+            break;
+          }
+        }
+        if (persAdresse) {
+          geocoderBAN(persAdresse).then(function(geo) {
+            if (geo && papMapInstance) {
+              var icone = L.divIcon({ className: '', html: '<div style="background:#e74c3c;color:white;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 8px rgba(0,0,0,.4);border:2px solid white;">📍</div>', iconSize: [30, 30], iconAnchor: [15, 15] });
+              papMarqueurExact = L.marker([geo.lat, geo.lng], { icon: icone, zIndexOffset: 900 }).addTo(papMapInstance).bindPopup('<b>' + nom + ' ' + prenom + '</b><br>' + geo.label);
+            }
+          });
+        }
+      }
+    }
+  }
 
   // Masquer la carte (pas la détruire)
   var overlay = document.querySelector('.pap-carte-overlay');
@@ -4189,9 +4324,12 @@ function retourPAP() {
   }
 
   // Return to PAP division view
+  // v83: Sauvegarder avant showPage (afficherPapAccueil reset papEtatActuel)
+  var savBureau = papEtatActuel.bureau;
+  var savDivision = papEtatActuel.division;
   showPage('pap');
-  if (papEtatActuel.bureau && papEtatActuel.division !== null) {
-    papOuvrirDivision(papEtatActuel.bureau, papEtatActuel.division);
+  if (savBureau && savDivision !== null) {
+    papOuvrirDivision(savBureau, savDivision);
   } else {
     afficherPapAccueil();
   }
