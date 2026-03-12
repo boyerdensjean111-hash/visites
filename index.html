@@ -260,7 +260,7 @@
 </div>
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v90</span> 🔥</div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v91</span> 🔥</div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -309,7 +309,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v90</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v91</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
@@ -660,7 +660,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v90';
+const APP_VERSION = 'Firebase v91';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -2175,7 +2175,7 @@ function majObjetAvecVariables() { if (!objetModele) return; var nom = ($('nouve
 
 function majScriptAvecVariables() { if (!scriptModele) return; var nom = ($('nouveauNom') ? $('nouveauNom').value : '').trim(); var pin = ($('nouveauPin') ? $('nouveauPin').value : '').trim(); var lien = ($('nouveauLien') ? $('nouveauLien').value : ''); var script = scriptModele; script = script.replace(/\{nom\}/gi, nom || '___'); script = script.replace(/\{pin\}/gi, pin || '____'); script = script.replace(/\{lien\}/gi, lien || '___'); script = script.replace(/\{role\}/gi, ($('nouveauRole') ? $('nouveauRole').value : 'militant')); $('nouveauScript').value = script; }
 
-function ouvrirGmail() { var nom = $('nouveauNom') ? $('nouveauNom').value.trim() : (arguments[0] || ''); var pin = $('nouveauPin') ? $('nouveauPin').value.trim() : (arguments[1] || ''); var email = $('nouveauEmail') ? $('nouveauEmail').value.trim() : (arguments[2] || ''); var script = $('nouveauScript') ? $('nouveauScript').value.trim() : ''; var objet = $('nouveauObjet') ? $('nouveauObjet').value.trim() : ''; var lien = ($('nouveauLien') ? $('nouveauLien').value : '') || 'https://boyerdensjean111-hash.github.io/visites/'; var sujet = encodeURIComponent(objet || 'Visites Électorales - Vos identifiants'); var corps = encodeURIComponent(script || ('Bonjour ' + nom + ',\n\nVoici vos identifiants :\n\nLien : ' + lien + '\nNom : ' + nom + '\nPIN : ' + pin + '\n\nCordialement,\n' + currentMilitant)); var mailtoUrl = 'mailto:' + encodeURIComponent(email) + '?subject=' + sujet + '&body=' + corps; var a = document.createElement('a'); a.href = mailtoUrl; a.target = '_blank'; a.rel = 'noopener'; a.style.display = 'none'; document.body.appendChild(a); a.click(); setTimeout(function() { a.remove(); }, 100); }
+function ouvrirGmail() { var nom = $('nouveauNom') ? $('nouveauNom').value.trim() : (arguments[0] || ''); var pin = $('nouveauPin') ? $('nouveauPin').value.trim() : (arguments[1] || ''); var email = $('nouveauEmail') ? $('nouveauEmail').value.trim() : (arguments[2] || ''); var script = $('nouveauScript') ? $('nouveauScript').value.trim() : ''; var objet = $('nouveauObjet') ? $('nouveauObjet').value.trim() : ''; var lien = ($('nouveauLien') ? $('nouveauLien').value : '') || 'https://boyerdensjean111-hash.github.io/visites/'; var sujet = encodeURIComponent(objet || 'Visites Électorales - Vos identifiants'); var corps = encodeURIComponent(script || ('Bonjour ' + nom + ',\n\nVoici vos identifiants :\n🔗 Lien : ' + lien + '\n👤 Nom : ' + nom + '\n🔑 PIN : ' + pin + '\n\nCordialement,\n' + currentMilitant)); var gmailUrl = 'https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent(email) + '&su=' + sujet + '&body=' + corps; window.open(gmailUrl, '_blank'); }
 
 function annulerAjoutMilitant() { var nom = ($('nouveauNom') ? $('nouveauNom').value : '').trim(); var email = ($('nouveauEmail') ? $('nouveauEmail').value : '').trim(); if (nom || email) { if (!confirm('⚠️ Vous n\'avez pas terminé !\n\nLe militant n\'a pas été ajouté.\nVoulez-vous vraiment quitter ?')) return; } localStorage.removeItem('visites_brouillon_militant'); fermerModal('modalAjoutMilitant'); }
 
