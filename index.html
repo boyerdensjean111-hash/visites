@@ -261,7 +261,7 @@
 </div>
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v92</span> 🔥</div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v94</span> 🔥</div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -310,7 +310,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v92</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v94</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
@@ -661,7 +661,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v92';
+const APP_VERSION = 'Firebase v94';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -2176,7 +2176,18 @@ function majObjetAvecVariables() { if (!objetModele) return; var nom = ($('nouve
 
 function majScriptAvecVariables() { if (!scriptModele) return; var nom = ($('nouveauNom') ? $('nouveauNom').value : '').trim(); var pin = ($('nouveauPin') ? $('nouveauPin').value : '').trim(); var lien = ($('nouveauLien') ? $('nouveauLien').value : ''); var script = scriptModele; script = script.replace(/\{nom\}/gi, nom || '___'); script = script.replace(/\{pin\}/gi, pin || '____'); script = script.replace(/\{lien\}/gi, lien || '___'); script = script.replace(/\{role\}/gi, ($('nouveauRole') ? $('nouveauRole').value : 'militant')); $('nouveauScript').value = script; }
 
-function ouvrirGmail() { var nom = $('nouveauNom') ? $('nouveauNom').value.trim() : (arguments[0] || ''); var pin = $('nouveauPin') ? $('nouveauPin').value.trim() : (arguments[1] || ''); var email = $('nouveauEmail') ? $('nouveauEmail').value.trim() : (arguments[2] || ''); var script = $('nouveauScript') ? $('nouveauScript').value.trim() : ''; var objet = $('nouveauObjet') ? $('nouveauObjet').value.trim() : ''; var lien = ($('nouveauLien') ? $('nouveauLien').value : '') || 'https://boyerdensjean111-hash.github.io/visites/'; var sujet = encodeURIComponent(objet || 'Visites Électorales - Vos identifiants'); var corps = encodeURIComponent(script || ('Bonjour ' + nom + ',\n\nVoici vos identifiants :\n🔗 Lien : ' + lien + '\n👤 Nom : ' + nom + '\n🔑 PIN : ' + pin + '\n\nCordialement,\n' + currentMilitant)); var gmailUrl = 'https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent(email) + '&su=' + sujet + '&body=' + corps; window.open(gmailUrl, '_blank'); }
+function ouvrirGmail() {
+  var nom = $('nouveauNom') ? $('nouveauNom').value.trim() : (arguments[0] || '');
+  var pin = $('nouveauPin') ? $('nouveauPin').value.trim() : (arguments[1] || '');
+  var email = $('nouveauEmail') ? $('nouveauEmail').value.trim() : (arguments[2] || '');
+  var script = $('nouveauScript') ? $('nouveauScript').value.trim() : '';
+  var objet = $('nouveauObjet') ? $('nouveauObjet').value.trim() : '';
+  var lien = ($('nouveauLien') ? $('nouveauLien').value : '') || 'https://boyerdensjean111-hash.github.io/visites/';
+  var sujet = encodeURIComponent(objet || 'Visites Électorales - Vos identifiants');
+  var corps = encodeURIComponent(script || ('Bonjour ' + nom + ',\n\nVoici vos identifiants :\n🔗 Lien : ' + lien + '\n👤 Nom : ' + nom + '\n🔑 PIN : ' + pin + '\n\nCordialement,\n' + currentMilitant));
+  var gmailUrl = 'https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent(email) + '&su=' + sujet + '&body=' + corps;
+  window.open(gmailUrl, '_blank');
+}
 
 function annulerAjoutMilitant() { var nom = ($('nouveauNom') ? $('nouveauNom').value : '').trim(); var email = ($('nouveauEmail') ? $('nouveauEmail').value : '').trim(); if (nom || email) { if (!confirm('⚠️ Vous n\'avez pas terminé !\n\nLe militant n\'a pas été ajouté.\nVoulez-vous vraiment quitter ?')) return; } localStorage.removeItem('visites_brouillon_militant'); fermerModal('modalAjoutMilitant'); }
 
@@ -2907,7 +2918,7 @@ function afficherFicheMiniCarte(adresseComplete, nomComplet) {
       return;
     }
     container.innerHTML = '<div id="ficheMapDiv" class="fiche-map"></div>' +
-      '<button class="fiche-map-btn" onclick="ouvrirGoogleMaps(' + geo.lat + ',' + geo.lng + ')">🗺️ Ouvrir dans Google Maps</button>';
+      '<button class="fiche-map-btn" onclick="ouvrirGoogleMaps(' + geo.lat + ',' + geo.lng + ',\'' + nomComplet.replace(/'/g, "\\'") + '\')">🗺️ Ouvrir dans Google Maps</button>';
 
     ficheMap = L.map('ficheMapDiv', { zoomControl: false, attributionControl: false }).setView([geo.lat, geo.lng], 17);
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 }).addTo(ficheMap);
@@ -2916,8 +2927,34 @@ function afficherFicheMiniCarte(adresseComplete, nomComplet) {
   });
 }
 
-function ouvrirGoogleMaps(lat, lng) {
-  window.open('https://www.google.com/maps/dir/?api=1&destination=' + lat + ',' + lng, '_blank');
+function ouvrirGoogleMaps(lat, lng, nomPersonne) {
+  // v93: Alerte tuto — conseils terrain avant navigation
+  var prenom = (nomPersonne || '').split(' ')[0] || 'cette personne';
+  document.querySelectorAll('.pap-alert, .pap-alert-overlay').forEach(function(e) { e.remove(); });
+  var overlay = document.createElement('div');
+  overlay.className = 'pap-alert-overlay';
+  var box = document.createElement('div');
+  box.className = 'pap-alert';
+  box.innerHTML = '<div class="pap-alert-icon">🚀</div>' +
+    '<div class="pap-alert-title">TU Y ES PRESQUE !</div>' +
+    '<div class="pap-alert-msg" style="text-align:left;font-size:13px;line-height:1.6;">' +
+      'Tu vas chez <b>' + (nomPersonne || 'cette personne') + '</b>. Le GPS te guide directement !<br><br>' +
+      '💡 <b>Quoi dire en arrivant :</b><br>' +
+      '« <i>Bonjour ' + prenom + ', je suis ' + (currentMilitant || 'militant(e)') + ', je viens de la part de <b>Johnny Payet</b>. ' +
+      'On passe voir les habitants du quartier pour écouter vos préoccupations et vous présenter notre projet pour La Plaine-des-Palmistes.</i> »<br><br>' +
+      '🎯 <b>Les clés du contact :</b><br>' +
+      '• <b>Souris et sois chaleureux(se)</b> — le premier regard compte !<br>' +
+      '• <b>Écoute d\'abord</b> — demande quels sont ses besoins<br>' +
+      '• <b>Parle du projet</b> de Johnny Payet pour améliorer le quotidien<br>' +
+      '• <b>Note les retours</b> dans la fiche après la visite<br><br>' +
+      '💪 Chaque porte ouverte est une victoire. <b>Tu fais la différence !</b>' +
+    '</div>' +
+    '<button class="pap-alert-btn" style="background:var(--vert);width:100%;padding:14px;" onclick="fermerPapAlert();window.open(\'https://www.google.com/maps/dir/?api=1&destination=' + lat + ',' + lng + '\',\'_blank\')">🗺️ C\'est parti, j\'y vais ! 🚀</button>' +
+    '<button class="pap-alert-btn" style="background:var(--gris);color:var(--texte);width:100%;padding:12px;margin-top:8px;font-size:13px;" onclick="fermerPapAlert()">Annuler</button>';
+  document.body.appendChild(overlay);
+  document.body.appendChild(box);
+  overlay.onclick = function() { fermerPapAlert(); };
+  papParler('Tu vas chez ' + prenom + '. Présente-toi de la part de Johnny Payet, sois souriant et à l\'écoute. Chaque visite compte, tu fais la différence !');
 }
 
 // Voice synthesis — voix douce et naturelle
