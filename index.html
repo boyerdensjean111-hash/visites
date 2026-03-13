@@ -261,7 +261,7 @@
 </div>
 <div id="ecranLogin" style="display:none;">
   <div class="login-logo" id="loginLogo">🗳️ Visites Électorales</div>
-  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v94</span> 🔥</div>
+  <div class="login-sub" id="loginSub">La Plaine-des-Palmistes · <span style="opacity:.5;font-size:11px;">v96</span> 🔥</div>
   <div class="login-card">
     <h2>🔐 Connexion</h2>
     <div class="login-field">
@@ -310,7 +310,7 @@
   <div class="header" id="mainHeader">
     <div class="header-left">
       <h1><span class="sync-indicator" id="syncIndicator"></span>🗳️ Visites <span class="firebase-badge">🔥</span></h1>
-      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v94</span></p>
+      <p>La Plaine-des-Palmistes · <span style="opacity:.5;font-size:10px;">Firebase v96</span></p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button class="header-user" id="btnUser" onclick="seDeconnecter()">Quitter</button>
@@ -661,7 +661,7 @@ const db = firebase.database();
 // =====================================================
 // CONSTANTES
 // =====================================================
-const APP_VERSION = 'Firebase v94';
+const APP_VERSION = 'Firebase v96';
 const MAX_RESULTATS = 50;
 const VERSION_CHECK_URL = 'https://boyerdensjean111-hash.github.io/visites/index.html';
 const VERSION_CHECK_INTERVAL = 60000;
@@ -2927,9 +2927,26 @@ function afficherFicheMiniCarte(adresseComplete, nomComplet) {
   });
 }
 
+// v94: Formater nom pour prononciation naturelle (NOM PRENOM → Prénom Nom en minuscules)
+function formaterNomVocal(nomBrut) {
+  if (!nomBrut) return 'cette personne';
+  var parts = nomBrut.trim().split(/\s+/);
+  // Format base: "NOM PRENOM" → on inverse pour "PRENOM NOM"
+  // Mettre en casse titre pour que la voix prononce naturellement
+  function titreCasse(s) { return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase(); }
+  if (parts.length >= 2) {
+    // Le nom de famille est souvent le 1er mot (en majuscules), le prénom après
+    var nom = titreCasse(parts[0]);
+    var prenom = parts.slice(1).map(titreCasse).join(' ');
+    return prenom + ' ' + nom;
+  }
+  return titreCasse(parts[0]);
+}
+
 function ouvrirGoogleMaps(lat, lng, nomPersonne) {
-  // v93: Alerte tuto — conseils terrain avant navigation
-  var prenom = (nomPersonne || '').split(' ')[0] || 'cette personne';
+  // v94: Alerte tuto — conseils terrain avant navigation
+  var nomVocal = formaterNomVocal(nomPersonne);
+  var prenomVocal = nomVocal.split(' ')[0] || 'cette personne';
   document.querySelectorAll('.pap-alert, .pap-alert-overlay').forEach(function(e) { e.remove(); });
   var overlay = document.createElement('div');
   overlay.className = 'pap-alert-overlay';
@@ -2938,9 +2955,9 @@ function ouvrirGoogleMaps(lat, lng, nomPersonne) {
   box.innerHTML = '<div class="pap-alert-icon">🚀</div>' +
     '<div class="pap-alert-title">TU Y ES PRESQUE !</div>' +
     '<div class="pap-alert-msg" style="text-align:left;font-size:13px;line-height:1.6;">' +
-      'Tu vas chez <b>' + (nomPersonne || 'cette personne') + '</b>. Le GPS te guide directement !<br><br>' +
+      'Tu vas chez <b>' + nomVocal + '</b>. Le GPS te guide directement !<br><br>' +
       '💡 <b>Quoi dire en arrivant :</b><br>' +
-      '« <i>Bonjour ' + prenom + ', je suis ' + (currentMilitant || 'militant(e)') + ', je viens de la part de <b>Johnny Payet</b>. ' +
+      '« <i>Bonjour ' + prenomVocal + ', je suis ' + (currentMilitant || 'militant(e)') + ', je viens de la part de <b>Johnny Payet</b>. ' +
       'On passe voir les habitants du quartier pour écouter vos préoccupations et vous présenter notre projet pour La Plaine-des-Palmistes.</i> »<br><br>' +
       '🎯 <b>Les clés du contact :</b><br>' +
       '• <b>Souris et sois chaleureux(se)</b> — le premier regard compte !<br>' +
@@ -2954,7 +2971,20 @@ function ouvrirGoogleMaps(lat, lng, nomPersonne) {
   document.body.appendChild(overlay);
   document.body.appendChild(box);
   overlay.onclick = function() { fermerPapAlert(); };
-  papParler('Tu vas chez ' + prenom + '. Présente-toi de la part de Johnny Payet, sois souriant et à l\'écoute. Chaque visite compte, tu fais la différence !');
+
+  // v94: Voix lit toute la fiche avec pauses naturelles
+  var texteVocal = 'Tu y es presque ! ' +
+    'Tu vas chez ' + nomVocal + '. Le GPS te guide directement. ' +
+    'Quoi dire en arrivant : ' +
+    'Bonjour ' + prenomVocal + ', je suis ' + (currentMilitant || 'militant') + ', je viens de la part de Johnny Payet. ' +
+    'On passe voir les habitants du quartier pour écouter vos préoccupations et vous présenter notre projet pour La Plaine des Palmistes. ' +
+    'Les clés du contact : ' +
+    'Souris et sois chaleureux, le premier regard compte. ' +
+    'Écoute d\'abord, demande quels sont ses besoins. ' +
+    'Parle du projet de Johnny Payet pour améliorer le quotidien. ' +
+    'Note les retours dans la fiche après la visite. ' +
+    'Chaque porte ouverte est une victoire. Tu fais la différence !';
+  papParler(texteVocal);
 }
 
 // Voice synthesis — voix douce et naturelle
